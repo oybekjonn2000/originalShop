@@ -18,12 +18,14 @@ import { AuthService } from '../../services/auth.service';
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
           <!-- Error alert -->
-          <div *ngIf="errorMessage" class="error-alert">
-            {{ errorMessage }}
+          <div *ngIf="errorMessage" class="mat-alert mat-alert-error" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>{{ errorMessage }}</span>
           </div>
           <!-- Success alert -->
-          <div *ngIf="successMessage" class="success-alert">
-            {{ successMessage }}
+          <div *ngIf="successMessage" class="mat-alert mat-alert-success" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>{{ successMessage }}</span>
           </div>
 
           <div class="form-row">
@@ -198,26 +200,39 @@ import { AuthService } from '../../services/auth.service';
       font-weight: 500;
     }
 
-    .error-alert {
-      padding: 0.85rem 1rem;
-      border-radius: var(--border-radius-sm);
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      color: #f87171;
-      font-size: 0.9rem;
+    .mat-alert {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
       font-weight: 500;
-      text-align: center;
+      line-height: 1.4;
+      animation: alertSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .success-alert {
-      padding: 0.85rem 1rem;
-      border-radius: var(--border-radius-sm);
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+    .mat-alert svg {
+      flex-shrink: 0;
+    }
+
+    .mat-alert-error {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      border-left: 3px solid #ef4444;
+    }
+
+    .mat-alert-success {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
       color: #34d399;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-align: center;
+      border-left: 3px solid #10b981;
+    }
+
+    @keyframes alertSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .btn-block {

@@ -103,6 +103,11 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 15px 0 rgba(0, 242, 254, 0.25);
 }
 
+select option {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
 .glass-label {
   display: block;
   margin-bottom: 0.5rem;

@@ -173,10 +173,13 @@ import { OrderService } from '../../../services/order.service';
         </div>
       </div>
 
-      <!-- Toast -->
-      <div class="toast-success" *ngIf="showToast">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        {{ toastMessage }}
+      <!-- Material Snackbar Toast -->
+      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
+        <div class="mat-snack-icon">
+          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <span class="mat-snack-text">{{ toastMessage }}</span>
       </div>
     </div>
   `,
@@ -566,30 +569,33 @@ import { OrderService } from '../../../services/order.service';
       -webkit-text-fill-color: transparent;
     }
 
-    /* Toast */
-    .toast-success {
+    /* Material Snackbar Toast */
+    .mat-snackbar {
       position: fixed;
       bottom: 2rem;
-      right: 2rem;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #34d399;
-      padding: 1rem 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 300px;
+      max-width: 480px;
+      padding: 0.9rem 1.4rem;
       border-radius: 12px;
-      backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.75rem;
       font-weight: 600;
-      font-size: 0.95rem;
-      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
-      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 9999;
+      font-size: 0.9rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      z-index: 99999;
+      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
+    .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
+    .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .mat-snack-text { flex: 1; line-height: 1.4; }
+    @keyframes snackSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     @media (max-width: 768px) {
@@ -613,6 +619,8 @@ export class OrdersComponent implements OnInit {
 
   showToast = false;
   toastMessage = '';
+  toastType: 'snack-success' | 'snack-error' = 'snack-success';
+  private toastTimer: any;
 
   constructor(private orderService: OrderService) {}
 
@@ -652,11 +660,11 @@ export class OrdersComponent implements OnInit {
       next: (updated) => {
         order.status = updated.status;
         this.updatingOrderId = null;
-        this.showSuccessToast(`#${order.id} buyurtma statusi yangilandi!`);
+        this.triggerToast(`#${order.id} buyurtma statusi yangilandi!`, 'snack-success');
       },
       error: (err) => {
         this.updatingOrderId = null;
-        alert(err.error?.message || 'Statusni yangilashda xatolik!');
+        this.triggerToast(err.error?.message || 'Statusni yangilashda xatolik!', 'snack-error');
       }
     });
   }
@@ -706,9 +714,11 @@ export class OrdersComponent implements OnInit {
     return text.length > limit ? text.substring(0, limit) + '...' : text;
   }
 
-  showSuccessToast(message: string): void {
+  triggerToast(message: string, type: 'snack-success' | 'snack-error' = 'snack-success'): void {
+    clearTimeout(this.toastTimer);
     this.toastMessage = message;
+    this.toastType = type;
     this.showToast = true;
-    setTimeout(() => this.showToast = false, 3000);
+    this.toastTimer = setTimeout(() => this.showToast = false, 3000);
   }
 }

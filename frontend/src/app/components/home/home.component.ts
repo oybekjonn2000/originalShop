@@ -111,19 +111,28 @@ import { AuthService } from '../../services/auth.service';
                     </div>
                   </div>
                   
-                  <button 
-                    *ngIf="product.stockQuantity > 0; else outOfStockBtn"
-                    (click)="addToCart(product)" 
-                    [disabled]="addingProductId === product.id"
-                    class="btn-add-to-cart"
-                  >
-                    <span *ngIf="addingProductId !== product.id">
-                      Savatga +
-                    </span>
-                    <span *ngIf="addingProductId === product.id" class="added-feedback">
-                      Qo'shildi!
-                    </span>
-                  </button>
+                  <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
+                    <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
+                      <div class="qty-control">
+                        <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
+                        <span class="qty-val">{{ cartItem.quantity }}</span>
+                        <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity + 1)">+</button>
+                      </div>
+                      <a routerLink="/cart" class="btn-go-cart" title="Savatga o'tish">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                      </a>
+                    </div>
+                    <ng-template #addBtn>
+                      <button 
+                        (click)="addToCart(product)" 
+                        [disabled]="addingProductId === product.id"
+                        class="btn-add-to-cart"
+                      >
+                        <span *ngIf="addingProductId !== product.id">Savatga +</span>
+                        <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
+                      </button>
+                    </ng-template>
+                  </ng-container>
                   <ng-template #outOfStockBtn>
                     <span class="out-of-stock">Tugagan</span>
                   </ng-template>
@@ -133,6 +142,16 @@ import { AuthService } from '../../services/auth.service';
           </div>
         </main>
       </div>
+    </div>
+
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg *ngIf="toastType === 'snack-warning'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <span class="mat-snack-text">{{ toastMsg }}</span>
     </div>
   `,
   styles: [`
@@ -533,6 +552,66 @@ import { AuthService } from '../../services/auth.service';
       font-weight: 700;
     }
 
+    .cart-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .qty-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      width: 28px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: var(--transition-smooth);
+    }
+
+    .qty-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary-color);
+    }
+
+    .qty-val {
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-go-cart {
+      background: var(--primary-gradient);
+      color: #04080f;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-go-cart:hover {
+      box-shadow: 0 0 12px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
     .out-of-stock {
       font-size: 0.8rem;
       font-weight: 600;
@@ -629,16 +708,70 @@ import { AuthService } from '../../services/auth.service';
       .hero-text p { font-size: 0.9rem; }
       .area-header h2 { font-size: 1.2rem; }
     }
+
+    /* Material Snackbar Toast */
+    .mat-snackbar {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 320px;
+      max-width: 480px;
+      padding: 0.9rem 1.4rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      z-index: 99999;
+      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .snack-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .snack-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .snack-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .mat-snack-text { flex: 1; line-height: 1.4; }
+
+    @keyframes snackSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   categories: any[] = [];
   products: any[] = [];
+  cartItems: any[] = [];
   selectedCategoryId: number | null = null;
   searchQuery: string = '';
   catalogTitle: string = 'Barcha mahsulotlar';
   isLoading = true;
   addingProductId: number | null = null;
+
+  // Toast
+  showToastNotif = false;
+  toastMsg = '';
+  toastType: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success';
+  private toastTimer: any;
 
   // Carousel Properties
   banners = [
@@ -674,6 +807,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       } else {
         this.loadAllProducts();
       }
+    });
+
+    // Cart items for UI updates
+    this.cartService.cartItems$.subscribe(items => {
+      this.cartItems = items;
     });
   }
 
@@ -763,22 +901,32 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   addToCart(product: any): void {
     if (!this.authService.isLoggedIn()) {
-      alert('Savatga mahsulot qo\'shish uchun avval tizimga kiring!');
+      this.showToast('Savatga mahsulot qo\'shish uchun avval tizimga kiring!', 'snack-warning');
       return;
     }
 
     this.addingProductId = product.id;
     this.cartService.addToCart(product.id, 1).subscribe({
       next: () => {
-        setTimeout(() => {
-          this.addingProductId = null;
-        }, 1000);
+        this.addingProductId = null;
       },
       error: (err) => {
-        alert(err.error?.message || 'Xatolik yuz berdi!');
+        this.showToast(err.error?.message || 'Xatolik yuz berdi!', 'snack-error');
         this.addingProductId = null;
       }
     });
+  }
+
+  getCartItem(productId: number): any {
+    return this.cartItems.find(item => item.product.id === productId);
+  }
+
+  updateCartQty(cartItem: any, newQty: number): void {
+    if (newQty < 1) {
+      this.cartService.removeFromCart(cartItem.id).subscribe();
+    } else {
+      this.cartService.updateCartItem(cartItem.id, newQty).subscribe();
+    }
   }
 
   truncateText(text: string, limit: number): string {
@@ -787,9 +935,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   calculateInstallment(price: number): number {
-    // 12 oylik, yiliga 45% ustama bilan
-    // Umumiy summa = narx + (narx * 0.45)
-    // Oylik to'lov = Umumiy summa / 12
     return (price * 1.45) / 12;
+  }
+
+  showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {
+    clearTimeout(this.toastTimer);
+    this.toastMsg = message;
+    this.toastType = type;
+    this.showToastNotif = true;
+    this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
   }
 }

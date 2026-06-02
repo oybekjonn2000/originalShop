@@ -118,6 +118,15 @@ import { AuthService } from '../../services/auth.service';
         </div>
       </div>
     </div>
+
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+      <span class="mat-snack-text">{{ toastMsg }}</span>
+    </div>
   `,
   styles: [`
     .checkout-container {
@@ -363,6 +372,35 @@ import { AuthService } from '../../services/auth.service';
       .payment-box { padding: 1rem; }
       .success-screen { padding: 2rem 1rem; margin: 1rem auto; }
     }
+
+    /* Material Snackbar Toast */
+    .mat-snackbar {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 300px;
+      max-width: 480px;
+      padding: 0.9rem 1.4rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      z-index: 99999;
+      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
+    .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
+    .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .mat-snack-text { flex: 1; line-height: 1.4; }
+    @keyframes snackSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
   `]
 })
 export class CheckoutComponent implements OnInit {
@@ -373,6 +411,12 @@ export class CheckoutComponent implements OnInit {
   isLoading = false;
   showSuccess = false;
   createdOrderId: number | null = null;
+
+  // Toast
+  showToastNotif = false;
+  toastMsg = '';
+  toastType: 'snack-success' | 'snack-error' = 'snack-success';
+  private toastTimer: any;
 
   constructor(
     private cartService: CartService,
@@ -413,8 +457,16 @@ export class CheckoutComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        alert(err.error?.message || 'Buyurtma berishda xatolik yuz berdi!');
+        this.showToast(err.error?.message || 'Buyurtma berishda xatolik yuz berdi!', 'snack-error');
       }
     });
+  }
+
+  showToast(message: string, type: 'snack-success' | 'snack-error' = 'snack-success'): void {
+    clearTimeout(this.toastTimer);
+    this.toastMsg = message;
+    this.toastType = type;
+    this.showToastNotif = true;
+    this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
   }
 }

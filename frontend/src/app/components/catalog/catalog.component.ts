@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-catalog',
@@ -52,6 +54,11 @@ import { ProductService } from '../../services/product.service';
 
         <!-- Product Grid -->
         <main class="products-main">
+          <div class="area-header">
+            <h2>{{ getTitle() }}</h2>
+            <p *ngIf="filteredProducts.length > 0" class="results-count">{{ filteredProducts.length }} ta mahsulot topildi</p>
+          </div>
+
           <div *ngIf="isLoading" class="loading-state">
             <div class="spinner"></div>
             <p>Mahsulotlar yuklanmoqda...</p>
@@ -65,22 +72,68 @@ import { ProductService } from '../../services/product.service';
           </div>
 
           <div *ngIf="!isLoading && filteredProducts.length > 0" class="products-grid">
-            <div *ngFor="let product of filteredProducts" class="product-card glass-panel">
-              <div class="product-image-container">
-                <img [src]="product.imageUrl" [alt]="product.name" class="product-image" />
-                <div class="product-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
-                <div class="product-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
+            <div *ngFor="let product of filteredProducts" class="product-card glass-card">
+              <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
+                <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+                <span class="category-badge">{{ product.category?.name || 'Kategoriyasiz' }}</span>
+                <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
+                <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
               </div>
+
               <div class="product-info">
-                <div class="product-category">{{ product.category?.name || 'Kategoriyasiz' }}</div>
-                <h3 class="product-title" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
-                <div class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
-                <button [routerLink]="['/product', product.id]" class="btn-primary w-full mt-3">Batafsil ko'rish</button>
+                <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
+
+                <div class="product-footer">
+                  <div class="price-section">
+                    <div class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
+                    <div class="installment-badge">
+                      <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.2-2' }} so'm</span> / 12 oy
+                    </div>
+                  </div>
+                  
+                  <div class="actions-section">
+                    <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
+                      <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
+                        <div class="qty-control">
+                          <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
+                          <span class="qty-val">{{ cartItem.quantity }}</span>
+                          <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity + 1)">+</button>
+                        </div>
+                        <a routerLink="/cart" class="btn-go-cart" title="Savatga o'tish">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        </a>
+                      </div>
+                      <ng-template #addBtn>
+                        <button 
+                          (click)="addToCart(product)" 
+                          [disabled]="addingProductId === product.id"
+                          class="btn-add-to-cart"
+                        >
+                          <span *ngIf="addingProductId !== product.id">Savatga +</span>
+                          <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
+                        </button>
+                      </ng-template>
+                    </ng-container>
+                    <ng-template #outOfStockBtn>
+                      <button [routerLink]="['/product', product.id]" class="btn-view">Ko'rish →</button>
+                    </ng-template>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </main>
       </div>
+    </div>
+
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg *ngIf="toastType === 'snack-warning'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <span class="mat-snack-text">{{ toastMsg }}</span>
     </div>
   `,
   styles: [`
@@ -91,7 +144,7 @@ import { ProductService } from '../../services/product.service';
     }
 
     .page-header {
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
       margin-top: 1rem;
     }
 
@@ -104,6 +157,11 @@ import { ProductService } from '../../services/product.service';
       -webkit-text-fill-color: transparent;
     }
 
+    .page-header .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+    }
+
     .catalog-layout {
       display: grid;
       grid-template-columns: 280px 1fr;
@@ -113,7 +171,7 @@ import { ProductService } from '../../services/product.service';
 
     /* Sidebar Filters */
     .filters-sidebar {
-      padding: 1.5rem;
+      padding: 1.75rem 1.5rem;
       position: sticky;
       top: 90px;
     }
@@ -131,9 +189,9 @@ import { ProductService } from '../../services/product.service';
       font-weight: 700;
       margin-bottom: 1rem;
       color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-family: var(--font-heading);
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 0.6rem;
     }
 
     .search-box {
@@ -159,154 +217,343 @@ import { ProductService } from '../../services/product.service';
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
     .category-list li {
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius-sm);
       cursor: pointer;
       color: var(--text-secondary);
       transition: var(--transition-smooth);
       font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 0.1rem;
     }
 
     .category-list li:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--text-primary);
+      transform: translateX(3px);
     }
 
     .category-list li.active {
-      background: rgba(168, 85, 247, 0.15);
-      color: #a855f7;
+      background: rgba(0, 242, 254, 0.08);
+      border-left: 3px solid var(--primary-color);
+      color: var(--primary-color);
       font-weight: 600;
-      border-left: 3px solid #a855f7;
     }
 
     .w-full {
       width: 100%;
     }
 
+    /* Area Header */
+    .area-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .area-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .results-count {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
     /* Products Grid */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
+      gap: 1.75rem;
     }
 
     .product-card {
-      padding: 0;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
       height: 100%;
-      transition: var(--transition-smooth);
-    }
-
-    .product-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-      border-color: rgba(168, 85, 247, 0.3);
-    }
-
-    .product-image-container {
-      position: relative;
-      width: 100%;
-      padding-top: 75%; /* 4:3 Aspect Ratio */
-      background: rgba(0, 0, 0, 0.2);
+      padding: 0;
       overflow: hidden;
     }
 
-    .product-image {
-      position: absolute;
-      top: 0;
-      left: 0;
+    .product-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .product-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .product-card:hover .product-image {
-      transform: scale(1.05);
+    .product-card:hover .product-img {
+      transform: scale(1.08);
     }
 
-    .product-badge {
+    .category-badge {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(11, 14, 20, 0.85);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      backdrop-filter: blur(5px);
+    }
+
+    .stock-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
       background: rgba(245, 158, 11, 0.9);
       color: white;
-      padding: 0.4rem 0.8rem;
+      padding: 0.3rem 0.7rem;
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 600;
       backdrop-filter: blur(4px);
     }
 
-    .out-of-stock {
+    .stock-badge.out-of-stock {
       background: rgba(239, 68, 68, 0.9);
     }
 
     .product-info {
-      padding: 1.5rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
-    .product-category {
-      font-size: 0.8rem;
-      color: var(--primary-color);
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .product-title {
-      font-size: 1.15rem;
+    .product-name {
+      font-size: 1.1rem;
       font-weight: 700;
+      margin-bottom: 1rem;
       color: var(--text-primary);
-      margin-bottom: 0.5rem;
       cursor: pointer;
       text-decoration: none;
-      line-height: 1.4;
+      transition: var(--transition-smooth);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      line-height: 1.4;
+      flex: 1;
     }
 
-    .product-title:hover {
+    .product-name:hover {
       color: var(--primary-color);
     }
 
-    .product-price {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--text-primary);
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
       margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 0.85rem;
+    }
+
+    .price-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .product-price {
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       font-family: var(--font-heading);
     }
 
-    .mt-3 {
-      margin-top: 1.25rem;
+    .installment-badge {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .installment-amount {
+      color: #fbbf24;
+      font-weight: 700;
+    }
+
+    .btn-view {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.5rem 0.95rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-view:hover {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: #04080f;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .btn-add-to-cart {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.5rem 0.95rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-add-to-cart:hover {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: #04080f;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .added-feedback {
+      color: var(--success-color);
+      font-weight: 700;
+    }
+
+    .cart-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .qty-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      width: 28px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: var(--transition-smooth);
+    }
+
+    .qty-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary-color);
+    }
+
+    .qty-val {
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-go-cart {
+      background: var(--primary-gradient);
+      color: #04080f;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-go-cart:hover {
+      box-shadow: 0 0 12px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
+    /* Material Snackbar Toast */
+    .mat-snackbar {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 320px;
+      max-width: 480px;
+      padding: 0.9rem 1.4rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      z-index: 99999;
+      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .snack-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
+    .snack-error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; }
+    .snack-warning { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; }
+    .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .mat-snack-text { flex: 1; line-height: 1.4; }
+
+    @keyframes snackSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     /* Loading & Empty State */
-    .loading-state, .empty-state {
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 0;
+      color: var(--text-secondary);
+    }
+
+    .empty-state {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 4rem 2rem;
       text-align: center;
-    }
-
-    .empty-state {
       max-width: 500px;
-      margin: 0 auto;
+      margin: 2rem auto;
     }
 
     .empty-state svg {
@@ -315,20 +562,10 @@ import { ProductService } from '../../services/product.service';
       margin-bottom: 1.5rem;
     }
 
-    .empty-state h3 {
-      font-size: 1.4rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-state p {
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-    }
-
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px dashed #a855f7;
+      border: 3px dashed var(--primary-color);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -336,28 +573,35 @@ import { ProductService } from '../../services/product.service';
 
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    @media (max-width: 992px) {
+    @media (max-width: 1024px) {
       .catalog-layout { grid-template-columns: 1fr; }
       .filters-sidebar { position: static; }
       .category-list { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
-      .category-list li { padding: 0.35rem 0.85rem; border-radius: 50px; }
-      .category-list li.active { border-left: none; border: 2px solid #a855f7; }
+      .category-list li { padding: 0.4rem 0.8rem; border-radius: 50px; border: 1px solid var(--glass-border); }
+      .category-list li.active { border-left: none; border: 1px solid var(--primary-color); }
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
     }
 
     @media (max-width: 768px) {
       .catalog-container { padding: 0 0.75rem; }
       .page-header h1 { font-size: 1.8rem; }
-      .products-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-      .product-info { padding: 1rem; }
-      .product-price { font-size: 1.15rem; }
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+      .product-img-wrapper { height: 160px; }
+      .product-info { padding: 0.85rem; }
+      .product-name { font-size: 0.9rem; }
+      .product-price { font-size: 1.1rem; }
+      .installment-badge { font-size: 0.68rem; }
+      .btn-view { font-size: 0.75rem; padding: 0.4rem 0.7rem; }
+      .product-footer { flex-direction: column; align-items: stretch; gap: 0.5rem; }
     }
 
     @media (max-width: 480px) {
       .page-header h1 { font-size: 1.4rem; }
       .page-header { margin-bottom: 1.5rem; }
       .products-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-      .product-title { font-size: 0.95rem; }
+      .product-name { font-size: 0.85rem; }
       .product-info { padding: 0.75rem; }
+      .area-header h2 { font-size: 1.2rem; }
     }
   `]
 })
@@ -365,14 +609,24 @@ export class CatalogComponent implements OnInit {
   products: any[] = [];
   filteredProducts: any[] = [];
   categories: any[] = [];
+  cartItems: any[] = [];
   
   isLoading = true;
   searchTerm = '';
   selectedCategoryId: number | null = null;
   sortBy = 'newest';
+  addingProductId: number | null = null;
+
+  // Toast
+  showToastNotif = false;
+  toastMsg = '';
+  toastType: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success';
+  private toastTimer: any;
 
   constructor(
     private productService: ProductService,
+    private cartService: CartService,
+    private authService: AuthService,
     private route: ActivatedRoute
   ) {}
 
@@ -382,6 +636,10 @@ export class CatalogComponent implements OnInit {
         this.searchTerm = params['q'];
       }
       this.loadData();
+    });
+
+    this.cartService.cartItems$.subscribe(items => {
+      this.cartItems = items;
     });
   }
 
@@ -398,7 +656,7 @@ export class CatalogComponent implements OnInit {
     // Mahsulotlarni yuklash
     this.productService.getProducts().subscribe({
       next: (prods) => {
-        this.products = prods;
+        this.products = prods.filter(p => p.isActive);
         this.applyFilters();
         this.isLoading = false;
       },
@@ -453,5 +711,59 @@ export class CatalogComponent implements OnInit {
     this.selectedCategoryId = null;
     this.sortBy = 'newest';
     this.applyFilters();
+  }
+
+  getTitle(): string {
+    if (this.searchTerm.trim()) {
+      return `"${this.searchTerm}" bo'yicha natijalar`;
+    }
+    if (this.selectedCategoryId !== null) {
+      const cat = this.categories.find(c => c.id === this.selectedCategoryId);
+      return cat ? cat.name : 'Mahsulotlar';
+    }
+    return 'Barcha mahsulotlar';
+  }
+
+  calculateInstallment(price: number): number {
+    // 12 oylik, yiliga 45% ustama bilan
+    return (price * 1.45) / 12;
+  }
+
+  addToCart(product: any): void {
+    if (!this.authService.isLoggedIn()) {
+      this.showToast('Savatga mahsulot qo\'shish uchun avval tizimga kiring!', 'snack-warning');
+      return;
+    }
+
+    this.addingProductId = product.id;
+    this.cartService.addToCart(product.id, 1).subscribe({
+      next: () => {
+        this.addingProductId = null;
+      },
+      error: (err) => {
+        this.showToast(err.error?.message || 'Xatolik yuz berdi!', 'snack-error');
+        this.addingProductId = null;
+      }
+    });
+  }
+
+  getCartItem(productId: number): any {
+    return this.cartItems.find(item => item.product.id === productId);
+  }
+
+  updateCartQty(cartItem: any, newQty: number): void {
+    if (newQty < 1) {
+      this.cartService.removeFromCart(cartItem.id).subscribe();
+    } else {
+      this.cartService.updateCartItem(cartItem.id, newQty).subscribe();
+    }
+  }
+
+  showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {
+    clearTimeout(this.toastTimer);
+    this.toastMsg = message;
+    this.toastType = type;
+    this.showToastNotif = true;
+    this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
   }
 }

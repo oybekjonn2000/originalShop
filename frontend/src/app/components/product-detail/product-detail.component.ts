@@ -80,6 +80,16 @@ import { AuthService } from '../../services/auth.service';
       <div class="spinner"></div>
       <p>Mahsulot tafsilotlari yuklanmoqda...</p>
     </div>
+
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg *ngIf="toastType === 'snack-warning'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <span class="mat-snack-text">{{ toastMsg }}</span>
+    </div>
   `,
   styles: [`
     .detail-container {
@@ -347,6 +357,36 @@ import { AuthService } from '../../services/auth.service';
       .installment-option { flex-direction: row; justify-content: space-between; align-items: center; }
       .price-value { font-size: 1.4rem; }
     }
+
+    /* Material Snackbar Toast */
+    .mat-snackbar {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 300px;
+      max-width: 480px;
+      padding: 0.9rem 1.4rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      z-index: 99999;
+      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
+    .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
+    .snack-warning { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24; }
+    .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .mat-snack-text { flex: 1; line-height: 1.4; }
+    @keyframes snackSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
   `]
 })
 export class ProductDetailComponent implements OnInit {
@@ -354,6 +394,12 @@ export class ProductDetailComponent implements OnInit {
   quantity = 1;
   isLoading = true;
   isAdding = false;
+
+  // Toast
+  showToastNotif = false;
+  toastMsg = '';
+  toastType: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success';
+  private toastTimer: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -400,7 +446,7 @@ export class ProductDetailComponent implements OnInit {
 
   addToCart(): void {
     if (!this.authService.isLoggedIn()) {
-      alert('Savatga mahsulot qo\'shish uchun avval tizimga kiring!');
+      this.showToast('Savatga mahsulot qo\'shish uchun avval tizimga kiring!', 'snack-warning');
       this.router.navigate(['/login'], { queryParams: { returnUrl: `/product/${this.product.id}` } });
       return;
     }
@@ -409,20 +455,27 @@ export class ProductDetailComponent implements OnInit {
     this.cartService.addToCart(this.product.id, this.quantity).subscribe({
       next: () => {
         this.isAdding = false;
-        alert(`Savatga ${this.quantity} ta mahsulot qo'shildi!`);
+        this.showToast(`Savatga ${this.quantity} ta mahsulot qo'shildi!`, 'snack-success');
         this.quantity = 1;
       },
       error: (err) => {
         this.isAdding = false;
-        alert(err.error?.message || 'Xatolik yuz berdi!');
+        this.showToast(err.error?.message || 'Xatolik yuz berdi!', 'snack-error');
       }
     });
   }
 
   calculateInstallment(price: number, months: number): number {
-    // Yiliga 45% ustama, ya'ni oyiga 45 / 12 = 3.75% ustama
-    const totalInterestRate = (45 / 12) * months; // 6 oy uchun 22.5%, 12 oy uchun 45%
+    const totalInterestRate = (45 / 12) * months;
     const totalAmount = price * (1 + (totalInterestRate / 100));
     return totalAmount / months;
+  }
+
+  showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {
+    clearTimeout(this.toastTimer);
+    this.toastMsg = message;
+    this.toastType = type;
+    this.showToastNotif = true;
+    this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
   }
 }

@@ -74,7 +74,7 @@ import { ProductService } from '../../services/product.service';
               <div class="product-info">
                 <div class="product-category">{{ product.category?.name || 'Kategoriyasiz' }}</div>
                 <h3 class="product-title" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
-                <div class="product-price">\${{ product.price | number:'1.2-2' }}</div>
+                <div class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
                 <button [routerLink]="['/product', product.id]" class="btn-primary w-full mt-3">Batafsil ko'rish</button>
               </div>
             </div>
@@ -337,12 +337,27 @@ import { ProductService } from '../../services/product.service';
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
     @media (max-width: 992px) {
-      .catalog-layout {
-        grid-template-columns: 1fr;
-      }
-      .filters-sidebar {
-        position: static;
-      }
+      .catalog-layout { grid-template-columns: 1fr; }
+      .filters-sidebar { position: static; }
+      .category-list { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
+      .category-list li { padding: 0.35rem 0.85rem; border-radius: 50px; }
+      .category-list li.active { border-left: none; border: 2px solid #a855f7; }
+    }
+
+    @media (max-width: 768px) {
+      .catalog-container { padding: 0 0.75rem; }
+      .page-header h1 { font-size: 1.8rem; }
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+      .product-info { padding: 1rem; }
+      .product-price { font-size: 1.15rem; }
+    }
+
+    @media (max-width: 480px) {
+      .page-header h1 { font-size: 1.4rem; }
+      .page-header { margin-bottom: 1.5rem; }
+      .products-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+      .product-title { font-size: 0.95rem; }
+      .product-info { padding: 0.75rem; }
     }
   `]
 })

@@ -32,7 +32,18 @@ import { AuthService } from '../../services/auth.service';
           
           <div class="price-box">
             <span class="price-label">Narxi:</span>
-            <span class="price-value">\${{ product.price | number:'1.2-2' }}</span>
+            <span class="price-value">{{ product.price | number:'1.2-2' }} so'm</span>
+          </div>
+
+          <div class="installments-box">
+            <div class="installment-option">
+              <div class="installment-amount">{{ calculateInstallment(product.price, 6) | number:'1.2-2' }} so'm</div>
+              <div class="installment-period">x 6 oy</div>
+            </div>
+            <div class="installment-option">
+              <div class="installment-amount">{{ calculateInstallment(product.price, 12) | number:'1.2-2' }} so'm</div>
+              <div class="installment-period">x 12 oy</div>
+            </div>
           </div>
 
           <div class="stock-status" [class.low]="product.stockQuantity <= 5">
@@ -52,7 +63,7 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
-              <span *ngIf="!isAdding">Savatga qo'shish (\${{ product.price * quantity | number:'1.2-2' }})</span>
+              <span *ngIf="!isAdding">Savatga qo'shish ({{ product.price * quantity | number:'1.2-2' }} so'm)</span>
               <span *ngIf="isAdding">Qo'shilmoqda...</span>
             </button>
           </div>
@@ -167,6 +178,40 @@ import { AuthService } from '../../services/auth.service';
       font-family: var(--font-heading);
     }
 
+    .installments-box {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .installment-option {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--border-radius-sm);
+      padding: 0.75rem 1rem;
+      flex: 1;
+      text-align: center;
+      transition: var(--transition-smooth);
+    }
+
+    .installment-option:hover {
+      background: rgba(0, 242, 254, 0.05);
+      border-color: rgba(0, 242, 254, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .installment-amount {
+      color: #fbbf24;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .installment-period {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
     .stock-status {
       font-size: 0.95rem;
       color: var(--text-secondary);
@@ -277,13 +322,30 @@ import { AuthService } from '../../services/auth.service';
     }
 
     @media (max-width: 900px) {
-      .detail-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-      .info-wrapper {
-        padding: 2rem;
-      }
+      .detail-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      .info-wrapper { padding: 2rem; }
+      .product-title { font-size: 1.8rem; }
+      .installments-box { flex-direction: row; }
+    }
+
+    @media (max-width: 768px) {
+      .detail-container { padding: 0 0.75rem; }
+      .image-wrapper { min-height: 260px; padding: 1.25rem; }
+      .detail-image { max-height: 280px; }
+      .product-title { font-size: 1.5rem; }
+      .price-value { font-size: 1.6rem; }
+      .installments-box { gap: 0.75rem; }
+      .installment-amount { font-size: 1rem; }
+      .purchase-actions { flex-direction: column; }
+      .flex-1 { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .info-wrapper { padding: 1.25rem; }
+      .product-title { font-size: 1.25rem; }
+      .installments-box { flex-direction: column; }
+      .installment-option { flex-direction: row; justify-content: space-between; align-items: center; }
+      .price-value { font-size: 1.4rem; }
     }
   `]
 })
@@ -355,5 +417,12 @@ export class ProductDetailComponent implements OnInit {
         alert(err.error?.message || 'Xatolik yuz berdi!');
       }
     });
+  }
+
+  calculateInstallment(price: number, months: number): number {
+    // Yiliga 45% ustama, ya'ni oyiga 45 / 12 = 3.75% ustama
+    const totalInterestRate = (45 / 12) * months; // 6 oy uchun 22.5%, 12 oy uchun 45%
+    const totalAmount = price * (1 + (totalInterestRate / 100));
+    return totalAmount / months;
   }
 }

@@ -62,7 +62,7 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             <button type="submit" [disabled]="isLoading || !shippingAddress.trim()" class="btn-primary btn-block">
-              <span *ngIf="!isLoading">To'lash va buyurtma berish (\${{ totalPrice | number:'1.2-2' }})</span>
+              <span *ngIf="!isLoading">To'lash va buyurtma berish ({{ totalPrice | number:'1.2-2' }} so'm)</span>
               <span *ngIf="isLoading">Buyurtma qayta ishlanmoqda...</span>
             </button>
           </form>
@@ -75,7 +75,7 @@ import { AuthService } from '../../services/auth.service';
           <div class="items-preview">
             <div *ngFor="let item of cartItems" class="preview-item">
               <span class="item-name">{{ item.product.name }} <small>x{{ item.quantity }}</small></span>
-              <span class="item-price">\${{ item.product.price * item.quantity | number:'1.2-2' }}</span>
+              <span class="item-price">{{ item.product.price * item.quantity | number:'1.2-2' }} so'm</span>
             </div>
           </div>
 
@@ -83,7 +83,7 @@ import { AuthService } from '../../services/auth.service';
 
           <div class="summary-row">
             <span>Mahsulotlar jami:</span>
-            <span>\${{ totalPrice | number:'1.2-2' }}</span>
+            <span>{{ totalPrice | number:'1.2-2' }} so'm</span>
           </div>
 
           <div class="summary-row">
@@ -95,7 +95,7 @@ import { AuthService } from '../../services/auth.service';
 
           <div class="summary-row total-row">
             <span>Jami summa:</span>
-            <span class="total-price">\${{ totalPrice | number:'1.2-2' }}</span>
+            <span class="total-price">{{ totalPrice | number:'1.2-2' }} so'm</span>
           </div>
         </div>
       </div>
@@ -343,15 +343,25 @@ import { AuthService } from '../../services/auth.service';
     }
 
     @media (max-width: 900px) {
-      .checkout-grid {
-        grid-template-columns: 1fr;
-      }
-      .details-section, .summary-section {
-        padding: 1.5rem;
-      }
-      .success-actions {
-        flex-direction: column;
-      }
+      .checkout-grid { grid-template-columns: 1fr; }
+      .details-section, .summary-section { padding: 1.5rem; }
+      .success-actions { flex-direction: column; align-items: stretch; }
+      .success-actions a { text-align: center; }
+    }
+
+    @media (max-width: 768px) {
+      .checkout-container { padding: 0 0.75rem; }
+      .page-title { font-size: 1.8rem; }
+      .success-screen { padding: 2.5rem 1.5rem; }
+      .success-screen h2 { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .page-title { font-size: 1.5rem; }
+      .form-row { flex-direction: column; gap: 0; }
+      .details-section, .summary-section { padding: 1.25rem; }
+      .payment-box { padding: 1rem; }
+      .success-screen { padding: 2rem 1rem; margin: 1rem auto; }
     }
   `]
 })

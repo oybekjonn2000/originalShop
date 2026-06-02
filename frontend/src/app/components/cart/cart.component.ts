@@ -40,8 +40,8 @@ import { CartService } from '../../services/cart.service';
             </div>
 
             <div class="item-price">
-              \${{ item.product.price * item.quantity | number:'1.2-2' }}
-              <small class="unit-price">(\${{ item.product.price | number:'1.2-2' }}/dona)</small>
+              {{ item.product.price * item.quantity | number:'1.2-2' }} so'm
+              <small class="unit-price">({{ item.product.price | number:'1.2-2' }} so'm/dona)</small>
             </div>
 
             <button (click)="removeItem(item.id)" class="btn-remove" title="O'chirish">
@@ -68,7 +68,7 @@ import { CartService } from '../../services/cart.service';
 
           <div class="summary-row total-row">
             <span>Jami summa:</span>
-            <span class="total-price">\${{ totalPrice | number:'1.2-2' }}</span>
+            <span class="total-price">{{ totalPrice | number:'1.2-2' }} so'm</span>
           </div>
 
           <div class="summary-actions">
@@ -344,33 +344,39 @@ import { CartService } from '../../services/cart.service';
     }
 
     @media (max-width: 992px) {
-      .cart-grid {
-        grid-template-columns: 1fr;
-      }
-      .cart-summary {
-        position: static;
-      }
+      .cart-grid { grid-template-columns: 1fr; }
+      .cart-summary { position: static; }
+      .page-title { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 768px) {
+      .cart-container { padding: 0 0.75rem; }
+      .cart-item { padding: 1rem 1.25rem; gap: 1rem; }
+      .item-img-wrapper { width: 65px; height: 65px; }
+      .item-name { font-size: 0.95rem; }
+      .item-price { font-size: 1rem; min-width: auto; }
+      .unit-price { display: none; }
+      .cart-summary { padding: 1.5rem; }
     }
 
     @media (max-width: 600px) {
       .cart-item {
-        flex-direction: column;
+        flex-wrap: wrap;
         align-items: flex-start;
-        padding: 1.5rem;
+        padding: 1rem;
         position: relative;
       }
-      .item-quantity {
-        align-self: flex-end;
-      }
-      .item-price {
-        align-self: flex-end;
-        text-align: right;
-      }
-      .btn-remove {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-      }
+      .item-info { flex: 1 1 calc(100% - 80px); }
+      .item-quantity { order: 3; }
+      .item-price { order: 4; text-align: left; min-width: auto; }
+      .btn-remove { position: absolute; top: 12px; right: 12px; }
+    }
+
+    @media (max-width: 480px) {
+      .page-title { font-size: 1.5rem; }
+      .cart-items-list { gap: 0.75rem; }
+      .confirm-actions { flex-direction: column; }
+      .confirm-actions button { width: 100%; }
     }
     
     /* Confirm Modal CSS */

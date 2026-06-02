@@ -60,7 +60,7 @@ import { ProductService } from '../../../services/product.service';
                 <span class="product-name">{{ product.name }}</span>
               </td>
               <td>{{ product.category?.name || '—' }}</td>
-              <td><strong>\${{ product.price | number:'1.2-2' }}</strong></td>
+              <td><strong>{{ product.price | number:'1.2-2' }} so'm</strong></td>
               <td>
                 <span [class]="product.stockQuantity <= 5 ? 'stock-low' : 'stock-ok'">
                   {{ product.stockQuantity }} ta
@@ -117,7 +117,7 @@ import { ProductService } from '../../../services/product.service';
 
             <div class="form-row">
               <div class="form-group flex-1">
-                <label class="glass-label">Narxi ($) *</label>
+                <label class="glass-label">Narxi (so'm) *</label>
                 <input type="number" [(ngModel)]="form.price" name="price" class="glass-input" required step="0.01" min="0" placeholder="0.00" />
               </div>
               <div class="form-group flex-1">

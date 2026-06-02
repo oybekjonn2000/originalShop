@@ -58,7 +58,7 @@ import { AuthService } from '../../../services/auth.service';
           </div>
           <div class="stat-info">
             <span class="stat-label">Jami Daromad</span>
-            <span class="stat-value revenue">\${{ totalRevenue | number:'1.0-0' }}</span>
+            <span class="stat-value revenue">{{ totalRevenue | number:'1.0-0' }} so'm</span>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ import { AuthService } from '../../../services/auth.service';
                 <td><strong>#{{ order.id }}</strong></td>
                 <td>{{ order.user?.username }}</td>
                 <td>{{ order.orderDate | date:'dd.MM.yy HH:mm' }}</td>
-                <td><strong>\${{ order.totalAmount | number:'1.2-2' }}</strong></td>
+                <td><strong>{{ order.totalAmount | number:'1.2-2' }} so'm</strong></td>
                 <td>
                   <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
                 </td>

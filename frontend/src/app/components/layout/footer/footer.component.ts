@@ -120,11 +120,16 @@ import { RouterModule } from '@angular/router';
     }
 
     @media (max-width: 768px) {
-      .footer-links-section {
-        gap: 2rem;
-        width: 100%;
-        justify-content: space-between;
-      }
+      .footer-container { padding: 2rem 1.25rem 1.25rem; width: calc(100% - 1rem); }
+      .footer-content { flex-direction: column; gap: 1.5rem; }
+      .footer-brand { min-width: 100%; max-width: 100%; }
+      .footer-links-section { gap: 1.5rem; width: 100%; flex-wrap: wrap; }
+    }
+
+    @media (max-width: 480px) {
+      .footer-container { width: 100%; border-radius: 0; }
+      .footer-links-section { flex-direction: column; gap: 1rem; }
+      .footer-bottom { font-size: 0.78rem; }
     }
   `]
 })

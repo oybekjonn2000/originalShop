@@ -4,6 +4,8 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { CartService } from '../../../services/cart.service';
+import { HostListener } from '@angular/core';
+import { ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-header',
@@ -17,7 +19,7 @@ import { CartService } from '../../../services/cart.service';
           <span class="logo-glow">Nex</span>Shop
         </a>
 
-        <!-- Search Bar -->
+        <!-- Search Bar (desktop) -->
         <div class="search-box">
           <input 
             type="text" 
@@ -31,65 +33,91 @@ import { CartService } from '../../../services/cart.service';
           </button>
         </div>
 
-        <!-- Navigation Actions -->
-        <nav class="nav-actions">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
-            Asosiy
-          </a>
-          <a routerLink="/catalog" routerLinkActive="active" class="nav-link">
-            Katalog
-          </a>
-          <a routerLink="/about" routerLinkActive="active" class="nav-link">
-            Biz haqimizda
-          </a>
-          <a routerLink="/contact" routerLinkActive="active" class="nav-link">
-            Aloqa
-          </a>
-
-          <!-- Cart Badge -->
+        <!-- Desktop Navigation -->
+        <nav class="nav-actions nav-desktop">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Asosiy</a>
+          <a routerLink="/catalog" routerLinkActive="active" class="nav-link">Katalog</a>
+          <a routerLink="/about" routerLinkActive="active" class="nav-link">Biz haqimizda</a>
+          <a routerLink="/contact" routerLinkActive="active" class="nav-link">Aloqa</a>
           <a routerLink="/cart" routerLinkActive="active" class="nav-link cart-link">
             Savat
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
           </a>
-
-          <!-- Logged In User Links -->
-          <ng-container *ngIf="isLoggedIn; else authLinks">
-            <a routerLink="/orders" routerLinkActive="active" class="nav-link">
-              Buyurtmalarim
-            </a>
-            
-            <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">
-              Admin Panel
-            </a>
-
-            <!-- User Menu -->
+          <ng-container *ngIf="isLoggedIn; else authLinksDesktop">
+            <a routerLink="/orders" routerLinkActive="active" class="nav-link">Buyurtmalarim</a>
+            <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">Admin Panel</a>
             <div class="user-menu">
-              <a routerLink="/profile" class="username-display" style="text-decoration: none; display: flex; align-items: center; gap: 5px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <a routerLink="/profile" class="username-display" style="text-decoration:none;display:flex;align-items:center;gap:5px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 {{ currentUser?.firstName || currentUser?.username }}
               </a>
               <button (click)="logout()" class="btn-logout" title="Chiqish">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
               </button>
             </div>
           </ng-container>
-
-          <!-- Logged Out Auth Links -->
-          <ng-template #authLinks>
+          <ng-template #authLinksDesktop>
             <div class="auth-buttons">
-              <a routerLink="/login" class="nav-link font-semibold">Kirish</a>
+              <a routerLink="/login" class="nav-link">Kirish</a>
               <a routerLink="/register" class="btn-primary-sm">Ro'yxatdan o'tish</a>
             </div>
           </ng-template>
         </nav>
+
+        <!-- Mobile Right Side (cart + burger) -->
+        <div class="mobile-right">
+          <a routerLink="/cart" class="nav-link cart-link mobile-cart">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
+          </a>
+          <button class="hamburger-btn" (click)="toggleMenu()" [class.open]="menuOpen">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
       </div>
+
+      <!-- Mobile Search Bar -->
+      <div class="mobile-search">
+        <div class="search-box" style="max-width:100%">
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (keyup.enter)="onSearch()"
+            placeholder="Qidirish..." 
+            class="glass-input search-input"
+          />
+          <button (click)="onSearch()" class="search-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Menu -->
+      <nav class="mobile-nav" [class.open]="menuOpen">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-nav-link" (click)="closeMenu()">Asosiy</a>
+        <a routerLink="/catalog" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Katalog</a>
+        <a routerLink="/about" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Biz haqimizda</a>
+        <a routerLink="/contact" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Aloqa</a>
+        <ng-container *ngIf="isLoggedIn; else mobileAuthLinks">
+          <a routerLink="/orders" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Buyurtmalarim</a>
+          <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+            {{ currentUser?.firstName || currentUser?.username }} — Profil
+          </a>
+          <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="mobile-nav-link admin-mobile" (click)="closeMenu()">Admin Panel</a>
+          <button (click)="logout(); closeMenu()" class="mobile-nav-link logout-mobile">Chiqish</button>
+        </ng-container>
+        <ng-template #mobileAuthLinks>
+          <a routerLink="/login" class="mobile-nav-link" (click)="closeMenu()">Kirish</a>
+          <a routerLink="/register" class="mobile-nav-link register-mobile" (click)="closeMenu()">Ro'yxatdan o'tish</a>
+        </ng-template>
+      </nav>
     </header>
   `,
   styles: [`
     .header-container {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
       margin: 0 auto 1.5rem auto;
       max-width: 1400px;
       width: calc(100% - 2rem);
@@ -112,6 +140,7 @@ import { CartService } from '../../../services/cart.service';
       color: var(--text-primary);
       text-decoration: none;
       letter-spacing: -0.03em;
+      flex-shrink: 0;
     }
 
     .logo-glow {
@@ -133,6 +162,7 @@ import { CartService } from '../../../services/cart.service';
       padding-right: 3.5rem;
       border-radius: 50px;
       height: 42px;
+      width: 100%;
     }
 
     .search-btn {
@@ -149,26 +179,30 @@ import { CartService } from '../../../services/cart.service';
       transition: var(--transition-smooth);
     }
 
-    .search-btn:hover {
-      color: var(--primary-color);
-      transform: scale(1.1);
-    }
+    .search-btn:hover { color: var(--primary-color); transform: scale(1.1); }
 
-    .nav-actions {
+    /* Desktop Nav */
+    .nav-desktop {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 0.75rem;
+      flex-shrink: 0;
     }
+
+    .mobile-right { display: none; }
+    .mobile-search { display: none; }
+    .mobile-nav { display: none; }
 
     .nav-link {
       font-family: var(--font-heading);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 500;
       color: var(--text-secondary);
       text-decoration: none;
-      padding: 0.4rem 0.8rem;
+      padding: 0.4rem 0.65rem;
       border-radius: 8px;
       transition: var(--transition-smooth);
+      white-space: nowrap;
     }
 
     .nav-link:hover, .nav-link.active {
@@ -187,10 +221,10 @@ import { CartService } from '../../../services/cart.service';
       right: -2px;
       background: var(--secondary-gradient);
       color: white;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      min-width: 18px;
-      height: 18px;
+      min-width: 17px;
+      height: 17px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -219,7 +253,7 @@ import { CartService } from '../../../services/cart.service';
     }
 
     .username-display {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-primary);
     }
@@ -234,10 +268,7 @@ import { CartService } from '../../../services/cart.service';
       transition: var(--transition-smooth);
     }
 
-    .btn-logout:hover {
-      color: var(--danger-color);
-      transform: scale(1.1);
-    }
+    .btn-logout:hover { color: var(--danger-color); transform: scale(1.1); }
 
     .auth-buttons {
       display: flex;
@@ -249,17 +280,18 @@ import { CartService } from '../../../services/cart.service';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 1rem;
+      padding: 0.45rem 0.9rem;
       background: var(--primary-gradient);
       color: #04080f;
       font-family: var(--font-heading);
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       border: none;
       border-radius: 8px;
       text-decoration: none;
       box-shadow: 0 4px 10px 0 rgba(0, 242, 254, 0.2);
       transition: var(--transition-smooth);
+      white-space: nowrap;
     }
 
     .btn-primary-sm:hover {
@@ -267,18 +299,137 @@ import { CartService } from '../../../services/cart.service';
       filter: brightness(1.1);
     }
 
+    /* --- TABLET (max 1024px) --- */
+    @media (max-width: 1024px) {
+      .header-container { padding: 0.85rem 1.25rem; }
+      .nav-link { font-size: 0.82rem; padding: 0.35rem 0.5rem; }
+      .search-box { max-width: 300px; }
+    }
+
+    /* --- MOBILE (max 768px) --- */
     @media (max-width: 768px) {
-      .header-content {
+      .header-container {
+        width: calc(100% - 1rem);
+        padding: 0.75rem 1rem 0;
+      }
+
+      .nav-desktop { display: none; }
+      .search-box { display: none; }
+
+      .mobile-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .mobile-cart {
+        position: relative;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        padding: 0.4rem;
+        border-radius: 8px;
+      }
+
+      .hamburger-btn {
+        background: none;
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        cursor: pointer;
+        width: 40px;
+        height: 38px;
+        display: flex;
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 6px;
+        transition: all 0.3s ease;
+        background: rgba(255,255,255,0.03);
       }
-      .search-box {
+
+      .hamburger-btn span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: var(--text-primary);
+        border-radius: 2px;
+        transition: all 0.3s ease;
+        transform-origin: center;
+      }
+
+      .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+      .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+      .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+      .mobile-search {
+        display: flex;
+        padding: 0.75rem 0 0;
+      }
+
+      .mobile-search .search-box {
+        display: flex;
         max-width: 100%;
+        width: 100%;
+        flex: 1;
       }
-      .nav-actions {
-        justify-content: space-around;
-        flex-wrap: wrap;
+
+      /* Mobile dropdown nav */
+      .mobile-nav {
+        display: flex;
+        flex-direction: column;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.3s ease;
       }
+
+      .mobile-nav.open {
+        max-height: 600px;
+        padding: 0.5rem 0 1rem;
+      }
+
+      .mobile-nav-link {
+        display: block;
+        padding: 0.75rem 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s ease;
+        background: none;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        font-family: var(--font-heading);
+      }
+
+      .mobile-nav-link:hover, .mobile-nav-link.active {
+        color: var(--primary-color);
+        padding-left: 1rem;
+      }
+
+      .admin-mobile {
+        color: #f76b1c !important;
+      }
+
+      .logout-mobile {
+        color: var(--danger-color) !important;
+      }
+
+      .register-mobile {
+        color: var(--primary-color) !important;
+        font-weight: 700;
+      }
+    }
+
+    /* --- Small Mobile (max 480px) --- */
+    @media (max-width: 480px) {
+      .logo { font-size: 1.3rem; }
+      .header-container { width: 100%; border-radius: 0; margin-bottom: 1rem; }
     }
   `]
 })
@@ -288,6 +439,7 @@ export class HeaderComponent implements OnInit {
   currentUser: any = null;
   cartCount = 0;
   searchQuery = '';
+  menuOpen = false;
 
   constructor(
     private authService: AuthService,
@@ -307,12 +459,21 @@ export class HeaderComponent implements OnInit {
     });
   }
 
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+  }
+
   onSearch(): void {
     if (this.searchQuery && this.searchQuery.trim()) {
       this.router.navigate(['/catalog'], { queryParams: { q: this.searchQuery.trim() } });
     } else {
       this.router.navigate(['/']);
     }
+    this.closeMenu();
   }
 
   logout(): void {

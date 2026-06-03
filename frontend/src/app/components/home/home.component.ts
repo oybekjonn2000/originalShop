@@ -1053,7 +1053,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private authService: AuthService,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.startAutoSlide();
@@ -1120,7 +1120,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           el.scrollBy({ left: 300, behavior: 'smooth' });
         }
       }
-    }, 10000);
+    }, 3000);
   }
 
   loadCategories(): void {

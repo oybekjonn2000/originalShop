@@ -20,49 +20,35 @@ import { AuthService } from '../../services/auth.service';
           <h3>Yetkazib berish ma'lumotlari</h3>
           
           <form (ngSubmit)="onSubmit()" class="checkout-form">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="glass-label" for="region">Viloyat</label>
+                <input type="text" id="region" [(ngModel)]="region" name="region" class="glass-input" placeholder="Masalan: Toshkent" required />
+              </div>
+              <div class="form-group flex-1">
+                <label class="glass-label" for="city">Shahar</label>
+                <input type="text" id="city" [(ngModel)]="city" name="city" class="glass-input" placeholder="Masalan: Toshkent" required />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="glass-label" for="district">Tuman</label>
+                <input type="text" id="district" [(ngModel)]="district" name="district" class="glass-input" placeholder="Masalan: Yunusobod" required />
+              </div>
+              <div class="form-group flex-1">
+                <label class="glass-label" for="street">Ko'cha / Uy / Xonadon</label>
+                <input type="text" id="street" [(ngModel)]="street" name="street" class="glass-input" placeholder="Masalan: 4-daha, 12-uy" required />
+              </div>
+            </div>
+
             <div class="form-group">
-              <label class="glass-label" for="address">Yetkazib berish manzili</label>
-              <textarea 
-                id="address" 
-                [(ngModel)]="shippingAddress" 
-                name="shippingAddress" 
-                rows="3" 
-                class="glass-input" 
-                placeholder="Toshkent shahar, Yunusobod 4-dha, 12-uy, 45-xonadon" 
-                required
-              ></textarea>
+              <label class="glass-label" for="promoCode">Promokod (ixtiyoriy)</label>
+              <input type="text" id="promoCode" [(ngModel)]="promoCode" name="promoCode" class="glass-input" placeholder="Promo kod kiriting" />
             </div>
 
-            <!-- Mock Card Info -->
-            <div class="payment-box">
-              <h4>To'lov turi (Karta orqali test rejimi)</h4>
-              
-              <div class="form-group">
-                <label class="glass-label" for="card">Karta raqami</label>
-                <input 
-                  type="text" 
-                  id="card" 
-                  [(ngModel)]="cardNum" 
-                  name="cardNum" 
-                  class="glass-input" 
-                  placeholder="8600 1234 5678 9012" 
-                />
-              </div>
-
-              <div class="form-row">
-                <div class="form-group flex-1">
-                  <label class="glass-label" for="expire">Muddati</label>
-                  <input type="text" id="expire" class="glass-input" placeholder="12/29" />
-                </div>
-                <div class="form-group flex-1">
-                  <label class="glass-label" for="cvc">CVC</label>
-                  <input type="password" id="cvc" class="glass-input" placeholder="•••" />
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" [disabled]="isLoading || !shippingAddress.trim()" class="btn-primary btn-block">
-              <span *ngIf="!isLoading">To'lash va buyurtma berish ({{ totalPrice | number:'1.2-2' }} so'm)</span>
+            <button type="submit" [disabled]="isLoading || !region.trim() || !city.trim() || !district.trim() || !street.trim()" class="btn-primary btn-block">
+              <span *ngIf="!isLoading">Buyurtma berish ({{ totalPrice | number:'1.2-2' }} so'm)</span>
               <span *ngIf="isLoading">Buyurtma qayta ishlanmoqda...</span>
             </button>
           </form>
@@ -406,8 +392,11 @@ import { AuthService } from '../../services/auth.service';
 export class CheckoutComponent implements OnInit {
   cartItems: any[] = [];
   totalPrice = 0;
-  shippingAddress = '';
-  cardNum = '';
+  region = '';
+  city = '';
+  district = '';
+  street = '';
+  promoCode = '';
   isLoading = false;
   showSuccess = false;
   createdOrderId: number | null = null;
@@ -429,7 +418,7 @@ export class CheckoutComponent implements OnInit {
     // Redirect if cart is empty
     this.cartService.cartItems$.subscribe(items => {
       this.cartItems = items;
-      this.totalPrice = items.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+      this.totalPrice = items.reduce((acc, item) => acc + (this.getFinalPrice(item.product.price, item.product.discount) * item.quantity), 0);
       
       if (!this.isLoading && !this.showSuccess && items.length === 0) {
         this.router.navigate(['/cart']);
@@ -437,18 +426,26 @@ export class CheckoutComponent implements OnInit {
     });
 
     const user = this.authService.currentUserValue;
-    if (user && user.address) {
-      this.shippingAddress = user.address;
-    }
+    // user.address might be used if parsed correctly, but skipping for simple implementation
 
     this.cartService.loadCart();
   }
 
+  getFinalPrice(price: number, discount?: number): number {
+    if (!discount) return price;
+    return price - (price * discount / 100);
+  }
+
   onSubmit(): void {
-    if (!this.shippingAddress.trim()) return;
+    if (!this.region.trim() || !this.city.trim() || !this.district.trim() || !this.street.trim()) return;
+
+    let finalAddress = `${this.region}, ${this.city}, ${this.district}, ${this.street}`;
+    if (this.promoCode.trim()) {
+      finalAddress += ` (Promo: ${this.promoCode})`;
+    }
 
     this.isLoading = true;
-    this.orderService.checkout(this.shippingAddress).subscribe({
+    this.orderService.checkout(finalAddress).subscribe({
       next: (order) => {
         this.isLoading = false;
         this.createdOrderId = order.id;

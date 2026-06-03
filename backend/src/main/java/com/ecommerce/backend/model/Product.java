@@ -39,4 +39,7 @@ public class Product {
 
     @Builder.Default
     private Boolean isActive = true;
+
+    @Builder.Default
+    private Double discount = 0.0;
 }

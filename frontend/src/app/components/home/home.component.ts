@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -48,8 +48,36 @@ import { AuthService } from '../../services/auth.service';
         <div class="hero-glow-effect"></div>
       </section>
 
+      <!-- Hot Deals Section -->
+      <section *ngIf="discountedProducts.length > 0" class="hot-deals-section fade-in-el">
+        <div class="deals-header">
+          <h2>🔥 Maxsus Chegirmalar</h2>
+        </div>
+        <div class="deals-scroll-container" #dealsContainer>
+          <div *ngFor="let product of discountedProducts" class="deal-card glass-card">
+            <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
+              <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+              <span class="discount-badge">-{{ product.discount }}%</span>
+            </div>
+            
+            <div class="product-info">
+              <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
+              
+              <div class="deal-price-section">
+                <span class="old-price">{{ product.price | number:'1.2-2' }} so'm</span>
+                <span class="new-price">{{ getFinalPrice(product.price, product.discount) | number:'1.2-2' }} so'm</span>
+              </div>
+              
+              <button class="btn-primary btn-deal" (click)="addToCart(product)">
+                Savatga qo'shish
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Main Layout -->
-      <div class="catalog-layout">
+      <div class="catalog-layout" #catalogAnchor>
         <!-- Category Filter Sidebar -->
         <aside class="sidebar glass-panel">
           <h3>Kategoriyalar</h3>
@@ -93,9 +121,10 @@ import { AuthService } from '../../services/auth.service';
 
           <!-- Grid -->
           <div *ngIf="!isLoading && products.length > 0" class="products-grid">
-            <div *ngFor="let product of products" class="product-card glass-card">
+            <div *ngFor="let product of pagedProducts" class="product-card glass-card">
               <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
                 <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+                <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
                 <span class="category-badge">{{ product.category?.name }}</span>
               </div>
               
@@ -105,7 +134,11 @@ import { AuthService } from '../../services/auth.service';
                 
                 <div class="product-footer">
                   <div class="price-section">
-                    <div class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
+                    <div *ngIf="product.discount" class="product-price new-price" style="font-size: 1.1rem; color: var(--danger-color); -webkit-text-fill-color: initial;">
+                      {{ getFinalPrice(product.price, product.discount) | number:'1.2-2' }} so'm 
+                      <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.2-2' }}</span>
+                    </div>
+                    <div *ngIf="!product.discount" class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
                     <div class="installment-badge">
                       <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.2-2' }} so'm</span> / 12 oy
                     </div>
@@ -137,6 +170,32 @@ import { AuthService } from '../../services/auth.service';
                     <span class="out-of-stock">Tugagan</span>
                   </ng-template>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="mat-paginator" *ngIf="!isLoading && products.length > pageSize">
+            <div class="mat-paginator-container">
+              <div class="mat-paginator-range-label">
+                {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, products.length) }} / {{ products.length }}
+              </div>
+              <div class="mat-paginator-navigation">
+                <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi">&#171;</button>
+                <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">&#8249;</button>
+                <ng-container *ngFor="let p of pageNumbers()">
+                  <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+                </ng-container>
+                <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">&#8250;</button>
+                <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi">&#187;</button>
+              </div>
+              <div class="mat-paginator-page-size">
+                <span>Sahifada:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+                  <option [value]="12">12</option>
+                  <option [value]="24">24</option>
+                  <option [value]="48">48</option>
+                </select>
               </div>
             </div>
           </div>
@@ -755,17 +814,218 @@ import { AuthService } from '../../services/auth.service';
       from { opacity: 0; transform: translateX(-50%) translateY(20px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
+
+    /* Hot Deals Styles */
+    .hot-deals-section {
+      margin-bottom: 3rem;
+    }
+    
+    .deals-header h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      color: var(--danger-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .deals-scroll-container {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 1.5rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.05);
+    }
+    
+    .deals-scroll-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    .deals-scroll-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    .deals-scroll-container::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+
+    .deal-card {
+      min-width: 280px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .discount-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--danger-color);
+      color: white;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+    }
+
+    .deal-price-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .old-price {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      text-decoration: line-through;
+    }
+
+    .new-price {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--danger-color);
+    }
+
+    .btn-deal {
+      width: 100%;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+      border: none;
+    }
+    .btn-deal:hover {
+      background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* ======= Pagination ======= */
+    .mat-paginator {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+      padding: 0.5rem 0 1rem;
+    }
+    .mat-paginator-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 0.75rem 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .mat-paginator-range-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 120px;
+      text-align: center;
+    }
+    .mat-paginator-navigation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mat-icon-btn, .mat-page-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .mat-icon-btn:hover:not(:disabled), .mat-page-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      border-color: var(--glass-border);
+    }
+    .mat-icon-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+    .mat-page-btn.active {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+    }
+    .mat-paginator-page-size {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .mat-page-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   categories: any[] = [];
   products: any[] = [];
+  discountedProducts: any[] = [];
   cartItems: any[] = [];
   selectedCategoryId: number | null = null;
   searchQuery: string = '';
   catalogTitle: string = 'Barcha mahsulotlar';
   isLoading = true;
   addingProductId: number | null = null;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 12;
+  Math = Math;
+  get totalPages(): number {
+    return Math.ceil(this.products.length / this.pageSize);
+  }
+  get pagedProducts(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.products.slice(start, start + this.pageSize);
+  }
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    let start = Math.max(1, cur - 2);
+    let end = Math.min(total, cur + 2);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+      end = Math.min(total, start + 4);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    if (this.catalogAnchor) {
+      this.catalogAnchor.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
 
   // Toast
   showToastNotif = false;
@@ -784,6 +1044,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentSlide = 0;
   slideInterval: any;
 
+  @ViewChild('dealsContainer') dealsContainer!: ElementRef;
+  @ViewChild('catalogAnchor') catalogAnchor!: ElementRef;
+  dealsInterval: any;
+
   constructor(
     private productService: ProductService,
     private cartService: CartService,
@@ -793,7 +1057,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.startAutoSlide();
+    this.startDealsAutoScroll();
     this.loadCategories();
+    this.loadDiscountedProducts();
 
     // Listen to query parameters for search queries
     this.route.queryParams.subscribe(params => {
@@ -819,6 +1085,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
     }
+    if (this.dealsInterval) {
+      clearInterval(this.dealsInterval);
+    }
   }
 
   // Carousel Methods
@@ -840,9 +1109,29 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentSlide = index;
   }
 
+  startDealsAutoScroll(): void {
+    this.dealsInterval = setInterval(() => {
+      if (this.dealsContainer && this.discountedProducts.length > 0) {
+        const el = this.dealsContainer.nativeElement;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (el.scrollLeft >= maxScroll - 10) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollBy({ left: 300, behavior: 'smooth' });
+        }
+      }
+    }, 10000);
+  }
+
   loadCategories(): void {
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
+    });
+  }
+
+  loadDiscountedProducts(): void {
+    this.productService.getProducts().subscribe(prods => {
+      this.discountedProducts = prods.filter(p => p.isActive && p.discount && p.discount > 0);
     });
   }
 
@@ -852,6 +1141,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getProducts().subscribe({
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: () => this.isLoading = false
@@ -936,6 +1226,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   calculateInstallment(price: number): number {
     return (price * 1.45) / 12;
+  }
+
+  getFinalPrice(price: number, discount?: number): number {
+    if (!discount) return price;
+    return price - (price * discount / 100);
   }
 
   showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {

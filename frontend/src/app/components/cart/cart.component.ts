@@ -26,6 +26,7 @@ import { CartService } from '../../services/cart.service';
           <div *ngFor="let item of cartItems" class="cart-item glass-panel">
             <div class="item-img-wrapper">
               <img [src]="item.product.imageUrl" [alt]="item.product.name" class="item-img" />
+              <div *ngIf="item.product.discount" class="cart-discount-circle">-{{ item.product.discount }}%</div>
             </div>
             
             <div class="item-info">
@@ -40,8 +41,18 @@ import { CartService } from '../../services/cart.service';
             </div>
 
             <div class="item-price">
-              {{ item.product.price * item.quantity | number:'1.2-2' }} so'm
-              <small class="unit-price">({{ item.product.price | number:'1.2-2' }} so'm/dona)</small>
+              <ng-container *ngIf="item.product.discount">
+                <span class="old-price" style="font-size:0.8rem; text-decoration:line-through; color:var(--text-secondary); display:block; text-align:right;">{{ item.product.price * item.quantity | number:'1.2-2' }} so'm</span>
+                <div style="color:var(--danger-color)">{{ getFinalPrice(item.product.price, item.product.discount) * item.quantity | number:'1.2-2' }} so'm</div>
+                <small class="unit-price">
+                  <span class="discount-badge" style="font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-right: 0.3rem;">-{{ item.product.discount }}%</span>
+                  ({{ getFinalPrice(item.product.price, item.product.discount) | number:'1.2-2' }} so'm/dona)
+                </small>
+              </ng-container>
+              <ng-container *ngIf="!item.product.discount">
+                {{ item.product.price * item.quantity | number:'1.2-2' }} so'm
+                <small class="unit-price">({{ item.product.price | number:'1.2-2' }} so'm/dona)</small>
+              </ng-container>
             </div>
 
             <button (click)="removeItem(item.id)" class="btn-remove" title="O'chirish">
@@ -164,6 +175,25 @@ import { CartService } from '../../services/cart.service';
       background: rgba(0, 0, 0, 0.1);
       flex-shrink: 0;
       border: 1px solid var(--glass-border);
+      position: relative;
+    }
+
+    .cart-discount-circle {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: var(--danger-color);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 800;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
     }
 
     .item-img {
@@ -246,6 +276,16 @@ import { CartService } from '../../services/cart.service';
       color: var(--text-secondary);
       font-weight: 400;
       margin-top: 0.15rem;
+    }
+
+    .discount-badge {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     .btn-remove {
@@ -470,8 +510,13 @@ export class CartComponent implements OnInit {
   }
 
   calculateSummary(): void {
-    this.totalPrice = this.cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+    this.totalPrice = this.cartItems.reduce((acc, item) => acc + (this.getFinalPrice(item.product.price, item.product.discount) * item.quantity), 0);
     this.totalItems = this.cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  }
+
+  getFinalPrice(price: number, discount?: number): number {
+    if (!discount) return price;
+    return price - (price * discount / 100);
   }
 
   incrementQty(item: any): void {

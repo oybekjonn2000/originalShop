@@ -46,13 +46,14 @@ import { ProductService } from '../../../services/product.service';
               <th>Mahsulot nomi</th>
               <th>Kategoriya</th>
               <th>Narxi</th>
+              <th>Chegirma</th>
               <th>Omborda</th>
               <th>Status</th>
               <th>Amallar</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let product of filteredProducts">
+            <tr *ngFor="let product of pagedProducts">
               <td>
                 <img [src]="product.imageUrl" [alt]="product.name" class="product-thumb" />
               </td>
@@ -61,6 +62,10 @@ import { ProductService } from '../../../services/product.service';
               </td>
               <td>{{ product.category?.name || '—' }}</td>
               <td><strong>{{ product.price | number:'1.2-2' }} so'm</strong></td>
+              <td>
+                <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
+                <span *ngIf="!product.discount">—</span>
+              </td>
               <td>
                 <span [class]="product.stockQuantity <= 5 ? 'stock-low' : 'stock-ok'">
                   {{ product.stockQuantity }} ta
@@ -81,17 +86,51 @@ import { ProductService } from '../../../services/product.service';
               </td>
             </tr>
             <tr *ngIf="filteredProducts.length === 0">
-              <td colspan="7" class="empty-row">Mahsulotlar topilmadi</td>
+              <td colspan="8" class="empty-row">Mahsulotlar topilmadi</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="mat-paginator" *ngIf="filteredProducts.length > pageSize">
+        <div class="mat-paginator-container">
+          <div class="mat-paginator-range-label">
+            {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredProducts.length) }} / {{ filteredProducts.length }}
+          </div>
+          <div class="mat-paginator-navigation">
+            <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi sahifa">
+              &#171;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">
+              &#8249;
+            </button>
+            <ng-container *ngFor="let p of pageNumbers()">
+              <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">
+              &#8250;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi sahifa">
+              &#187;
+            </button>
+          </div>
+          <div class="mat-paginator-page-size">
+            <span>Sahifada:</span>
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Overlay -->
       <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ isEditMode ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot qo\'shish' }}</h2>
+            <h2>{{ isEditMode ? 'Mahsulotni tahrirlash' : "Yangi mahsulot qo'shish" }}</h2>
             <button (click)="closeModal()" class="btn-close">✕</button>
           </div>
 
@@ -119,6 +158,10 @@ import { ProductService } from '../../../services/product.service';
               <div class="form-group flex-1">
                 <label class="glass-label">Narxi (so'm) *</label>
                 <input type="number" [(ngModel)]="form.price" name="price" class="glass-input" required step="0.01" min="0" placeholder="0.00" />
+              </div>
+              <div class="form-group flex-1">
+                <label class="glass-label">Chegirma (%)</label>
+                <input type="number" [(ngModel)]="form.discount" name="discount" class="glass-input" min="0" max="100" placeholder="0" />
               </div>
               <div class="form-group flex-1">
                 <label class="glass-label">Ombordagi soni *</label>
@@ -250,6 +293,16 @@ import { ProductService } from '../../../services/product.service';
       color: var(--text-primary);
     }
 
+    .discount-badge {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
     .stock-ok { color: var(--success-color); font-weight: 600; }
     .stock-low { color: var(--warning-color); font-weight: 600; }
 
@@ -291,9 +344,10 @@ import { ProductService } from '../../../services/product.service';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 1rem;
+      padding: 2rem 1rem;
+      overflow-y: auto;
       animation: fadeIn 0.2s ease;
     }
 
@@ -560,6 +614,79 @@ import { ProductService } from '../../../services/product.service';
       from { opacity: 0; transform: translateX(-50%) translateY(20px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
+
+    /* ======= Pagination ======= */
+    .mat-paginator {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+      padding: 0.5rem 0;
+    }
+    .mat-paginator-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.6rem 1.25rem;
+      flex-wrap: wrap;
+    }
+    .mat-paginator-range-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 110px;
+    }
+    .mat-paginator-navigation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mat-icon-btn, .mat-page-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .mat-icon-btn:hover:not(:disabled), .mat-page-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      border-color: var(--glass-border);
+    }
+    .mat-icon-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .mat-page-btn.active {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+    }
+    .mat-paginator-page-size {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .mat-page-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   `]
 })
 export class ProductsComponent implements OnInit {
@@ -568,6 +695,38 @@ export class ProductsComponent implements OnInit {
   categories: any[] = [];
   searchTerm = '';
   selectedCategoryFilter: number | null = null;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 10;
+  Math = Math;
+  get totalPages(): number {
+    return Math.ceil(this.filteredProducts.length / this.pageSize);
+  }
+  get pagedProducts(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredProducts.slice(start, start + this.pageSize);
+  }
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    let start = Math.max(1, cur - 2);
+    let end = Math.min(total, cur + 2);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+      end = Math.min(total, start + 4);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
   showModal = false;
   isEditMode = false;
   isSaving = false;
@@ -590,6 +749,7 @@ export class ProductsComponent implements OnInit {
     name: '',
     description: '',
     price: 0,
+    discount: 0,
     stockQuantity: 0,
     imageUrl: '',
     categoryId: null as number | null,
@@ -621,12 +781,13 @@ export class ProductsComponent implements OnInit {
       const matchCat = !this.selectedCategoryFilter || p.category?.id === this.selectedCategoryFilter;
       return matchSearch && matchCat;
     });
+    this.currentPage = 1;
   }
 
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', price: 0, stockQuantity: 0, imageUrl: '', categoryId: null, isActive: true };
+    this.form = { name: '', description: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', categoryId: null, isActive: true };
     this.imagePreviewUrl = null;
     this.showModal = true;
   }
@@ -638,6 +799,7 @@ export class ProductsComponent implements OnInit {
       name: product.name,
       description: product.description || '',
       price: product.price,
+      discount: product.discount || 0,
       stockQuantity: product.stockQuantity,
       imageUrl: product.imageUrl || '',
       categoryId: product.category?.id || null,
@@ -699,6 +861,7 @@ export class ProductsComponent implements OnInit {
       name: this.form.name,
       description: this.form.description,
       price: this.form.price,
+      discount: this.form.discount,
       stockQuantity: this.form.stockQuantity,
       imageUrl: this.form.imageUrl,
       isActive: this.form.isActive,

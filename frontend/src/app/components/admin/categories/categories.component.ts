@@ -92,7 +92,7 @@ import { ProductService } from '../../../services/product.service';
       <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ isEditMode ? 'Kategoriyani tahrirlash' : 'Yangi kategoriya qo\'shish' }}</h2>
+            <h2>{{ isEditMode ? 'Kategoriyani tahrirlash' : "Yangi kategoriya qo'shish" }}</h2>
             <button (click)="closeModal()" class="btn-close">✕</button>
           </div>
 
@@ -129,7 +129,7 @@ import { ProductService } from '../../../services/product.service';
             <div class="modal-actions">
               <button type="button" (click)="closeModal()" class="btn-secondary">Bekor qilish</button>
               <button type="submit" [disabled]="isSaving" class="btn-primary">
-                <span *ngIf="!isSaving">{{ isEditMode ? 'Saqlash' : 'Qo\'shish' }}</span>
+                <span *ngIf="!isSaving">{{ isEditMode ? 'Saqlash' : "Qo'shish" }}</span>
                 <span *ngIf="isSaving">Saqlanmoqda...</span>
               </button>
             </div>

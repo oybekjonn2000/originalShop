@@ -56,6 +56,7 @@ public class ProductService {
         product.setImageUrl(productDetails.getImageUrl());
         product.setStockQuantity(productDetails.getStockQuantity());
         product.setIsActive(productDetails.getIsActive());
+        product.setDiscount(productDetails.getDiscount());
 
         if (productDetails.getCategory() != null && productDetails.getCategory().getId() != null) {
             Category category = categoryRepository.findById(productDetails.getCategory().getId())

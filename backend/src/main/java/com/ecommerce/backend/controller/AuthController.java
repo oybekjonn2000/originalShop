@@ -57,6 +57,8 @@ public class AuthController {
                 .role(user.getRole().name())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .address(user.getAddress())
+                .phoneNumber(user.getPhoneNumber())
                 .build());
     }
 
@@ -82,6 +84,7 @@ public class AuthController {
                 .firstName(signUpRequest.getFirstName())
                 .lastName(signUpRequest.getLastName())
                 .address(signUpRequest.getAddress())
+                .phoneNumber(signUpRequest.getPhoneNumber())
                 .role(Role.ROLE_USER) // Default is customer
                 .build();
 
@@ -100,5 +103,33 @@ public class AuthController {
         }
         User user = userRepository.findById(userDetails.getId()).orElseThrow();
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody com.ecommerce.backend.dto.ChangePasswordRequest request) {
+
+        Map<String, String> response = new HashMap<>();
+
+        if (userDetails == null) {
+            response.put("error", "Siz tizimga kirmagansiz!");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        User user = userRepository.findById(userDetails.getId()).orElseThrow();
+
+        // Joriy parolni tekshirish
+        if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            response.put("error", "Joriy parol noto'g'ri!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Yangi parolni saqlash
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        response.put("message", "Parol muvaffaqiyatli o'zgartirildi!");
+        return ResponseEntity.ok(response);
     }
 }

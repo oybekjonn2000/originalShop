@@ -58,4 +58,8 @@ export class AuthService {
   isLoggedIn(): boolean {
     return this.currentUserValue !== null;
   }
+
+  changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/change-password`, data);
+  }
 }

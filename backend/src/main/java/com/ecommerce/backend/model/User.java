@@ -44,4 +44,7 @@ public class User {
     private Role role;
 
     private String address;
+
+    @Size(max = 20)
+    private String phoneNumber;
 }

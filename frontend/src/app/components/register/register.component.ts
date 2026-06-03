@@ -90,6 +90,23 @@ import { AuthService } from '../../services/auth.service';
             </div>
           </div>
 
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="glass-label" for="phoneNumber">Telefon raqam</label>
+            <input 
+              type="tel" 
+              id="phoneNumber" 
+              formControlName="phoneNumber" 
+              class="glass-input" 
+              [class.invalid]="isSubmitted && f['phoneNumber'].errors"
+              placeholder="+998 90 123 45 67" 
+            />
+            <div *ngIf="isSubmitted && f['phoneNumber'].errors" class="validation-msg">
+              <span *ngIf="f['phoneNumber'].errors['required']">Telefon raqam majburiy!</span>
+              <span *ngIf="f['phoneNumber'].errors['pattern']">Telefon raqam formatini tekshiring!</span>
+            </div>
+          </div>
+
           <!-- Password -->
           <div class="form-group">
             <label class="glass-label" for="password">Parol</label>
@@ -288,6 +305,7 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^\+?[0-9\s\-]{9,20}$/)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       firstName: [''],
       lastName: [''],

@@ -214,6 +214,10 @@ import { AuthService } from '../../services/auth.service';
     </div>
   `,
   styles: [`
+
+  .btn-primary{
+    color: wheat;
+  }
     .home-container {
       max-width: 1400px;
       margin: 0 auto;

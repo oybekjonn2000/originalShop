@@ -95,7 +95,7 @@ import { OrderService } from '../../../services/order.service';
               </td>
               <td class="date-cell">{{ order.orderDate | date:'dd.MM.yyyy' }}<br><small>{{ order.orderDate | date:'HH:mm' }}</small></td>
               <td class="address-cell" [title]="order.shippingAddress">{{ truncate(order.shippingAddress, 30) }}</td>
-              <td><strong class="amount">{{ order.totalAmount | number:'1.2-2' }} so'm</strong></td>
+              <td><strong class="amount">{{ order.totalAmount | number:'1.0-0' }} so'm</strong></td>
               <td>
                 <span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span>
               </td>
@@ -161,13 +161,13 @@ import { OrderService } from '../../../services/order.service';
                   <span class="order-item-name">{{ item.product?.name }}</span>
                   <span class="order-item-qty">{{ item.quantity }} dona</span>
                 </div>
-                <span class="order-item-price">{{ item.price | number:'1.2-2' }} so'm</span>
+                <span class="order-item-price">{{ item.price | number:'1.0-0' }} so'm</span>
               </div>
             </div>
 
             <div class="order-total-row">
               <span>Jami to'lov:</span>
-              <strong class="order-total-amount">{{ selectedOrder.totalAmount | number:'1.2-2' }} so'm</strong>
+              <strong class="order-total-amount">{{ selectedOrder.totalAmount | number:'1.0-0' }} so'm</strong>
             </div>
           </div>
         </div>

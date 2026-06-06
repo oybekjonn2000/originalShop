@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
+import { WishlistService } from '../../services/wishlist.service';
 
 @Component({
   selector: 'app-catalog',
@@ -71,10 +72,133 @@ import { AuthService } from '../../services/auth.service';
             <button (click)="resetFilters()" class="btn-secondary">Filtrlarni tozalash</button>
           </div>
 
+          <!-- Recommendations if not found -->
+          <div *ngIf="!isLoading && filteredProducts.length === 0" class="recommendations-container fade-in-el">
+            <div class="recommendations-header text-center">
+              <h2>Sizga taklif etamiz</h2>
+              <p class="subtitle">Qidirgan mahsulotingiz topilmadi, ammo ushbu mahsulotlar sizga yoqishi mumkin:</p>
+            </div>
+            
+            <div *ngFor="let recGroup of getRecommendedProducts()" class="rec-category-group">
+              <h3 class="rec-category-title">{{ recGroup.categoryName }}</h3>
+              <div class="products-grid">
+                <div *ngFor="let product of recGroup.products" class="product-card glass-card">
+                  <div class="product-img-wrapper">
+                    <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                    
+                    <!-- Card Image Slider Controls -->
+                    <ng-container *ngIf="getProductImages(product).length > 1">
+                      <button class="card-slider-arrow prev" (click)="prevCardImage(product, $event)">❮</button>
+                      <button class="card-slider-arrow next" (click)="nextCardImage(product, $event)">❯</button>
+                      <div class="card-slider-dots">
+                        <span *ngFor="let img of getProductImages(product); let idx = index" 
+                              class="card-slider-dot" 
+                              [class.active]="(product.activeImageIndex || 0) === idx"
+                              (click)="setCardImage(product, idx, $event)">
+                        </span>
+                      </div>
+                    </ng-container>
+
+                    <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
+                    <span class="category-badge">{{ product.category?.name || 'Kategoriyasiz' }}</span>
+                    <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
+                    <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
+                  </div>
+
+                  <div class="product-info">
+                    <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
+
+                    <div class="product-footer">
+                      <div class="price-section">
+                        <div *ngIf="product.discount" class="product-price new-price" style="font-size: 1.1rem; color: var(--danger-color); -webkit-text-fill-color: initial;">
+                          {{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm 
+                          <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.0-0' }}</span>
+                        </div>
+                        <div *ngIf="!product.discount" class="product-price">{{ product.price | number:'1.0-0' }} so'm</div>
+                        <div class="installment-badge">
+                          <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.0-0' }} so'm</span> / 12 oy
+                        </div>
+                      </div>
+                      
+                      <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
+                        <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
+                          <button
+                            class="btn-wish"
+                            [class.wished]="isInWishlist(product.id)"
+                            (click)="toggleWishlist(product, $event)"
+                            title="Sevimlilarga qo'shish"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                          </button>
+                          <div class="qty-control">
+                            <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
+                            <span class="qty-val">{{ cartItem.quantity }}</span>
+                            <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity + 1)">+</button>
+                          </div>
+                          <a routerLink="/cart" class="btn-go-cart" title="Savatga o'tish">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                          </a>
+                        </div>
+                        <ng-template #addBtn>
+                          <div class="add-btn-row">
+                            <button
+                              class="btn-wish"
+                              [class.wished]="isInWishlist(product.id)"
+                              (click)="toggleWishlist(product, $event)"
+                              title="Sevimlilarga qo'shish"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            </button>
+                            <button 
+                              (click)="addToCart(product)" 
+                              [disabled]="addingProductId === product.id"
+                              class="btn-add-to-cart"
+                            >
+                              <span *ngIf="addingProductId !== product.id">Savatga +</span>
+                              <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
+                            </button>
+                          </div>
+                        </ng-template>
+                      </ng-container>
+                      <ng-template #outOfStockBtn>
+                        <div class="add-btn-row">
+                          <button
+                            class="btn-wish"
+                            [class.wished]="isInWishlist(product.id)"
+                            (click)="toggleWishlist(product, $event)"
+                            title="Sevimlilarga qo'shish"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                          </button>
+                          <span class="out-of-stock">Tugagan</span>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div *ngIf="!isLoading && filteredProducts.length > 0" class="products-grid">
-            <div *ngFor="let product of filteredProducts" class="product-card glass-card">
-              <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-                <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+            <div *ngFor="let product of pagedProducts" class="product-card glass-card">
+              <div class="product-img-wrapper">
+                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                
+                <!-- Card Image Slider Controls -->
+                <ng-container *ngIf="getProductImages(product).length > 1">
+                  <button class="card-slider-arrow prev" (click)="prevCardImage(product, $event)">❮</button>
+                  <button class="card-slider-arrow next" (click)="nextCardImage(product, $event)">❯</button>
+                  <div class="card-slider-dots">
+                    <span *ngFor="let img of getProductImages(product); let idx = index" 
+                          class="card-slider-dot" 
+                          [class.active]="(product.activeImageIndex || 0) === idx"
+                          (click)="setCardImage(product, idx, $event)">
+                    </span>
+                  </div>
+                </ng-container>
+
+                <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
                 <span class="category-badge">{{ product.category?.name || 'Kategoriyasiz' }}</span>
                 <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
                 <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
@@ -85,25 +209,45 @@ import { AuthService } from '../../services/auth.service';
 
                 <div class="product-footer">
                   <div class="price-section">
-                    <div class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
+                    <div *ngIf="product.discount" class="product-price new-price" style="font-size: 1.1rem; color: var(--danger-color); -webkit-text-fill-color: initial;">
+                      {{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm 
+                      <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.0-0' }}</span>
+                    </div>
+                    <div *ngIf="!product.discount" class="product-price">{{ product.price | number:'1.0-0' }} so'm</div>
                     <div class="installment-badge">
-                      <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.2-2' }} so'm</span> / 12 oy
+                      <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.0-0' }} so'm</span> / 12 oy
                     </div>
                   </div>
                   
-                  <div class="actions-section">
-                    <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
-                      <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
-                        <div class="qty-control">
-                          <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
-                          <span class="qty-val">{{ cartItem.quantity }}</span>
-                          <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity + 1)">+</button>
-                        </div>
-                        <a routerLink="/cart" class="btn-go-cart" title="Savatga o'tish">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                        </a>
+                  <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
+                    <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
+                      <button
+                        class="btn-wish"
+                        [class.wished]="isInWishlist(product.id)"
+                        (click)="toggleWishlist(product, $event)"
+                        title="Sevimlilarga qo'shish"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      </button>
+                      <div class="qty-control">
+                        <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
+                        <span class="qty-val">{{ cartItem.quantity }}</span>
+                        <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity + 1)">+</button>
                       </div>
-                      <ng-template #addBtn>
+                      <a routerLink="/cart" class="btn-go-cart" title="Savatga o'tish">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                      </a>
+                    </div>
+                    <ng-template #addBtn>
+                      <div class="add-btn-row">
+                        <button
+                          class="btn-wish"
+                          [class.wished]="isInWishlist(product.id)"
+                          (click)="toggleWishlist(product, $event)"
+                          title="Sevimlilarga qo'shish"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </button>
                         <button 
                           (click)="addToCart(product)" 
                           [disabled]="addingProductId === product.id"
@@ -112,13 +256,49 @@ import { AuthService } from '../../services/auth.service';
                           <span *ngIf="addingProductId !== product.id">Savatga +</span>
                           <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
                         </button>
-                      </ng-template>
-                    </ng-container>
-                    <ng-template #outOfStockBtn>
-                      <button [routerLink]="['/product', product.id]" class="btn-view">Ko'rish →</button>
+                      </div>
                     </ng-template>
-                  </div>
+                  </ng-container>
+                  <ng-template #outOfStockBtn>
+                    <div class="add-btn-row">
+                      <button
+                        class="btn-wish"
+                        [class.wished]="isInWishlist(product.id)"
+                        (click)="toggleWishlist(product, $event)"
+                        title="Sevimlilarga qo'shish"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      </button>
+                      <span class="out-of-stock">Tugagan</span>
+                    </div>
+                  </ng-template>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="mat-paginator" *ngIf="!isLoading && filteredProducts.length > pageSize">
+            <div class="mat-paginator-container">
+              <div class="mat-paginator-range-label">
+                {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredProducts.length) }} / {{ filteredProducts.length }}
+              </div>
+              <div class="mat-paginator-navigation">
+                <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi">&#171;</button>
+                <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">&#8249;</button>
+                <ng-container *ngFor="let p of pageNumbers()">
+                  <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+                </ng-container>
+                <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">&#8250;</button>
+                <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi">&#187;</button>
+              </div>
+              <div class="mat-paginator-page-size">
+                <span>Sahifada:</span>
+                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+                  <option [value]="12">12</option>
+                  <option [value]="24">24</option>
+                  <option [value]="48">48</option>
+                </select>
               </div>
             </div>
           </div>
@@ -269,7 +449,7 @@ import { AuthService } from '../../services/auth.service';
     /* Products Grid */
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 1.75rem;
     }
 
@@ -361,8 +541,9 @@ import { AuthService } from '../../services/auth.service';
 
     .product-footer {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
+      flex-direction: column;
+      gap: 0.85rem;
+      align-items: stretch;
       margin-top: auto;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       padding-top: 0.85rem;
@@ -573,19 +754,106 @@ import { AuthService } from '../../services/auth.service';
 
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* ======= Pagination ======= */
+    .mat-paginator {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+      padding: 0.5rem 0 1rem;
+    }
+    .mat-paginator-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 0.75rem 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .mat-paginator-range-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 120px;
+      text-align: center;
+    }
+    .mat-paginator-navigation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mat-icon-btn, .mat-page-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .mat-icon-btn:hover:not(:disabled), .mat-page-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      border-color: var(--glass-border);
+    }
+    .mat-icon-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+    .mat-page-btn.active {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+    }
+    .mat-paginator-page-size {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .mat-page-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+      .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 1024px) {
       .catalog-layout { grid-template-columns: 1fr; }
       .filters-sidebar { position: static; }
       .category-list { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
       .category-list li { padding: 0.4rem 0.8rem; border-radius: 50px; border: 1px solid var(--glass-border); }
       .category-list li.active { border-left: none; border: 1px solid var(--primary-color); }
-      .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+      .products-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (max-width: 768px) {
       .catalog-container { padding: 0 0.75rem; }
       .page-header h1 { font-size: 1.8rem; }
-      .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
       .product-img-wrapper { height: 160px; }
       .product-info { padding: 0.85rem; }
       .product-name { font-size: 0.9rem; }
@@ -603,6 +871,133 @@ import { AuthService } from '../../services/auth.service';
       .product-info { padding: 0.75rem; }
       .area-header h2 { font-size: 1.2rem; }
     }
+
+    .recommendations-container {
+      margin-top: 4rem;
+      border-top: 1px dashed var(--glass-border);
+      padding-top: 3rem;
+      width: 100%;
+    }
+
+    .recommendations-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .recommendations-header h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .rec-category-group {
+      margin-bottom: 3rem;
+    }
+
+    .rec-category-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 1.25rem;
+      border-left: 4px solid var(--primary-color);
+      padding-left: 0.75rem;
+    }
+
+    .rec-category-group .products-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (max-width: 1200px) {
+      .rec-category-group .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .rec-category-group .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .rec-category-group .products-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Wishlist Heart Button */
+    .btn-wish {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 77, 109, 0.25);
+      background: rgba(255, 77, 109, 0.08);
+      color: rgba(255, 77, 109, 0.6);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-wish:hover {
+      background: rgba(255, 77, 109, 0.15);
+      color: #ff4d6d;
+      border-color: rgba(255, 77, 109, 0.5);
+      transform: scale(1.1);
+    }
+
+    .btn-wish.wished {
+      background: rgba(255, 77, 109, 0.2);
+      color: #ff4d6d;
+      border-color: #ff4d6d;
+      animation: heartPop 0.3s ease;
+    }
+
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .add-btn-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      width: 100%;
+    }
+
+    .add-btn-row .btn-add-to-cart {
+      flex: 1;
+    }
+
+    /* Discount styling */
+    .discount-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--danger-color);
+      color: white;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+      z-index: 5;
+    }
+
+    .old-price {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      text-decoration: line-through;
+    }
+
+    .new-price {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--danger-color);
+    }
   `]
 })
 export class CatalogComponent implements OnInit {
@@ -610,12 +1005,47 @@ export class CatalogComponent implements OnInit {
   filteredProducts: any[] = [];
   categories: any[] = [];
   cartItems: any[] = [];
+  wishlistProductIds = new Set<number>();
   
   isLoading = true;
   searchTerm = '';
   selectedCategoryId: number | null = null;
+  selectedBrandId: number | null = null;
   sortBy = 'newest';
   addingProductId: number | null = null;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 12;
+  Math = Math;
+  get totalPages(): number {
+    return Math.ceil(this.filteredProducts.length / this.pageSize);
+  }
+  get pagedProducts(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredProducts.slice(start, start + this.pageSize);
+  }
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    let start = Math.max(1, cur - 2);
+    let end = Math.min(total, cur + 2);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+      end = Math.min(total, start + 4);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
 
   // Toast
   showToastNotif = false;
@@ -627,7 +1057,9 @@ export class CatalogComponent implements OnInit {
     private productService: ProductService,
     private cartService: CartService,
     private authService: AuthService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router,
+    private wishlistService: WishlistService
   ) {}
 
   ngOnInit(): void {
@@ -635,11 +1067,18 @@ export class CatalogComponent implements OnInit {
       if (params['q']) {
         this.searchTerm = params['q'];
       }
+      if (params['brand']) {
+        this.selectedBrandId = +params['brand'];
+      }
       this.loadData();
     });
 
     this.cartService.cartItems$.subscribe(items => {
       this.cartItems = items;
+    });
+
+    this.wishlistService.wishlistProductIds$.subscribe(ids => {
+      this.wishlistProductIds = ids;
     });
   }
 
@@ -679,6 +1118,11 @@ export class CatalogComponent implements OnInit {
       result = result.filter(p => p.category && p.category.id === this.selectedCategoryId);
     }
 
+    // Brand bo'yicha filtr
+    if (this.selectedBrandId !== null) {
+      result = result.filter(p => p.brand && p.brand.id === this.selectedBrandId);
+    }
+
     // 2. Qidiruv bo'yicha filtr
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
@@ -704,11 +1148,13 @@ export class CatalogComponent implements OnInit {
     }
 
     this.filteredProducts = result;
+    this.currentPage = 1;
   }
 
   resetFilters(): void {
     this.searchTerm = '';
     this.selectedCategoryId = null;
+    this.selectedBrandId = null;
     this.sortBy = 'newest';
     this.applyFilters();
   }
@@ -765,5 +1211,86 @@ export class CatalogComponent implements OnInit {
     this.toastType = type;
     this.showToastNotif = true;
     this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
+  }
+
+  getRecommendedProducts(): { categoryName: string, products: any[] }[] {
+    const recommendations: { categoryName: string, products: any[] }[] = [];
+    
+    this.categories.forEach(cat => {
+      const catProds = this.products
+        .filter(p => p.category && p.category.id === cat.id)
+        .slice(0, 4);
+      
+      if (catProds.length > 0) {
+        recommendations.push({
+          categoryName: cat.name,
+          products: catProds
+        });
+      }
+    });
+    
+    return recommendations;
+  }
+
+  isInWishlist(productId: number): boolean {
+    return this.wishlistProductIds.has(productId);
+  }
+
+  toggleWishlist(product: any, event: Event): void {
+    event.stopPropagation();
+
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/register']);
+      return;
+    }
+
+    if (this.isInWishlist(product.id)) {
+      this.wishlistService.removeFromWishlistByProduct(product.id).subscribe({
+        next: () => this.showToast('Sevimlilardan o\'chirildi!', 'snack-warning')
+      });
+    } else {
+      this.wishlistService.addToWishlist(product.id).subscribe({
+        next: () => this.showToast('Sevimlilarga qo\'shildi! ❤️', 'snack-success')
+      });
+    }
+  }
+
+  getFinalPrice(price: number, discount?: number): number {
+    if (!discount) return price;
+    return price - (price * discount / 100);
+  }
+
+  getProductImages(product: any): string[] {
+    const list: string[] = [];
+    if (product.imageUrl) list.push(product.imageUrl);
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      product.imageUrls.forEach((url: string) => {
+        if (url && !list.includes(url)) {
+          list.push(url);
+        }
+      });
+    }
+    return list;
+  }
+
+  prevCardImage(product: any, event: Event): void {
+    event.stopPropagation();
+    const imgs = this.getProductImages(product);
+    if (imgs.length <= 1) return;
+    const cur = product.activeImageIndex || 0;
+    product.activeImageIndex = (cur - 1 + imgs.length) % imgs.length;
+  }
+
+  nextCardImage(product: any, event: Event): void {
+    event.stopPropagation();
+    const imgs = this.getProductImages(product);
+    if (imgs.length <= 1) return;
+    const cur = product.activeImageIndex || 0;
+    product.activeImageIndex = (cur + 1) % imgs.length;
+  }
+
+  setCardImage(product: any, index: number, event: Event): void {
+    event.stopPropagation();
+    product.activeImageIndex = index;
   }
 }

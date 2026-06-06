@@ -54,8 +54,8 @@ import { OrderService } from '../../services/order.service';
                   <span class="qty">Soni: {{ item.quantity }} ta</span>
                 </div>
                 <div class="item-subtotal">
-                  {{ item.price * item.quantity | number:'1.2-2' }} so'm
-                  <small class="unit-price">({{ item.price | number:'1.2-2' }} so'm/dona)</small>
+                  {{ item.price * item.quantity | number:'1.0-0' }} so'm
+                  <small class="unit-price">({{ item.price | number:'1.0-0' }} so'm/dona)</small>
                 </div>
               </div>
             </div>
@@ -64,7 +64,7 @@ import { OrderService } from '../../services/order.service';
           <!-- Total price footer -->
           <div class="order-footer">
             <span class="total-label">Jami to'lov summasi:</span>
-            <span class="total-val">{{ order.totalAmount | number:'1.2-2' }} so'm</span>
+            <span class="total-val">{{ order.totalAmount | number:'1.0-0' }} so'm</span>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ProductService } from '../../../services/product.service';
+import { BrandService } from '../../../services/brand.service';
 
 @Component({
   selector: 'app-admin-products',
@@ -45,6 +46,7 @@ import { ProductService } from '../../../services/product.service';
               <th>Rasm</th>
               <th>Mahsulot nomi</th>
               <th>Kategoriya</th>
+              <th>Brand</th>
               <th>Narxi</th>
               <th>Chegirma</th>
               <th>Omborda</th>
@@ -61,7 +63,8 @@ import { ProductService } from '../../../services/product.service';
                 <span class="product-name">{{ product.name }}</span>
               </td>
               <td>{{ product.category?.name || '—' }}</td>
-              <td><strong>{{ product.price | number:'1.2-2' }} so'm</strong></td>
+              <td>{{ product.brand?.name || '—' }}</td>
+              <td><strong>{{ product.price | number:'1.0-0' }} so'm</strong></td>
               <td>
                 <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
                 <span *ngIf="!product.discount">—</span>
@@ -86,7 +89,7 @@ import { ProductService } from '../../../services/product.service';
               </td>
             </tr>
             <tr *ngIf="filteredProducts.length === 0">
-              <td colspan="8" class="empty-row">Mahsulotlar topilmadi</td>
+              <td colspan="9" class="empty-row">Mahsulotlar topilmadi</td>
             </tr>
           </tbody>
         </table>
@@ -147,11 +150,23 @@ import { ProductService } from '../../../services/product.service';
                   <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
                 </select>
               </div>
+              <div class="form-group flex-1">
+                <label class="glass-label">Brand</label>
+                <select [(ngModel)]="form.brandId" name="brandId" class="glass-input">
+                  <option [ngValue]="null">Brand tanlang (ixtiyoriy)</option>
+                  <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-group">
               <label class="glass-label">Tavsif</label>
               <textarea [(ngModel)]="form.description" name="description" class="glass-input" rows="3" placeholder="Mahsulot haqida batafsil ma'lumot..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="glass-label">Umumiy tafsif</label>
+              <textarea [(ngModel)]="form.fullDescription" name="fullDescription" class="glass-input" rows="5" placeholder="Mahsulotning umumiy, to'liq tafsifi..."></textarea>
             </div>
 
             <div class="form-row">
@@ -169,26 +184,45 @@ import { ProductService } from '../../../services/product.service';
               </div>
             </div>
 
-            <!-- Rasm Yuklash Qismi -->
+            <!-- Rasmlar Yuklash Qismi (10 tagacha) -->
             <div class="form-group">
-              <label class="glass-label">Mahsulot Rasmi</label>
-              <div class="image-upload-area" (click)="triggerFileInput()" [class.has-image]="imagePreviewUrl">
-                <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Rasm preview" class="image-preview" />
-                <div *ngIf="!imagePreviewUrl" class="upload-placeholder">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  <p>Rasmni tanlash uchun bosing</p>
-                  <span>JPG, PNG, WEBP — maksimum 10MB</span>
+              <label class="glass-label">
+                Mahsulot Rasmlari (10 tagacha)
+                <span class="drag-hint">· tartibini o'zgartirish uchun sudrab qo'ying</span>
+              </label>
+              <div class="multi-image-grid">
+                <div
+                  *ngFor="let img of allImageUrls; let i = index"
+                  class="multi-image-item"
+                  [class.dragging]="dragIndex === i"
+                  [class.drag-over]="dragOverIndex === i && dragIndex !== i"
+                  draggable="true"
+                  (dragstart)="onDragStart(i, $event)"
+                  (dragover)="onDragOver(i, $event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop(i, $event)"
+                  (dragend)="onDragEnd()"
+                >
+                  <img [src]="img" alt="Rasm" />
+                  <span *ngIf="i === 0" class="main-badge">Asosiy</span>
+                  <div class="drag-icon" title="Sudrab o'zgartirish">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+                  </div>
+                  <button type="button" class="remove-img-btn" (click)="removeImage(i, $event)" title="O'chirish">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
                 </div>
-                <div *ngIf="imagePreviewUrl" class="image-overlay">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  Rasmni almashtirish
+                <div class="add-image-btn" *ngIf="allImageUrls.length < 10" (click)="triggerFileInput()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>Rasm qo'shish</span>
                 </div>
-                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input-hidden" />
               </div>
+              <input #fileInput type="file" accept="image/*" multiple (change)="onFilesSelected($event)" class="file-input-hidden" />
               <div *ngIf="isUploading" class="upload-progress">
                 <div class="upload-spinner"></div>
                 <span>Rasm yuklanmoqda...</span>
               </div>
+              <p *ngIf="allImageUrls.length > 0" class="image-count-hint">{{ allImageUrls.length }} / 10 ta rasm yuklangan · Birinchi rasm asosiy hisoblanadi</p>
             </div>
 
             <div class="form-group checkbox-group">
@@ -486,78 +520,105 @@ import { ProductService } from '../../../services/product.service';
       .form-row { flex-direction: column; }
     }
 
-    /* Image Upload Area */
-    .image-upload-area {
+    /* Multi-Image Upload Grid */
+    .multi-image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .multi-image-item {
       position: relative;
-      border: 2px dashed var(--glass-border);
-      border-radius: 12px;
-      min-height: 160px;
+      width: 100%;
+      padding-bottom: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .multi-image-item img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .main-badge {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: var(--primary-gradient);
+      color: #04080f;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 50px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .remove-img-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(239, 68, 68, 0.85);
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .image-upload-area:hover {
-      border-color: rgba(168, 85, 247, 0.5);
-      background: rgba(168, 85, 247, 0.05);
-    }
-
-    .image-upload-area.has-image {
-      border-style: solid;
-      border-color: rgba(168, 85, 247, 0.4);
-    }
-
-    .upload-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-secondary);
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .upload-placeholder p {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-
-    .upload-placeholder span {
-      font-size: 0.8rem;
-      opacity: 0.6;
-    }
-
-    .image-preview {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      min-height: 160px;
-      max-height: 220px;
-    }
-
-    .image-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      color: white;
-      font-size: 0.9rem;
-      font-weight: 600;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.2s ease;
+      backdrop-filter: blur(4px);
+      padding: 0;
     }
 
-    .image-upload-area:hover .image-overlay {
+    .multi-image-item:hover .remove-img-btn {
       opacity: 1;
+    }
+
+    .add-image-btn {
+      width: 100%;
+      padding-bottom: 100%;
+      position: relative;
+      border: 2px dashed rgba(79, 172, 254, 0.35);
+      border-radius: 10px;
+      background: rgba(79, 172, 254, 0.03);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .add-image-btn:hover {
+      border-color: var(--primary-color);
+      background: rgba(79, 172, 254, 0.08);
+    }
+
+    .add-image-btn svg,
+    .add-image-btn span {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .add-image-btn svg {
+      top: calc(50% - 22px);
+      color: var(--primary-color);
+      transform: translate(-50%, 0);
+    }
+
+    .add-image-btn span {
+      bottom: 16%;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      white-space: nowrap;
     }
 
     .file-input-hidden {
@@ -577,13 +638,73 @@ import { ProductService } from '../../../services/product.service';
     .upload-spinner {
       width: 18px;
       height: 18px;
-      border: 2px solid rgba(168, 85, 247, 0.3);
-      border-top-color: #a855f7;
+      border: 2px solid rgba(79, 172, 254, 0.25);
+      border-top-color: var(--primary-color);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
+    .image-count-hint {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+
     @keyframes spin { 100% { transform: rotate(360deg); } }
+
+
+    /* Drag states */
+    .multi-image-item {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: grab;
+      transition: transform 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .multi-image-item:active { cursor: grabbing; }
+
+    .multi-image-item.dragging {
+      opacity: 0.35;
+      border-color: var(--primary-color);
+      transform: scale(0.96);
+    }
+
+    .multi-image-item.drag-over {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-color), inset 0 0 20px rgba(0, 242, 254, 0.15);
+      transform: scale(1.04);
+    }
+
+    .drag-icon {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.55);
+      display: flex;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .multi-image-item:hover .drag-icon {
+      opacity: 1;
+    }
+
+    .drag-hint {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 0.25rem;
+    }
 
     /* Material Snackbar Toast */
     .mat-snackbar {
@@ -693,6 +814,7 @@ export class ProductsComponent implements OnInit {
   products: any[] = [];
   filteredProducts: any[] = [];
   categories: any[] = [];
+  brands: any[] = [];
   searchTerm = '';
   selectedCategoryFilter: number | null = null;
 
@@ -745,19 +867,25 @@ export class ProductsComponent implements OnInit {
   toastType: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success';
   private toastTimer: any;
 
+  allImageUrls: string[] = [];
+
   form = {
     name: '',
     description: '',
+    fullDescription: '',
     price: 0,
     discount: 0,
     stockQuantity: 0,
     imageUrl: '',
+    imageUrls: [] as string[],
     categoryId: null as number | null,
+    brandId: null as number | null,
     isActive: true
   };
 
   constructor(
     private productService: ProductService,
+    private brandService: BrandService,
     private http: HttpClient
   ) {}
 
@@ -767,6 +895,7 @@ export class ProductsComponent implements OnInit {
 
   loadAll(): void {
     this.productService.getCategories().subscribe(c => this.categories = c);
+    this.brandService.getBrands().subscribe(b => this.brands = b);
     this.productService.getProducts().subscribe(p => {
       this.products = p;
       this.filteredProducts = p;
@@ -787,8 +916,9 @@ export class ProductsComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', categoryId: null, isActive: true };
+    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, brandId: null, isActive: true };
     this.imagePreviewUrl = null;
+    this.allImageUrls = [];
     this.showModal = true;
   }
 
@@ -798,56 +928,142 @@ export class ProductsComponent implements OnInit {
     this.form = {
       name: product.name,
       description: product.description || '',
+      fullDescription: product.fullDescription || '',
       price: product.price,
       discount: product.discount || 0,
       stockQuantity: product.stockQuantity,
       imageUrl: product.imageUrl || '',
+      imageUrls: product.imageUrls ? [...product.imageUrls] : [],
       categoryId: product.category?.id || null,
+      brandId: product.brand?.id || null,
       isActive: product.isActive
     };
     this.imagePreviewUrl = this.form.imageUrl || null;
+    // Build allImageUrls from imageUrl + imageUrls
+    this.allImageUrls = [];
+    if (this.form.imageUrl) this.allImageUrls.push(this.form.imageUrl);
+    if (this.form.imageUrls.length > 0) {
+      this.form.imageUrls.forEach(url => {
+        if (url && !this.allImageUrls.includes(url)) this.allImageUrls.push(url);
+      });
+    }
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
     this.imagePreviewUrl = null;
+    this.allImageUrls = [];
   }
 
   triggerFileInput(): void {
     const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
-    if (input) input.click();
+    if (input) {
+      input.value = '';
+      input.click();
+    }
   }
 
-  onFileSelected(event: Event): void {
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
-    const file = input.files[0];
+    const remaining = 10 - this.allImageUrls.length;
+    if (remaining <= 0) {
+      this.showToast('Maksimum 10 ta rasm qo\'shish mumkin!', 'snack-warning');
+      return;
+    }
 
-    // Lokal preview uchun
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.imagePreviewUrl = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    const filesToUpload = Array.from(input.files).slice(0, remaining);
 
-    // Backend'ga yuklash
-    this.isUploading = true;
-    const formData = new FormData();
-    formData.append('file', file);
+    filesToUpload.forEach(file => {
+      this.isUploading = true;
+      const formData = new FormData();
+      formData.append('file', file);
 
-    this.http.post<any>('http://localhost:8080/api/upload/image', formData).subscribe({
-      next: (res) => {
-        this.form.imageUrl = res.imageUrl;
-        this.isUploading = false;
-        this.showToast('Rasm yuklandi!', 'snack-success');
-      },
-      error: () => {
-        this.isUploading = false;
-        this.showToast('Rasmni yuklashda xatolik! Iltimos qayta urinib ko\'ring.', 'snack-error');
-      }
+      this.http.post<any>('http://localhost:8080/api/upload/image', formData).subscribe({
+        next: (res) => {
+          this.allImageUrls.push(res.imageUrl);
+          this.syncFormImages();
+          this.isUploading = false;
+          this.showToast('Rasm yuklandi!', 'snack-success');
+        },
+        error: () => {
+          this.isUploading = false;
+          this.showToast('Rasmni yuklashda xatolik!', 'snack-error');
+        }
+      });
     });
+  }
+
+  removeImage(index: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.allImageUrls.splice(index, 1);
+    this.syncFormImages();
+  }
+
+  syncFormImages(): void {
+    if (this.allImageUrls.length > 0) {
+      this.form.imageUrl = this.allImageUrls[0];
+      this.form.imageUrls = this.allImageUrls.slice(1);
+      this.imagePreviewUrl = this.allImageUrls[0];
+    } else {
+      this.form.imageUrl = '';
+      this.form.imageUrls = [];
+      this.imagePreviewUrl = null;
+    }
+  }
+
+  // --- Drag & Drop ---
+  dragIndex: number | null = null;
+  dragOverIndex: number | null = null;
+
+  onDragStart(index: number, event: DragEvent): void {
+    this.dragIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(index));
+    }
+  }
+
+  onDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dragOverIndex = index;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    // Only clear if truly leaving the grid item (not entering a child)
+    const related = event.relatedTarget as HTMLElement;
+    if (!related || !(event.currentTarget as HTMLElement).contains(related)) {
+      this.dragOverIndex = null;
+    }
+  }
+
+  onDrop(targetIndex: number, event: DragEvent): void {
+    event.preventDefault();
+    if (this.dragIndex === null || this.dragIndex === targetIndex) {
+      this.dragIndex = null;
+      this.dragOverIndex = null;
+      return;
+    }
+
+    // Reorder
+    const moved = this.allImageUrls.splice(this.dragIndex, 1)[0];
+    this.allImageUrls.splice(targetIndex, 0, moved);
+    this.syncFormImages();
+
+    this.dragIndex = null;
+    this.dragOverIndex = null;
+
+    if (targetIndex === 0) {
+      this.showToast('Asosiy rasm o\'zgartirildi!', 'snack-success');
+    }
+  }
+
+  onDragEnd(): void {
+    this.dragIndex = null;
+    this.dragOverIndex = null;
   }
 
   saveProduct(): void {
@@ -860,12 +1076,15 @@ export class ProductsComponent implements OnInit {
     const payload = {
       name: this.form.name,
       description: this.form.description,
+      fullDescription: this.form.fullDescription,
       price: this.form.price,
       discount: this.form.discount,
       stockQuantity: this.form.stockQuantity,
       imageUrl: this.form.imageUrl,
+      imageUrls: this.form.imageUrls,
       isActive: this.form.isActive,
-      category: { id: this.form.categoryId }
+      category: { id: this.form.categoryId },
+      brand: this.form.brandId ? { id: this.form.brandId } : null
     };
 
     const request$ = this.isEditMode && this.editingId

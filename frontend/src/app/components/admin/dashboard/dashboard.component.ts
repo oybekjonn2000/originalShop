@@ -83,6 +83,14 @@ import { AuthService } from '../../../services/auth.service';
             <p>Kategoriyalarni boshqaring</p>
           </a>
 
+          <a routerLink="/admin/brands" class="action-card glass-panel">
+            <div class="action-icon" style="background: linear-gradient(135deg, #22c55e, #10b981);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 0 1-8 0"></path><line x1="12" y1="8" x2="12" y2="16"></line></svg>
+            </div>
+            <h3>Brandlar</h3>
+            <p>Brandlarni boshqaring</p>
+          </a>
+
           <a routerLink="/admin/orders" class="action-card glass-panel">
             <div class="action-icon" style="background: linear-gradient(135deg, #f59e0b, #f76b1c);">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -140,7 +148,7 @@ import { AuthService } from '../../../services/auth.service';
                 <td><strong>#{{ order.id }}</strong></td>
                 <td>{{ order.user?.username }}</td>
                 <td>{{ order.orderDate | date:'dd.MM.yy HH:mm' }}</td>
-                <td><strong>{{ order.totalAmount | number:'1.2-2' }} so'm</strong></td>
+                <td><strong>{{ order.totalAmount | number:'1.0-0' }} so'm</strong></td>
                 <td>
                   <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
                 </td>

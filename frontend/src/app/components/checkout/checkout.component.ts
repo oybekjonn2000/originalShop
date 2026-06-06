@@ -48,7 +48,7 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             <button type="submit" [disabled]="isLoading || !region.trim() || !city.trim() || !district.trim() || !street.trim()" class="btn-primary btn-block">
-              <span *ngIf="!isLoading">Buyurtma berish ({{ totalPrice | number:'1.2-2' }} so'm)</span>
+              <span *ngIf="!isLoading">Buyurtma berish ({{ totalPrice | number:'1.0-0' }} so'm)</span>
               <span *ngIf="isLoading">Buyurtma qayta ishlanmoqda...</span>
             </button>
           </form>
@@ -61,7 +61,7 @@ import { AuthService } from '../../services/auth.service';
           <div class="items-preview">
             <div *ngFor="let item of cartItems" class="preview-item">
               <span class="item-name">{{ item.product.name }} <small>x{{ item.quantity }}</small></span>
-              <span class="item-price">{{ item.product.price * item.quantity | number:'1.2-2' }} so'm</span>
+              <span class="item-price">{{ item.product.price * item.quantity | number:'1.0-0' }} so'm</span>
             </div>
           </div>
 
@@ -69,7 +69,7 @@ import { AuthService } from '../../services/auth.service';
 
           <div class="summary-row">
             <span>Mahsulotlar jami:</span>
-            <span>{{ totalPrice | number:'1.2-2' }} so'm</span>
+            <span>{{ totalPrice | number:'1.0-0' }} so'm</span>
           </div>
 
           <div class="summary-row">
@@ -81,7 +81,7 @@ import { AuthService } from '../../services/auth.service';
 
           <div class="summary-row total-row">
             <span>Jami summa:</span>
-            <span class="total-price">{{ totalPrice | number:'1.2-2' }} so'm</span>
+            <span class="total-price">{{ totalPrice | number:'1.0-0' }} so'm</span>
           </div>
         </div>
       </div>

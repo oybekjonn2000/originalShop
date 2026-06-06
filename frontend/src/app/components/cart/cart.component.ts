@@ -42,16 +42,16 @@ import { CartService } from '../../services/cart.service';
 
             <div class="item-price">
               <ng-container *ngIf="item.product.discount">
-                <span class="old-price" style="font-size:0.8rem; text-decoration:line-through; color:var(--text-secondary); display:block; text-align:right;">{{ item.product.price * item.quantity | number:'1.2-2' }} so'm</span>
-                <div style="color:var(--danger-color)">{{ getFinalPrice(item.product.price, item.product.discount) * item.quantity | number:'1.2-2' }} so'm</div>
+                <span class="old-price" style="font-size:0.8rem; text-decoration:line-through; color:var(--text-secondary); display:block; text-align:right;">{{ item.product.price * item.quantity | number:'1.0-0' }} so'm</span>
+                <div style="color:var(--danger-color)">{{ getFinalPrice(item.product.price, item.product.discount) * item.quantity | number:'1.0-0' }} so'm</div>
                 <small class="unit-price">
                   <span class="discount-badge" style="font-size: 0.7rem; padding: 0.1rem 0.3rem; margin-right: 0.3rem;">-{{ item.product.discount }}%</span>
-                  ({{ getFinalPrice(item.product.price, item.product.discount) | number:'1.2-2' }} so'm/dona)
+                  ({{ getFinalPrice(item.product.price, item.product.discount) | number:'1.0-0' }} so'm/dona)
                 </small>
               </ng-container>
               <ng-container *ngIf="!item.product.discount">
-                {{ item.product.price * item.quantity | number:'1.2-2' }} so'm
-                <small class="unit-price">({{ item.product.price | number:'1.2-2' }} so'm/dona)</small>
+                {{ item.product.price * item.quantity | number:'1.0-0' }} so'm
+                <small class="unit-price">({{ item.product.price | number:'1.0-0' }} so'm/dona)</small>
               </ng-container>
             </div>
 
@@ -79,7 +79,7 @@ import { CartService } from '../../services/cart.service';
 
           <div class="summary-row total-row">
             <span>Jami summa:</span>
-            <span class="total-price">{{ totalPrice | number:'1.2-2' }} so'm</span>
+            <span class="total-price">{{ totalPrice | number:'1.0-0' }} so'm</span>
           </div>
 
           <div class="summary-actions">

@@ -1,10 +1,12 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
+import { BrandService } from '../../services/brand.service';
+import { WishlistService } from '../../services/wishlist.service';
 
 @Component({
   selector: 'app-home',
@@ -12,6 +14,16 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="home-container fade-in-el">
+      <!-- Brands Reels Slider -->
+      <section class="brands-reels-section" *ngIf="brands.length > 0">
+        <div class="brands-reels-container">
+          <div class="brand-item" *ngFor="let brand of brands" [routerLink]="['/catalog']" [queryParams]="{ brand: brand.id }">
+            <div class="brand-img-wrapper" [style.backgroundImage]="'url(' + (brand.imageUrl || 'assets/placeholder.png') + ')'"></div>
+            <span class="brand-name">{{ brand.name }}</span>
+          </div>
+        </div>
+      </section>
+
       <!-- Carousel Banner -->
       <section class="carousel-section">
         <div class="carousel-container">
@@ -55,8 +67,22 @@ import { AuthService } from '../../services/auth.service';
         </div>
         <div class="deals-scroll-container" #dealsContainer>
           <div *ngFor="let product of discountedProducts" class="deal-card glass-card">
-            <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-              <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+            <div class="product-img-wrapper">
+              <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+              
+              <!-- Card Image Slider Controls -->
+              <ng-container *ngIf="getProductImages(product).length > 1">
+                <button class="card-slider-arrow prev" (click)="prevCardImage(product, $event)">❮</button>
+                <button class="card-slider-arrow next" (click)="nextCardImage(product, $event)">❯</button>
+                <div class="card-slider-dots">
+                  <span *ngFor="let img of getProductImages(product); let idx = index" 
+                        class="card-slider-dot" 
+                        [class.active]="(product.activeImageIndex || 0) === idx"
+                        (click)="setCardImage(product, idx, $event)">
+                  </span>
+                </div>
+              </ng-container>
+
               <span class="discount-badge">-{{ product.discount }}%</span>
             </div>
             
@@ -64,8 +90,8 @@ import { AuthService } from '../../services/auth.service';
               <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
               
               <div class="deal-price-section">
-                <span class="old-price">{{ product.price | number:'1.2-2' }} so'm</span>
-                <span class="new-price">{{ getFinalPrice(product.price, product.discount) | number:'1.2-2' }} so'm</span>
+                <span class="old-price">{{ product.price | number:'1.0-0' }} so'm</span>
+                <span class="new-price">{{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm</span>
               </div>
               
               <button class="btn-primary btn-deal" (click)="addToCart(product)">
@@ -122,30 +148,52 @@ import { AuthService } from '../../services/auth.service';
           <!-- Grid -->
           <div *ngIf="!isLoading && products.length > 0" class="products-grid">
             <div *ngFor="let product of pagedProducts" class="product-card glass-card">
-              <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-                <img [src]="product.imageUrl" [alt]="product.name" class="product-img" />
+              <div class="product-img-wrapper">
+                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                
+                <!-- Card Image Slider Controls -->
+                <ng-container *ngIf="getProductImages(product).length > 1">
+                  <button class="card-slider-arrow prev" (click)="prevCardImage(product, $event)">❮</button>
+                  <button class="card-slider-arrow next" (click)="nextCardImage(product, $event)">❯</button>
+                  <div class="card-slider-dots">
+                    <span *ngFor="let img of getProductImages(product); let idx = index" 
+                          class="card-slider-dot" 
+                          [class.active]="(product.activeImageIndex || 0) === idx"
+                          (click)="setCardImage(product, idx, $event)">
+                    </span>
+                  </div>
+                </ng-container>
+
                 <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
                 <span class="category-badge">{{ product.category?.name }}</span>
               </div>
               
               <div class="product-info">
                 <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
-                <p class="product-desc">{{ truncateText(product.description, 90) }}</p>
+             
                 
                 <div class="product-footer">
                   <div class="price-section">
                     <div *ngIf="product.discount" class="product-price new-price" style="font-size: 1.1rem; color: var(--danger-color); -webkit-text-fill-color: initial;">
-                      {{ getFinalPrice(product.price, product.discount) | number:'1.2-2' }} so'm 
-                      <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.2-2' }}</span>
+                      {{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm 
+                      <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.0-0' }}</span>
                     </div>
-                    <div *ngIf="!product.discount" class="product-price">{{ product.price | number:'1.2-2' }} so'm</div>
+                    <div *ngIf="!product.discount" class="product-price">{{ product.price | number:'1.0-0' }} so'm</div>
                     <div class="installment-badge">
-                      <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.2-2' }} so'm</span> / 12 oy
+                      <span class="installment-amount">{{ calculateInstallment(product.price) | number:'1.0-0' }} so'm</span> / 12 oy
                     </div>
                   </div>
                   
                   <ng-container *ngIf="product.stockQuantity > 0; else outOfStockBtn">
                     <div *ngIf="getCartItem(product.id) as cartItem; else addBtn" class="cart-controls">
+                      <button
+                        class="btn-wish"
+                        [class.wished]="isInWishlist(product.id)"
+                        (click)="toggleWishlist(product, $event)"
+                        title="Sevimlilarga qo'shish"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      </button>
                       <div class="qty-control">
                         <button class="qty-btn" (click)="updateCartQty(cartItem, cartItem.quantity - 1)">-</button>
                         <span class="qty-val">{{ cartItem.quantity }}</span>
@@ -156,18 +204,38 @@ import { AuthService } from '../../services/auth.service';
                       </a>
                     </div>
                     <ng-template #addBtn>
-                      <button 
-                        (click)="addToCart(product)" 
-                        [disabled]="addingProductId === product.id"
-                        class="btn-add-to-cart"
-                      >
-                        <span *ngIf="addingProductId !== product.id">Savatga +</span>
-                        <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
-                      </button>
+                      <div class="add-btn-row">
+                        <button
+                          class="btn-wish"
+                          [class.wished]="isInWishlist(product.id)"
+                          (click)="toggleWishlist(product, $event)"
+                          title="Sevimlilarga qo'shish"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </button>
+                        <button 
+                          (click)="addToCart(product)" 
+                          [disabled]="addingProductId === product.id"
+                          class="btn-add-to-cart"
+                        >
+                          <span *ngIf="addingProductId !== product.id">Savatga +</span>
+                          <span *ngIf="addingProductId === product.id" class="added-feedback">Qo'shildi!</span>
+                        </button>
+                      </div>
                     </ng-template>
                   </ng-container>
                   <ng-template #outOfStockBtn>
-                    <span class="out-of-stock">Tugagan</span>
+                    <div class="add-btn-row">
+                      <button
+                        class="btn-wish"
+                        [class.wished]="isInWishlist(product.id)"
+                        (click)="toggleWishlist(product, $event)"
+                        title="Sevimlilarga qo'shish"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      </button>
+                      <span class="out-of-stock">Tugagan</span>
+                    </div>
                   </ng-template>
                 </div>
               </div>
@@ -222,6 +290,92 @@ import { AuthService } from '../../services/auth.service';
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
+    }
+
+    /* Brands Reels Styles */
+    .brands-reels-section {
+      margin-bottom: 1.5rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .brands-reels-container {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      padding: 0.5rem 0.2rem 1rem 0.2rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
+      scroll-behavior: smooth;
+    }
+
+    .brands-reels-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .brands-reels-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .brands-reels-container::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.3);
+      border-radius: 10px;
+    }
+
+    .brands-reels-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(168, 85, 247, 0.6);
+    }
+
+    .brand-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 85px;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-item:hover {
+      transform: translateY(-5px) scale(1.05);
+    }
+
+    .brand-img-wrapper {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      background-color: #fff;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      position: relative;
+    }
+
+    .brand-img-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      z-index: -1;
+      transition: all 0.3s ease;
+    }
+
+    .brand-item:hover .brand-img-wrapper::before {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+    }
+
+    .brand-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      max-width: 85px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* Carousel Styles */
@@ -476,7 +630,7 @@ import { AuthService } from '../../services/auth.service';
 
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
       gap: 1.75rem;
     }
 
@@ -553,8 +707,9 @@ import { AuthService } from '../../services/auth.service';
 
     .product-footer {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
+      flex-direction: column;
+      gap: 0.85rem;
+      align-items: stretch;
       margin-top: auto;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       padding-top: 0.85rem;
@@ -563,7 +718,7 @@ import { AuthService } from '../../services/auth.service';
     .price-section {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
+      gap: 0.25rem;
     }
 
     .product-price {
@@ -573,6 +728,7 @@ import { AuthService } from '../../services/auth.service';
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-family: var(--font-heading);
+      white-space: nowrap;
     }
 
     .installment-badge {
@@ -584,6 +740,7 @@ import { AuthService } from '../../services/auth.service';
       display: inline-block;
       width: fit-content;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
     }
 
     .installment-amount {
@@ -682,6 +839,52 @@ import { AuthService } from '../../services/auth.service';
       background: rgba(255, 255, 255, 0.05);
       padding: 0.25rem 0.6rem;
       border-radius: 4px;
+    }
+
+    /* Wishlist Heart Button */
+    .btn-wish {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 77, 109, 0.25);
+      background: rgba(255, 77, 109, 0.08);
+      color: rgba(255, 77, 109, 0.6);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-wish:hover {
+      background: rgba(255, 77, 109, 0.15);
+      color: #ff4d6d;
+      border-color: rgba(255, 77, 109, 0.5);
+      transform: scale(1.1);
+    }
+
+    .btn-wish.wished {
+      background: rgba(255, 77, 109, 0.2);
+      color: #ff4d6d;
+      border-color: #ff4d6d;
+      animation: heartPop 0.3s ease;
+    }
+
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .add-btn-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .add-btn-row .btn-add-to-cart {
+      flex: 1;
     }
 
     .loading-container {
@@ -817,6 +1020,82 @@ import { AuthService } from '../../services/auth.service';
     @keyframes snackSlideUp {
       from { opacity: 0; transform: translateX(-50%) translateY(20px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Image Slider inside Card */
+    .product-img-wrapper {
+      position: relative;
+    }
+    
+    .card-slider-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(11, 14, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition-smooth);
+      opacity: 0;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+      padding: 0;
+      line-height: 1;
+    }
+    
+    .product-img-wrapper:hover .card-slider-arrow {
+      opacity: 1;
+    }
+    
+    .card-slider-arrow:hover {
+      background: var(--primary-color);
+      color: #0b0e14;
+      box-shadow: 0 0 10px var(--primary-glow);
+      border-color: var(--primary-color);
+    }
+    
+    .card-slider-arrow.prev {
+      left: 8px;
+    }
+    
+    .card-slider-arrow.next {
+      right: 8px;
+    }
+    
+    .card-slider-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      z-index: 5;
+      background: rgba(11, 14, 20, 0.5);
+      padding: 3px 8px;
+      border-radius: 50px;
+      backdrop-filter: blur(4px);
+    }
+    
+    .card-slider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    
+    .card-slider-dot.active {
+      background: var(--primary-color);
+      width: 12px;
+      border-radius: 3px;
     }
 
     /* Hot Deals Styles */
@@ -1037,6 +1316,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   toastType: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success';
   private toastTimer: any;
 
+  brands: any[] = [];
   // Carousel Properties
   banners = [
     { title: 'Noutbuklar chegirmasi', imageUrl: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=1200&auto=format&fit=crop' },
@@ -1052,11 +1332,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   @ViewChild('catalogAnchor') catalogAnchor!: ElementRef;
   dealsInterval: any;
 
+  wishlistProductIds = new Set<number>();
+
   constructor(
     private productService: ProductService,
     private cartService: CartService,
     private authService: AuthService,
-    private route: ActivatedRoute
+    private brandService: BrandService,
+    private wishlistService: WishlistService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -1064,6 +1349,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.startDealsAutoScroll();
     this.loadCategories();
     this.loadDiscountedProducts();
+    this.loadBrands();
 
     // Listen to query parameters for search queries
     this.route.queryParams.subscribe(params => {
@@ -1082,6 +1368,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Cart items for UI updates
     this.cartService.cartItems$.subscribe(items => {
       this.cartItems = items;
+    });
+
+    // Wishlist product IDs for heart icon state
+    this.wishlistService.wishlistProductIds$.subscribe(ids => {
+      this.wishlistProductIds = ids;
     });
   }
 
@@ -1130,6 +1421,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadCategories(): void {
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
+    });
+  }
+
+  loadBrands(): void {
+    this.brandService.getBrands().subscribe(b => {
+      this.brands = b;
     });
   }
 
@@ -1211,6 +1508,29 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  isInWishlist(productId: number): boolean {
+    return this.wishlistProductIds.has(productId);
+  }
+
+  toggleWishlist(product: any, event: Event): void {
+    event.stopPropagation();
+
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/register']);
+      return;
+    }
+
+    if (this.isInWishlist(product.id)) {
+      this.wishlistService.removeFromWishlistByProduct(product.id).subscribe({
+        next: () => this.showToast('Sevimlilardan o\'chirildi!', 'snack-warning')
+      });
+    } else {
+      this.wishlistService.addToWishlist(product.id).subscribe({
+        next: () => this.showToast('Sevimlilarga qo\'shildi! ❤️', 'snack-success')
+      });
+    }
+  }
+
   getCartItem(productId: number): any {
     return this.cartItems.find(item => item.product.id === productId);
   }
@@ -1243,5 +1563,39 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.toastType = type;
     this.showToastNotif = true;
     this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
+  }
+
+  getProductImages(product: any): string[] {
+    const list: string[] = [];
+    if (product.imageUrl) list.push(product.imageUrl);
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      product.imageUrls.forEach((url: string) => {
+        if (url && !list.includes(url)) {
+          list.push(url);
+        }
+      });
+    }
+    return list;
+  }
+
+  prevCardImage(product: any, event: Event): void {
+    event.stopPropagation();
+    const imgs = this.getProductImages(product);
+    if (imgs.length <= 1) return;
+    const cur = product.activeImageIndex || 0;
+    product.activeImageIndex = (cur - 1 + imgs.length) % imgs.length;
+  }
+
+  nextCardImage(product: any, event: Event): void {
+    event.stopPropagation();
+    const imgs = this.getProductImages(product);
+    if (imgs.length <= 1) return;
+    const cur = product.activeImageIndex || 0;
+    product.activeImageIndex = (cur + 1) % imgs.length;
+  }
+
+  setCardImage(product: any, index: number, event: Event): void {
+    event.stopPropagation();
+    product.activeImageIndex = index;
   }
 }

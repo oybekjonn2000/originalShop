@@ -1,3 +1,28 @@
+<!-- Premium Page Loader Overlay -->
+<div class="page-loader-overlay" [class.active]="isPageLoading">
+  <div class="loader-content">
+    <div class="loader-logo">
+      <span class="logo-nex">Nex</span><span class="logo-shop">Shop</span>
+    </div>
+    <div class="loader-ring-wrapper">
+      <div class="loader-ring ring-1"></div>
+      <div class="loader-ring ring-2"></div>
+      <div class="loader-ring ring-3"></div>
+      <div class="loader-core">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="loader-bar-track">
+      <div class="loader-bar-fill"></div>
+    </div>
+    <p class="loader-text">Yuklanmoqda<span class="loader-dots"><span>.</span><span>.</span><span>.</span></span></p>
+  </div>
+</div>
+
 <div class="app-shell">
   <app-header></app-header>
   <main class="main-content">

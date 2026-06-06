@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { CartService } from '../../../services/cart.service';
+import { WishlistService } from '../../../services/wishlist.service';
 import { HostListener } from '@angular/core';
 import { ElementRef } from '@angular/core';
 
@@ -39,6 +40,10 @@ import { ElementRef } from '@angular/core';
           <a routerLink="/catalog" routerLinkActive="active" class="nav-link">Katalog</a>
           <a routerLink="/about" routerLinkActive="active" class="nav-link">Biz haqimizda</a>
           <a routerLink="/contact" routerLinkActive="active" class="nav-link">Aloqa</a>
+          <a *ngIf="isLoggedIn" routerLink="/wishlist" routerLinkActive="active" class="nav-link wishlist-link">
+            Sevimlilar
+            <span *ngIf="wishlistCount > 0" class="wishlist-badge">{{ wishlistCount }}</span>
+          </a>
           <a routerLink="/cart" routerLinkActive="active" class="nav-link cart-link">
             Savat
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
@@ -64,8 +69,12 @@ import { ElementRef } from '@angular/core';
           </ng-template>
         </nav>
 
-        <!-- Mobile Right Side (cart + burger) -->
+        <!-- Mobile Right Side (wishlist + cart + burger) -->
         <div class="mobile-right">
+          <a *ngIf="isLoggedIn" routerLink="/wishlist" class="nav-link wishlist-link mobile-wishlist" style="padding: 0.4rem; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span *ngIf="wishlistCount > 0" class="wishlist-badge">{{ wishlistCount }}</span>
+          </a>
           <a routerLink="/cart" class="nav-link cart-link mobile-cart">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
@@ -99,6 +108,9 @@ import { ElementRef } from '@angular/core';
         <a routerLink="/about" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Biz haqimizda</a>
         <a routerLink="/contact" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Aloqa</a>
         <ng-container *ngIf="isLoggedIn; else mobileAuthLinks">
+          <a routerLink="/wishlist" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()" style="display: flex; align-items: center;">
+            Sevimlilar <span *ngIf="wishlistCount > 0" class="wishlist-badge" style="position: static; display: inline-flex; margin-left: 0.5rem; transform: none;">{{ wishlistCount }}</span>
+          </a>
           <a routerLink="/orders" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Buyurtmalarim</a>
           <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
             {{ currentUser?.firstName || currentUser?.username }} — Profil
@@ -230,6 +242,28 @@ import { ElementRef } from '@angular/core';
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 10px rgba(255, 15, 123, 0.4);
+    }
+
+    .wishlist-link {
+      position: relative;
+      padding-right: 1.5rem;
+    }
+
+    .wishlist-badge {
+      position: absolute;
+      top: -3px;
+      right: -2px;
+      background: linear-gradient(135deg, #ff4d6d 0%, #ff758f 100%);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      min-width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(255, 77, 109, 0.4);
     }
 
     .admin-link {
@@ -438,12 +472,14 @@ export class HeaderComponent implements OnInit {
   isAdmin = false;
   currentUser: any = null;
   cartCount = 0;
+  wishlistCount = 0;
   searchQuery = '';
   menuOpen = false;
 
   constructor(
     private authService: AuthService,
     private cartService: CartService,
+    private wishlistService: WishlistService,
     private router: Router
   ) {}
 
@@ -456,6 +492,10 @@ export class HeaderComponent implements OnInit {
 
     this.cartService.cartCount$.subscribe(count => {
       this.cartCount = count;
+    });
+
+    this.wishlistService.wishlistCount$.subscribe(count => {
+      this.wishlistCount = count;
     });
   }
 

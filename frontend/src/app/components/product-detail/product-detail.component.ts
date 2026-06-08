@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
+import { WishlistService } from '../../services/wishlist.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -54,18 +55,25 @@ import { AuthService } from '../../services/auth.service';
           <span class="category-tag">{{ product.category?.name }}</span>
           <h1 class="product-title">{{ product.name }}</h1>
           
-          <div class="price-box">
-            <span class="price-label">Narxi:</span>
-            <span class="price-value">{{ product.price | number:'1.0-0' }} so'm</span>
+          <div class="price-box" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="price-label">Narxi:</span>
+              <span class="price-value" *ngIf="product.discount">{{ getDiscountedPrice(product.price, product.discount) | number:'1.0-0' }} so'm</span>
+              <span class="price-value" *ngIf="!product.discount">{{ product.price | number:'1.0-0' }} so'm</span>
+              <span *ngIf="product.discount" class="discount-badge-detail">-{{ product.discount }}%</span>
+            </div>
+            <div *ngIf="product.discount" class="old-price">
+              {{ product.price | number:'1.0-0' }} so'm
+            </div>
           </div>
 
           <div class="installments-box">
             <div class="installment-option">
-              <div class="installment-amount">{{ calculateInstallment(product.price, 6) | number:'1.0-0' }} so'm</div>
+              <div class="installment-amount">{{ calculateInstallment(getDiscountedPrice(product.price, product.discount), 6) | number:'1.0-0' }} so'm</div>
               <div class="installment-period">x 6 oy</div>
             </div>
             <div class="installment-option">
-              <div class="installment-amount">{{ calculateInstallment(product.price, 12) | number:'1.0-0' }} so'm</div>
+              <div class="installment-amount">{{ calculateInstallment(getDiscountedPrice(product.price, product.discount), 12) | number:'1.0-0' }} so'm</div>
               <div class="installment-period">x 12 oy</div>
             </div>
           </div>
@@ -86,10 +94,20 @@ import { AuthService } from '../../services/auth.service';
               <button (click)="incrementQty()" class="qty-btn" [disabled]="quantity >= product.stockQuantity">+</button>
             </div>
 
-            <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
-              <span *ngIf="!isAdding">Savatga qo'shish ({{ product.price * quantity | number:'1.0-0' }} so'm)</span>
-              <span *ngIf="isAdding">Qo'shilmoqda...</span>
-            </button>
+            <div class="cart-wish-row">
+              <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
+                <span *ngIf="!isAdding">Savatga qo'shish ({{ getDiscountedPrice(product.price, product.discount) * quantity | number:'1.0-0' }} so'm)</span>
+                <span *ngIf="isAdding">Qo'shilmoqda...</span>
+              </button>
+              <button
+                class="btn-wish detail-wish-btn"
+                [class.wished]="isInWishlist(product.id)"
+                (click)="toggleWishlist(product)"
+                title="Sevimlilarga qo'shish"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              </button>
+            </div>
           </div>
           
           <div class="not-available-message" *ngIf="product.stockQuantity === 0">
@@ -116,7 +134,8 @@ import { AuthService } from '../../services/auth.service';
             <div class="mini-info">
               <h3 class="mini-name">{{ prod.name }}</h3>
               <div class="mini-price-row">
-                <span class="mini-price">{{ prod.price | number:'1.0-0' }} so'm</span>
+                <span class="mini-price" *ngIf="prod.discount">{{ getDiscountedPrice(prod.price, prod.discount) | number:'1.0-0' }} so'm</span>
+                <span class="mini-price" *ngIf="!prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
               </div>
             </div>
           </div>
@@ -135,7 +154,8 @@ import { AuthService } from '../../services/auth.service';
             <div class="mini-info">
               <h3 class="mini-name">{{ prod.name }}</h3>
               <div class="mini-price-row">
-                <span class="mini-price">{{ prod.price | number:'1.0-0' }} so'm</span>
+                <span class="mini-price" *ngIf="prod.discount">{{ getDiscountedPrice(prod.price, prod.discount) | number:'1.0-0' }} so'm</span>
+                <span class="mini-price" *ngIf="!prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
               </div>
             </div>
           </div>
@@ -642,6 +662,23 @@ import { AuthService } from '../../services/auth.service';
       box-shadow: 0 4px 10px rgba(255, 15, 123, 0.3);
     }
 
+    .discount-badge-detail {
+      background: var(--secondary-gradient);
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(255, 15, 123, 0.35);
+    }
+
+    .old-price {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      text-decoration: line-through;
+      margin-top: 0.25rem;
+    }
+
     .mini-info {
       display: flex;
       flex-direction: column;
@@ -686,6 +723,55 @@ import { AuthService } from '../../services/auth.service';
       }
     }
 
+    /* Cart + Wishlist row */
+    .cart-wish-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    /* Wishlist heart button */
+    .btn-wish {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      background: rgba(255, 77, 109, 0.08);
+      color: rgba(255, 77, 109, 0.6);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .detail-wish-btn {
+      width: 52px;
+      height: 52px;
+      min-width: 52px;
+      border-radius: 12px;
+    }
+
+    .btn-wish:hover {
+      background: rgba(255, 77, 109, 0.18);
+      color: #ff4d6d;
+      border-color: rgba(255, 77, 109, 0.6);
+      transform: scale(1.08);
+    }
+
+    .btn-wish.wished {
+      background: rgba(255, 77, 109, 0.22);
+      color: #ff4d6d;
+      border-color: #ff4d6d;
+      animation: heartPop 0.35s ease;
+    }
+
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.35); }
+      100% { transform: scale(1); }
+    }
+
     /* Material Snackbar Toast */
     .mat-snackbar {
       position: fixed;
@@ -725,6 +811,7 @@ export class ProductDetailComponent implements OnInit {
   similarProducts: any[] = [];
   recentlyViewedProducts: any[] = [];
   activeImageIndex = 0;
+  wishlistProductIds = new Set<number>();
 
   get isAdmin(): boolean {
     return this.authService.isAdmin();
@@ -741,10 +828,15 @@ export class ProductDetailComponent implements OnInit {
     private router: Router,
     private productService: ProductService,
     private cartService: CartService,
-    private authService: AuthService
+    private authService: AuthService,
+    private wishlistService: WishlistService
   ) {}
 
   ngOnInit(): void {
+    this.wishlistService.wishlistProductIds$.subscribe(ids => {
+      this.wishlistProductIds = ids;
+    });
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -753,6 +845,28 @@ export class ProductDetailComponent implements OnInit {
         this.router.navigate(['/']);
       }
     });
+  }
+
+  isInWishlist(productId: number): boolean {
+    return this.wishlistProductIds.has(productId);
+  }
+
+  toggleWishlist(product: any): void {
+    if (!this.authService.isLoggedIn()) {
+      this.showToast('Sevimlilarga qo\'shish uchun avval tizimga kiring!', 'snack-warning');
+      this.router.navigate(['/login'], { queryParams: { returnUrl: `/product/${product.id}` } });
+      return;
+    }
+
+    if (this.isInWishlist(product.id)) {
+      this.wishlistService.removeFromWishlistByProduct(product.id).subscribe({
+        next: () => this.showToast('Sevimlilardan o\'chirildi!', 'snack-warning')
+      });
+    } else {
+      this.wishlistService.addToWishlist(product.id).subscribe({
+        next: () => this.showToast('Sevimlilarga qo\'shildi! ❤️', 'snack-success')
+      });
+    }
   }
 
   loadProduct(id: number): void {
@@ -911,6 +1025,11 @@ export class ProductDetailComponent implements OnInit {
     const totalInterestRate = (45 / 12) * months;
     const totalAmount = price * (1 + (totalInterestRate / 100));
     return totalAmount / months;
+  }
+
+  getDiscountedPrice(price: number, discount: number | null | undefined): number {
+    if (!discount) return price;
+    return price * (1 - discount / 100);
   }
 
   showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {

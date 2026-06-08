@@ -36,6 +36,15 @@ import { BrandService } from '../../../services/brand.service';
           <option [ngValue]="null">Barcha kategoriyalar</option>
           <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
         </select>
+        <select [(ngModel)]="sortBy" (change)="filterProducts()" class="glass-input filter-select">
+          <option value="default">Saralash: Standart</option>
+          <option value="name-asc">Nomi bo'yicha (A-Z)</option>
+          <option value="name-desc">Nomi bo'yicha (Z-A)</option>
+          <option value="price-asc">Narxi: Arzonroq</option>
+          <option value="price-desc">Narxi: Qimmatroq</option>
+          <option value="stock-asc">Omborda: Kamroq</option>
+          <option value="stock-desc">Omborda: Ko'proq</option>
+        </select>
       </div>
 
       <!-- Products Table -->
@@ -44,13 +53,34 @@ import { BrandService } from '../../../services/brand.service';
           <thead>
             <tr>
               <th>Rasm</th>
-              <th>Mahsulot nomi</th>
-              <th>Kategoriya</th>
-              <th>Brand</th>
-              <th>Narxi</th>
-              <th>Chegirma</th>
-              <th>Omborda</th>
-              <th>Status</th>
+              <th (click)="toggleSort('name')" class="sortable-header">
+                Mahsulot nomi
+                <span class="sort-icon" *ngIf="sortBy.startsWith('name')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('category')" class="sortable-header">
+                Kategoriya
+                <span class="sort-icon" *ngIf="sortBy.startsWith('category')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('brand')" class="sortable-header">
+                Brand
+                <span class="sort-icon" *ngIf="sortBy.startsWith('brand')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('price')" class="sortable-header">
+                Narxi
+                <span class="sort-icon" *ngIf="sortBy.startsWith('price')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('discount')" class="sortable-header">
+                Chegirma
+                <span class="sort-icon" *ngIf="sortBy.startsWith('discount')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('stock')" class="sortable-header">
+                Omborda
+                <span class="sort-icon" *ngIf="sortBy.startsWith('stock')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
+              <th (click)="toggleSort('status')" class="sortable-header">
+                Status
+                <span class="sort-icon" *ngIf="sortBy.startsWith('status')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
               <th>Amallar</th>
             </tr>
           </thead>
@@ -808,6 +838,22 @@ import { BrandService } from '../../../services/brand.service';
       font-size: 0.85rem;
       cursor: pointer;
     }
+
+    .sortable-header {
+      cursor: pointer;
+      user-select: none;
+      transition: var(--transition-smooth);
+    }
+    .sortable-header:hover {
+      color: var(--primary-color) !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+    .sort-icon {
+      font-size: 0.75rem;
+      margin-left: 4px;
+      color: var(--primary-color);
+      display: inline-block;
+    }
   `]
 })
 export class ProductsComponent implements OnInit {
@@ -817,6 +863,7 @@ export class ProductsComponent implements OnInit {
   brands: any[] = [];
   searchTerm = '';
   selectedCategoryFilter: number | null = null;
+  sortBy = 'default';
 
   // Pagination
   currentPage = 1;
@@ -853,7 +900,7 @@ export class ProductsComponent implements OnInit {
   isEditMode = false;
   isSaving = false;
   editingId: number | null = null;
-  
+
   showConfirmModal = false;
   productToDelete: number | null = null;
 
@@ -887,7 +934,7 @@ export class ProductsComponent implements OnInit {
     private productService: ProductService,
     private brandService: BrandService,
     private http: HttpClient
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadAll();
@@ -898,19 +945,70 @@ export class ProductsComponent implements OnInit {
     this.brandService.getBrands().subscribe(b => this.brands = b);
     this.productService.getProducts().subscribe(p => {
       this.products = p;
-      this.filteredProducts = p;
+      this.filterProducts();
     });
   }
 
   filterProducts(): void {
-    this.filteredProducts = this.products.filter(p => {
+    let result = this.products.filter(p => {
       const matchSearch = !this.searchTerm ||
         p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (p.description && p.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
       const matchCat = !this.selectedCategoryFilter || p.category?.id === this.selectedCategoryFilter;
       return matchSearch && matchCat;
     });
+
+    if (this.sortBy === 'name-asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (this.sortBy === 'name-desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (this.sortBy === 'category-asc') {
+      result.sort((a, b) => (a.category?.name || '').localeCompare(b.category?.name || ''));
+    } else if (this.sortBy === 'category-desc') {
+      result.sort((a, b) => (b.category?.name || '').localeCompare(a.category?.name || ''));
+    } else if (this.sortBy === 'brand-asc') {
+      result.sort((a, b) => (a.brand?.name || '').localeCompare(b.brand?.name || ''));
+    } else if (this.sortBy === 'brand-desc') {
+      result.sort((a, b) => (b.brand?.name || '').localeCompare(a.brand?.name || ''));
+    } else if (this.sortBy === 'price-asc') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (this.sortBy === 'price-desc') {
+      result.sort((a, b) => b.price - a.price);
+    } else if (this.sortBy === 'discount-asc') {
+      result.sort((a, b) => (a.discount || 0) - (b.discount || 0));
+    } else if (this.sortBy === 'discount-desc') {
+      result.sort((a, b) => (b.discount || 0) - (a.discount || 0));
+    } else if (this.sortBy === 'stock-asc') {
+      result.sort((a, b) => a.stockQuantity - b.stockQuantity);
+    } else if (this.sortBy === 'stock-desc') {
+      result.sort((a, b) => b.stockQuantity - a.stockQuantity);
+    } else if (this.sortBy === 'status-asc') {
+      result.sort((a, b) => (a.isActive === b.isActive) ? 0 : a.isActive ? 1 : -1);
+    } else if (this.sortBy === 'status-desc') {
+      result.sort((a, b) => (a.isActive === b.isActive) ? 0 : a.isActive ? -1 : 1);
+    }
+
+    this.filteredProducts = result;
     this.currentPage = 1;
+  }
+
+  toggleSort(column: string): void {
+    if (column === 'name') {
+      this.sortBy = this.sortBy === 'name-asc' ? 'name-desc' : 'name-asc';
+    } else if (column === 'category') {
+      this.sortBy = this.sortBy === 'category-asc' ? 'category-desc' : 'category-asc';
+    } else if (column === 'brand') {
+      this.sortBy = this.sortBy === 'brand-asc' ? 'brand-desc' : 'brand-asc';
+    } else if (column === 'price') {
+      this.sortBy = this.sortBy === 'price-asc' ? 'price-desc' : 'price-asc';
+    } else if (column === 'discount') {
+      this.sortBy = this.sortBy === 'discount-asc' ? 'discount-desc' : 'discount-asc';
+    } else if (column === 'stock') {
+      this.sortBy = this.sortBy === 'stock-asc' ? 'stock-desc' : 'stock-asc';
+    } else if (column === 'status') {
+      this.sortBy = this.sortBy === 'status-asc' ? 'status-desc' : 'status-asc';
+    }
+    this.filterProducts();
   }
 
   openAddModal(): void {

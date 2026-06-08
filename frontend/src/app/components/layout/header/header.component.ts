@@ -36,20 +36,30 @@ import { ElementRef } from '@angular/core';
 
         <!-- Desktop Navigation -->
         <nav class="nav-actions nav-desktop">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Asosiy</a>
-          <a routerLink="/catalog" routerLinkActive="active" class="nav-link">Katalog</a>
-          <a routerLink="/about" routerLinkActive="active" class="nav-link">Biz haqimizda</a>
-          <a routerLink="/contact" routerLinkActive="active" class="nav-link">Aloqa</a>
-          <a *ngIf="isLoggedIn" routerLink="/wishlist" routerLinkActive="active" class="nav-link wishlist-link">
-            Sevimlilar
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" title="Asosiy">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </a>
+          <a routerLink="/catalog" routerLinkActive="active" class="nav-link" title="Katalog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </a>
+          <a routerLink="/about" routerLinkActive="active" class="nav-link" title="Biz haqimizda">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </a>
+          <a routerLink="/contact" routerLinkActive="active" class="nav-link" title="Aloqa">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </a>
+          <a *ngIf="isLoggedIn" routerLink="/wishlist" routerLinkActive="active" class="nav-link wishlist-link" title="Sevimlilar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             <span *ngIf="wishlistCount > 0" class="wishlist-badge">{{ wishlistCount }}</span>
           </a>
-          <a routerLink="/cart" routerLinkActive="active" class="nav-link cart-link">
-            Savat
+          <a routerLink="/cart" routerLinkActive="active" class="nav-link cart-link" title="Savat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
           </a>
           <ng-container *ngIf="isLoggedIn; else authLinksDesktop">
-            <a routerLink="/orders" routerLinkActive="active" class="nav-link">Buyurtmalarim</a>
+            <a routerLink="/orders" routerLinkActive="active" class="nav-link" title="Buyurtmalarim">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon><polygon points="12 22.08 21 17.08 21 6.92 12 12 12 22.08"></polygon><polygon points="12 12 21 6.92 12 1.84 3 6.92 12 12"></polygon></svg>
+            </a>
             <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">Admin Panel</a>
             <div class="user-menu">
               <a routerLink="/profile" class="username-display" style="text-decoration:none;display:flex;align-items:center;gap:5px">
@@ -103,15 +113,31 @@ import { ElementRef } from '@angular/core';
 
       <!-- Mobile Dropdown Menu -->
       <nav class="mobile-nav" [class.open]="menuOpen">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-nav-link" (click)="closeMenu()">Asosiy</a>
-        <a routerLink="/catalog" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Katalog</a>
-        <a routerLink="/about" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Biz haqimizda</a>
-        <a routerLink="/contact" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Aloqa</a>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-nav-link" (click)="closeMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          Asosiy
+        </a>
+        <a routerLink="/catalog" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Katalog
+        </a>
+        <a routerLink="/about" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          Biz haqimizda
+        </a>
+        <a routerLink="/contact" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Aloqa
+        </a>
         <ng-container *ngIf="isLoggedIn; else mobileAuthLinks">
-          <a routerLink="/wishlist" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()" style="display: flex; align-items: center;">
+          <a routerLink="/wishlist" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()" style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             Sevimlilar <span *ngIf="wishlistCount > 0" class="wishlist-badge" style="position: static; display: inline-flex; margin-left: 0.5rem; transform: none;">{{ wishlistCount }}</span>
           </a>
-          <a routerLink="/orders" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">Buyurtmalarim</a>
+          <a routerLink="/orders" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon><polygon points="12 22.08 21 17.08 21 6.92 12 12 12 22.08"></polygon><polygon points="12 12 21 6.92 12 1.84 3 6.92 12 12"></polygon></svg>
+            Buyurtmalarim
+          </a>
           <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
             {{ currentUser?.firstName || currentUser?.username }} — Profil
           </a>
@@ -215,6 +241,9 @@ import { ElementRef } from '@angular/core';
       border-radius: 8px;
       transition: var(--transition-smooth);
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .nav-link:hover, .nav-link.active {
@@ -423,7 +452,9 @@ import { ElementRef } from '@angular/core';
       }
 
       .mobile-nav-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         padding: 0.75rem 0.5rem;
         color: var(--text-secondary);
         text-decoration: none;

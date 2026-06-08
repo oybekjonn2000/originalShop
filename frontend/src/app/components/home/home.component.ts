@@ -94,9 +94,19 @@ import { WishlistService } from '../../services/wishlist.service';
                 <span class="new-price">{{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm</span>
               </div>
               
-              <button class="btn-primary btn-deal" (click)="addToCart(product)">
-                Savatga qo'shish
-              </button>
+              <div class="deal-actions">
+                <button class="btn-primary btn-deal" (click)="addToCart(product)">
+                  Savatga qo'shish
+                </button>
+                <button
+                  class="btn-wish deal-wish-btn"
+                  [class.wished]="isInWishlist(product.id)"
+                  (click)="toggleWishlist(product, $event)"
+                  title="Sevimlilarga qo'shish"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -875,6 +885,22 @@ import { WishlistService } from '../../services/wishlist.service';
       0% { transform: scale(1); }
       50% { transform: scale(1.3); }
       100% { transform: scale(1); }
+    }
+
+    /* Deal card actions row */
+    .deal-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.75rem;
+    }
+
+    .deal-wish-btn {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 10px;
+      flex-shrink: 0;
     }
 
     .add-btn-row {

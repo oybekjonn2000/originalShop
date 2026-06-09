@@ -102,8 +102,19 @@ import { RouterModule } from '@angular/router';
       border-radius: 24px 24px 0 0;
       border-bottom: none;
       overflow: hidden;
+      
+      /* Light Theme (Default) */
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 247, 255, 0.95) 100%);
+      border: 1px solid var(--glass-border);
+      border-bottom: none;
+      box-shadow: 0 -10px 40px rgba(37, 99, 235, 0.05);
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    :host-context([data-theme="dark"]) .modern-footer {
       background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(10, 15, 28, 0.8) 100%);
-      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
     }
 
     .footer-glow-effect {
@@ -112,11 +123,18 @@ import { RouterModule } from '@angular/router';
       right: 10%;
       width: 300px;
       height: 300px;
-      background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+      
+      /* Light Theme Glow */
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
       border-radius: 50%;
       filter: blur(40px);
       z-index: 0;
       pointer-events: none;
+      transition: background 0.4s ease;
+    }
+
+    :host-context([data-theme="dark"]) .footer-glow-effect {
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
     }
 
     .footer-content {
@@ -167,7 +185,7 @@ import { RouterModule } from '@angular/router';
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       color: var(--text-secondary);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -175,10 +193,10 @@ import { RouterModule } from '@angular/router';
 
     .social-btn:hover {
       background: var(--primary-color);
-      color: #0f172a;
+      color: #fff;
       border-color: var(--primary-color);
       transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+      box-shadow: 0 10px 20px var(--primary-glow);
     }
 
     /* Links Grid */
@@ -250,11 +268,17 @@ import { RouterModule } from '@angular/router';
       width: 100%;
       padding-right: 3.5rem;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      transition: var(--transition-smooth);
     }
 
     .newsletter-form input:focus {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--panel-bg);
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
     .btn-subscribe {
@@ -285,8 +309,16 @@ import { RouterModule } from '@angular/router';
       position: relative;
       z-index: 1;
       padding: 1.5rem 3rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      
+      /* Light Theme Bottom */
+      background: rgba(37, 99, 235, 0.03);
+      border-top: 1px solid var(--glass-border);
+      transition: background 0.4s ease, border-color 0.4s ease;
+    }
+
+    :host-context([data-theme="dark"]) .footer-bottom {
       background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .bottom-content {
@@ -312,12 +344,13 @@ import { RouterModule } from '@angular/router';
       font-size: 0.75rem;
       font-weight: 700;
       color: var(--text-secondary);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
       padding: 0.25rem 0.75rem;
       border-radius: 4px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
+      transition: var(--transition-smooth);
     }
 
     .developer-info strong {

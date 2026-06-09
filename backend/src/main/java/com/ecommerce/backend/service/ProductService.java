@@ -1,11 +1,11 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.model.Brand;
-import com.ecommerce.backend.model.Category;
 import com.ecommerce.backend.model.Product;
+import com.ecommerce.backend.model.Subcategory;
 import com.ecommerce.backend.repository.BrandRepository;
-import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
+import com.ecommerce.backend.repository.SubcategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class ProductService {
     private ProductRepository productRepository;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private SubcategoryRepository subcategoryRepository;
 
     @Autowired
     private BrandRepository brandRepository;
@@ -35,7 +35,11 @@ public class ProductService {
     }
 
     public List<Product> getProductsByCategory(Long categoryId) {
-        return productRepository.findByCategoryId(categoryId);
+        return productRepository.findBySubcategoryCategoryId(categoryId);
+    }
+
+    public List<Product> getProductsBySubcategory(Long subcategoryId) {
+        return productRepository.findBySubcategoryId(subcategoryId);
     }
 
     public Product getProductById(Long id) {
@@ -47,10 +51,10 @@ public class ProductService {
         if (product.getImageUrls() != null && product.getImageUrls().size() > 10) {
             throw new RuntimeException("Mahsulot rasmlari soni 10 tadan oshmasligi kerak!");
         }
-        if (product.getCategory() != null && product.getCategory().getId() != null) {
-            Category category = categoryRepository.findById(product.getCategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Kategoriya topilmadi ID: " + product.getCategory().getId()));
-            product.setCategory(category);
+        if (product.getSubcategory() != null && product.getSubcategory().getId() != null) {
+            Subcategory subcategory = subcategoryRepository.findById(product.getSubcategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + product.getSubcategory().getId()));
+            product.setSubcategory(subcategory);
         }
         if (product.getBrand() != null && product.getBrand().getId() != null) {
             Brand brand = brandRepository.findById(product.getBrand().getId())
@@ -77,12 +81,12 @@ public class ProductService {
         product.setDiscount(productDetails.getDiscount());
         product.setFullDescription(productDetails.getFullDescription());
 
-        if (productDetails.getCategory() != null && productDetails.getCategory().getId() != null) {
-            Category category = categoryRepository.findById(productDetails.getCategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Kategoriya topilmadi ID: " + productDetails.getCategory().getId()));
-            product.setCategory(category);
-        } else if (productDetails.getCategory() == null) {
-            product.setCategory(null);
+        if (productDetails.getSubcategory() != null && productDetails.getSubcategory().getId() != null) {
+            Subcategory subcategory = subcategoryRepository.findById(productDetails.getSubcategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + productDetails.getSubcategory().getId()));
+            product.setSubcategory(subcategory);
+        } else if (productDetails.getSubcategory() == null) {
+            product.setSubcategory(null);
         }
 
         if (productDetails.getBrand() != null && productDetails.getBrand().getId() != null) {

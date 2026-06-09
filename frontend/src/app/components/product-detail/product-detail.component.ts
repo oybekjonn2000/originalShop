@@ -133,7 +133,8 @@ import { WishlistService } from '../../services/wishlist.service';
             </div>
             <div class="mini-info">
               <h3 class="mini-name">{{ prod.name }}</h3>
-              <div class="mini-price-row">
+              <div class="mini-price-row" style="display: flex; flex-direction: column; gap: 0.15rem;">
+                <span class="old-price" style="font-size: 0.85rem; margin-top: 0;" *ngIf="prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
                 <span class="mini-price" *ngIf="prod.discount">{{ getDiscountedPrice(prod.price, prod.discount) | number:'1.0-0' }} so'm</span>
                 <span class="mini-price" *ngIf="!prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
               </div>
@@ -153,7 +154,8 @@ import { WishlistService } from '../../services/wishlist.service';
             </div>
             <div class="mini-info">
               <h3 class="mini-name">{{ prod.name }}</h3>
-              <div class="mini-price-row">
+              <div class="mini-price-row" style="display: flex; flex-direction: column; gap: 0.15rem;">
+                <span class="old-price" style="font-size: 0.85rem; margin-top: 0;" *ngIf="prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
                 <span class="mini-price" *ngIf="prod.discount">{{ getDiscountedPrice(prod.price, prod.discount) | number:'1.0-0' }} so'm</span>
                 <span class="mini-price" *ngIf="!prod.discount">{{ prod.price | number:'1.0-0' }} so'm</span>
               </div>

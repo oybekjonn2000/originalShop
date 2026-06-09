@@ -89,22 +89,23 @@ import { CartService } from '../../services/cart.service';
         </div>
       </div>
 
-      <!-- Confirm Modal -->
-      <div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
-        <div class="modal-card glass-panel confirm-modal" (click)="$event.stopPropagation()">
-          <div class="modal-header confirm-header">
-            <div class="confirm-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </div>
-            <h2>{{ confirmType === 'remove' ? "O'chirishni tasdiqlang" : "Savatni tozalashni tasdiqlang" }}</h2>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+      <div class="modal-card glass-panel confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header confirm-header">
+          <div class="confirm-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </div>
-          <div class="confirm-body">
-            <p>{{ confirmType === 'remove' ? "Ushbu mahsulotni savatdan o'chirmoqchimisiz?" : "Savatdagi barcha mahsulotlarni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." }}</p>
-          </div>
-          <div class="modal-actions confirm-actions">
-            <button (click)="closeConfirmModal()" class="btn-secondary">Bekor qilish</button>
-            <button (click)="confirmAction()" class="btn-primary btn-danger">{{ confirmType === 'remove' ? "O'chirish" : "Tozalash" }}</button>
-          </div>
+          <h2>{{ confirmType === 'remove' ? "O'chirishni tasdiqlang" : "Savatni tozalashni tasdiqlang" }}</h2>
+        </div>
+        <div class="confirm-body">
+          <p>{{ confirmType === 'remove' ? "Ushbu mahsulotni savatdan o'chirmoqchimisiz?" : "Savatdagi barcha mahsulotlarni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." }}</p>
+        </div>
+        <div class="modal-actions confirm-actions">
+          <button (click)="closeConfirmModal()" class="btn-secondary">Bekor qilish</button>
+          <button (click)="confirmAction()" class="btn-primary btn-danger">{{ confirmType === 'remove' ? "O'chirish" : "Tozalash" }}</button>
         </div>
       </div>
     </div>

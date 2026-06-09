@@ -35,6 +35,11 @@ public class ProductController {
         return productService.getProductsByCategory(categoryId);
     }
 
+    @GetMapping("/subcategory/{subcategoryId}")
+    public List<Product> getProductsBySubcategory(@PathVariable Long subcategoryId) {
+        return productService.getProductsBySubcategory(subcategoryId);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));

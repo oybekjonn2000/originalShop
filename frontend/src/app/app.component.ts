@@ -3,6 +3,7 @@ import { RouterOutlet, Router, NavigationStart, NavigationEnd, NavigationCancel,
 import { HeaderComponent } from './components/layout/header/header.component';
 import { FooterComponent } from './components/layout/footer/footer.component';
 import { CommonModule } from '@angular/common';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,10 @@ export class AppComponent implements OnInit, OnDestroy {
   isPageLoading = false;
   private navSub: any;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private themeService: ThemeService  // early injection applies saved theme on app start
+  ) {}
 
   ngOnInit(): void {
     this.navSub = this.router.events.subscribe(event => {

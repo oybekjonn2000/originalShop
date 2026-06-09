@@ -1,19 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { CartService } from '../../../services/cart.service';
 import { WishlistService } from '../../../services/wishlist.service';
-import { HostListener } from '@angular/core';
-import { ElementRef } from '@angular/core';
+import { ThemeService } from '../../../services/theme.service';
+import { HostListener, ElementRef } from '@angular/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <header class="header-container glass-panel">
+    <header class="header-container glass-panel" [class.scrolled]="isScrolled">
       <div class="header-content">
         <!-- Logo -->
         <a routerLink="/" class="logo">
@@ -78,9 +79,38 @@ import { ElementRef } from '@angular/core';
               <a routerLink="/register" class="btn-primary-sm">Ro'yxatdan o'tish</a>
             </div>
           </ng-template>
+
+          <!-- ✦ Theme Toggle Button (Desktop) -->
+          <button
+            class="theme-toggle-btn"
+            (click)="toggleTheme()"
+            [title]="isDark ? themeLabelLight : themeLabelDark"
+            [attr.aria-label]="isDark ? themeLabelLight : themeLabelDark"
+          >
+            <span class="theme-toggle-track" [class.dark]="isDark">
+              <span class="theme-toggle-thumb">
+                <!-- Sun icon (Light) -->
+                <svg *ngIf="!isDark" class="theme-icon sun-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon icon (Dark) -->
+                <svg *ngIf="isDark" class="theme-icon moon-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </span>
+            </span>
+          </button>
         </nav>
 
-        <!-- Mobile Right Side (wishlist + cart + burger) -->
+        <!-- Mobile Right Side (wishlist + cart + theme + burger) -->
         <div class="mobile-right">
           <a *ngIf="isLoggedIn" routerLink="/wishlist" class="nav-link wishlist-link mobile-wishlist" style="padding: 0.4rem; display: flex; align-items: center; justify-content: center;">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -90,6 +120,31 @@ import { ElementRef } from '@angular/core';
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
           </a>
+          <!-- Mobile Theme Toggle -->
+          <button
+            class="theme-toggle-btn mobile-theme-btn"
+            (click)="toggleTheme()"
+            [title]="isDark ? themeLabelLight : themeLabelDark"
+          >
+            <span class="theme-toggle-track" [class.dark]="isDark">
+              <span class="theme-toggle-thumb">
+                <svg *ngIf="!isDark" class="theme-icon sun-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg *ngIf="isDark" class="theme-icon moon-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </span>
+            </span>
+          </button>
           <button class="hamburger-btn" (click)="toggleMenu()" [class.open]="menuOpen">
             <span></span><span></span><span></span>
           </button>
@@ -153,16 +208,50 @@ import { ElementRef } from '@angular/core';
     </header>
   `,
   styles: [`
-    .header-container {
+    :host {
+      display: block;
       position: sticky;
       top: 0;
       z-index: 1000;
+    }
+
+    .header-container {
       margin: 0 auto 1.5rem auto;
       max-width: 1400px;
       width: calc(100% - 2rem);
       padding: 0.85rem 2rem;
       border-radius: 0 0 16px 16px;
       border-top: none;
+      transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.35s ease,
+                  backdrop-filter 0.35s ease,
+                  border-radius 0.35s ease;
+    }
+
+    /* Scrolled state — visible sticky bar */
+    .header-container.scrolled {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 0.55rem 2rem;
+      /* Light mode — opaque white background */
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1.5px solid rgba(37, 99, 235, 0.15);
+      box-shadow: 0 4px 32px rgba(37, 99, 235, 0.12),
+                  0 1px 0 rgba(37, 99, 235, 0.08);
+    }
+
+    /* Dark mode scrolled override */
+    :host-context([data-theme="dark"]) .header-container.scrolled {
+      background: rgba(11, 14, 22, 0.96) !important;
+      border-bottom: 1.5px solid rgba(79, 172, 254, 0.18);
+      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.55),
+                  0 1px 0 rgba(79, 172, 254, 0.08);
     }
 
     .header-content {
@@ -186,7 +275,7 @@ import { ElementRef } from '@angular/core';
       background: var(--primary-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.4));
+      filter: drop-shadow(0 0 8px var(--primary-glow));
     }
 
     .search-box {
@@ -249,7 +338,7 @@ import { ElementRef } from '@angular/core';
 
     .nav-link:hover, .nav-link.active {
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.04);
+      background: var(--glass-bg);
     }
 
     .cart-link {
@@ -310,7 +399,7 @@ import { ElementRef } from '@angular/core';
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--glass-bg);
       padding: 0.35rem 0.75rem;
       border-radius: 50px;
       border: 1px solid var(--glass-border);
@@ -328,7 +417,7 @@ import { ElementRef } from '@angular/core';
       border-radius: 50%;
       object-fit: cover;
       border: 1.5px solid var(--primary-color);
-      box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+      box-shadow: 0 0 8px var(--primary-glow);
     }
 
     .btn-logout {
@@ -355,21 +444,87 @@ import { ElementRef } from '@angular/core';
       justify-content: center;
       padding: 0.45rem 0.9rem;
       background: var(--primary-gradient);
-      color: #04080f;
+      color: #fff;
       font-family: var(--font-heading);
       font-weight: 600;
       font-size: 0.82rem;
       border: none;
       border-radius: 8px;
       text-decoration: none;
-      box-shadow: 0 4px 10px 0 rgba(0, 242, 254, 0.2);
+      box-shadow: 0 4px 10px 0 var(--primary-glow);
       transition: var(--transition-smooth);
       white-space: nowrap;
     }
 
     .btn-primary-sm:hover {
-      box-shadow: 0 6px 15px 0 rgba(0, 242, 254, 0.4);
-      filter: brightness(1.1);
+      box-shadow: 0 6px 15px 0 var(--primary-glow);
+      filter: brightness(1.08);
+    }
+
+    /* ============================================
+       THEME TOGGLE BUTTON
+       ============================================ */
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-track {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #f0c040 0%, #f5a623 100%);
+      border: 2px solid rgba(245, 166, 35, 0.4);
+      box-shadow: 0 0 12px rgba(245, 166, 35, 0.35), inset 0 1px 2px rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .theme-toggle-track.dark {
+      background: linear-gradient(135deg, #1e2a4a 0%, #2d3a5e 100%);
+      border-color: rgba(79, 172, 254, 0.4);
+      box-shadow: 0 0 12px rgba(79, 172, 254, 0.3), inset 0 1px 2px rgba(255,255,255,0.05);
+    }
+
+    .theme-toggle-thumb {
+      position: absolute;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+    }
+
+    .theme-toggle-track.dark .theme-toggle-thumb {
+      transform: translateX(24px);
+      background: #1a2540;
+    }
+
+    .theme-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sun-icon { color: #f59e0b; }
+    .moon-icon { color: #93c5fd; }
+
+    .theme-toggle-btn:hover .theme-toggle-track {
+      filter: brightness(1.08);
     }
 
     /* --- TABLET (max 1024px) --- */
@@ -392,7 +547,7 @@ import { ElementRef } from '@angular/core';
       .mobile-right {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
       }
 
       .mobile-cart {
@@ -404,8 +559,26 @@ import { ElementRef } from '@angular/core';
         border-radius: 8px;
       }
 
+      .mobile-theme-btn {
+        padding: 0;
+      }
+
+      .mobile-theme-btn .theme-toggle-track {
+        width: 44px;
+        height: 24px;
+      }
+
+      .mobile-theme-btn .theme-toggle-thumb {
+        width: 17px;
+        height: 17px;
+      }
+
+      .mobile-theme-btn .theme-toggle-track.dark .theme-toggle-thumb {
+        transform: translateX(20px);
+      }
+
       .hamburger-btn {
-        background: none;
+        background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         border-radius: 8px;
         cursor: pointer;
@@ -418,7 +591,6 @@ import { ElementRef } from '@angular/core';
         gap: 5px;
         padding: 6px;
         transition: all 0.3s ease;
-        background: rgba(255,255,255,0.03);
       }
 
       .hamburger-btn span {
@@ -470,7 +642,7 @@ import { ElementRef } from '@angular/core';
         text-decoration: none;
         font-size: 1rem;
         font-weight: 500;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid var(--glass-border);
         transition: all 0.2s ease;
         background: none;
         border-left: none;
@@ -508,7 +680,7 @@ import { ElementRef } from '@angular/core';
     }
   `]
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   isLoggedIn = false;
   isAdmin = false;
   currentUser: any = null;
@@ -516,28 +688,54 @@ export class HeaderComponent implements OnInit {
   wishlistCount = 0;
   searchQuery = '';
   menuOpen = false;
+  isDark = false;
+  isScrolled = false;
+  readonly themeLabelLight = "Light mavzuga o'tish";
+  readonly themeLabelDark  = "Dark mavzuga o'tish";
+
+  private subs: Subscription[] = [];
+
+  @HostListener('window:scroll', [])
+  onWindowScroll(): void {
+    this.isScrolled = window.scrollY > 30;
+  }
 
   constructor(
     private authService: AuthService,
     private cartService: CartService,
     private wishlistService: WishlistService,
+    private themeService: ThemeService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-      this.isLoggedIn = !!user;
-      this.isAdmin = this.authService.isAdmin();
-    });
+    this.subs.push(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser = user;
+        this.isLoggedIn = !!user;
+        this.isAdmin = this.authService.isAdmin();
+      }),
 
-    this.cartService.cartCount$.subscribe(count => {
-      this.cartCount = count;
-    });
+      this.cartService.cartCount$.subscribe(count => {
+        this.cartCount = count;
+      }),
 
-    this.wishlistService.wishlistCount$.subscribe(count => {
-      this.wishlistCount = count;
-    });
+      this.wishlistService.wishlistCount$.subscribe(count => {
+        this.wishlistCount = count;
+      }),
+
+      this.themeService.theme$.subscribe(theme => {
+        this.isDark = theme === 'dark';
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
   }
 
   toggleMenu(): void {

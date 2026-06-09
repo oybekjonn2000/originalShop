@@ -92,7 +92,12 @@ import { BrandService } from '../../../services/brand.service';
               <td>
                 <span class="product-name">{{ product.name }}</span>
               </td>
-              <td>{{ product.category?.name || '—' }}</td>
+              <td>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:0.78rem;color:var(--text-secondary);">{{ product.subcategory?.category?.name || '—' }}</span>
+                  <span>{{ product.subcategory?.name || '—' }}</span>
+                </div>
+              </td>
               <td>{{ product.brand?.name || '—' }}</td>
               <td><strong>{{ product.price | number:'1.0-0' }} so'm</strong></td>
               <td>
@@ -173,13 +178,20 @@ import { BrandService } from '../../../services/brand.service';
                 <label class="glass-label">Mahsulot nomi *</label>
                 <input type="text" [(ngModel)]="form.name" name="name" class="glass-input" required placeholder="iPhone 15 Pro" />
               </div>
-              <div class="form-group flex-1">
-                <label class="glass-label">Kategoriya *</label>
-                <select [(ngModel)]="form.categoryId" name="categoryId" class="glass-input" required>
-                  <option [ngValue]="null" disabled>Kategoriya tanlang</option>
-                  <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
-                </select>
-              </div>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Kategoriya *</label>
+                  <select [(ngModel)]="form.categoryId" name="categoryId" class="glass-input" required (change)="onCategoryChange()">
+                    <option [ngValue]="null" disabled>Kategoriya tanlang</option>
+                    <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Subkategoriya *</label>
+                  <select [(ngModel)]="form.subcategoryId" name="subcategoryId" class="glass-input" required [disabled]="!form.categoryId">
+                    <option [ngValue]="null" disabled>{{ form.categoryId ? 'Subkategoriya tanlang' : 'Avval kategoriya tanlang' }}</option>
+                    <option *ngFor="let sub of filteredSubcategories" [ngValue]="sub.id">{{ sub.name }}</option>
+                  </select>
+                </div>
               <div class="form-group flex-1">
                 <label class="glass-label">Brand</label>
                 <select [(ngModel)]="form.brandId" name="brandId" class="glass-input">
@@ -926,9 +938,13 @@ export class ProductsComponent implements OnInit {
     imageUrl: '',
     imageUrls: [] as string[],
     categoryId: null as number | null,
+    subcategoryId: null as number | null,
     brandId: null as number | null,
     isActive: true
   };
+
+  subcategories: any[] = [];
+  filteredSubcategories: any[] = [];
 
   constructor(
     private productService: ProductService,
@@ -942,6 +958,7 @@ export class ProductsComponent implements OnInit {
 
   loadAll(): void {
     this.productService.getCategories().subscribe(c => this.categories = c);
+    this.productService.getSubcategories().subscribe(s => this.subcategories = s);
     this.brandService.getBrands().subscribe(b => this.brands = b);
     this.productService.getProducts().subscribe(p => {
       this.products = p;
@@ -954,7 +971,7 @@ export class ProductsComponent implements OnInit {
       const matchSearch = !this.searchTerm ||
         p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (p.description && p.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
-      const matchCat = !this.selectedCategoryFilter || p.category?.id === this.selectedCategoryFilter;
+      const matchCat = !this.selectedCategoryFilter || p.subcategory?.category?.id === this.selectedCategoryFilter;
       return matchSearch && matchCat;
     });
 
@@ -963,9 +980,9 @@ export class ProductsComponent implements OnInit {
     } else if (this.sortBy === 'name-desc') {
       result.sort((a, b) => b.name.localeCompare(a.name));
     } else if (this.sortBy === 'category-asc') {
-      result.sort((a, b) => (a.category?.name || '').localeCompare(b.category?.name || ''));
+      result.sort((a, b) => (a.subcategory?.category?.name || '').localeCompare(b.subcategory?.category?.name || ''));
     } else if (this.sortBy === 'category-desc') {
-      result.sort((a, b) => (b.category?.name || '').localeCompare(a.category?.name || ''));
+      result.sort((a, b) => (b.subcategory?.category?.name || '').localeCompare(a.subcategory?.category?.name || ''));
     } else if (this.sortBy === 'brand-asc') {
       result.sort((a, b) => (a.brand?.name || '').localeCompare(b.brand?.name || ''));
     } else if (this.sortBy === 'brand-desc') {
@@ -1014,7 +1031,8 @@ export class ProductsComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, brandId: null, isActive: true };
+    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, subcategoryId: null, brandId: null, isActive: true };
+    this.filteredSubcategories = [];
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
     this.showModal = true;
@@ -1032,10 +1050,17 @@ export class ProductsComponent implements OnInit {
       stockQuantity: product.stockQuantity,
       imageUrl: product.imageUrl || '',
       imageUrls: product.imageUrls ? [...product.imageUrls] : [],
-      categoryId: product.category?.id || null,
+      categoryId: product.subcategory?.category?.id || null,
+      subcategoryId: product.subcategory?.id || null,
       brandId: product.brand?.id || null,
       isActive: product.isActive
     };
+    // Load subcategories for existing category
+    if (this.form.categoryId) {
+      this.filteredSubcategories = this.subcategories.filter(s => s.category?.id === this.form.categoryId);
+    } else {
+      this.filteredSubcategories = [];
+    }
     this.imagePreviewUrl = this.form.imageUrl || null;
     // Build allImageUrls from imageUrl + imageUrls
     this.allImageUrls = [];
@@ -1052,6 +1077,15 @@ export class ProductsComponent implements OnInit {
     this.showModal = false;
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
+  }
+
+  onCategoryChange(): void {
+    this.form.subcategoryId = null;
+    if (this.form.categoryId) {
+      this.filteredSubcategories = this.subcategories.filter(s => s.category?.id === this.form.categoryId);
+    } else {
+      this.filteredSubcategories = [];
+    }
   }
 
   triggerFileInput(): void {
@@ -1165,8 +1199,8 @@ export class ProductsComponent implements OnInit {
   }
 
   saveProduct(): void {
-    if (!this.form.name || !this.form.price || this.form.categoryId === null) {
-      this.showToast('Iltimos, barcha majburiy maydonlarni to\'ldiring!', 'snack-warning');
+    if (!this.form.name || !this.form.price || this.form.subcategoryId === null) {
+      this.showToast('Iltimos, barcha majburiy maydonlarni to\'ldiring! (Kategoriya va Subkategoriya ham tanlang)', 'snack-warning');
       return;
     }
 
@@ -1181,7 +1215,7 @@ export class ProductsComponent implements OnInit {
       imageUrl: this.form.imageUrl,
       imageUrls: this.form.imageUrls,
       isActive: this.form.isActive,
-      category: { id: this.form.categoryId },
+      subcategory: { id: this.form.subcategoryId },
       brand: this.form.brandId ? { id: this.form.brandId } : null
     };
 

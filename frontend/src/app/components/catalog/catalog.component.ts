@@ -33,13 +33,67 @@ import { WishlistService } from '../../services/wishlist.service';
           <div class="filter-section">
             <h3>Kategoriyalar</h3>
             <ul class="category-list">
-              <li [class.active]="selectedCategoryId === null" (click)="selectCategory(null)">Barchasi</li>
-              <li *ngFor="let cat of categories" 
-                  [class.active]="selectedCategoryId === cat.id" 
-                  (click)="selectCategory(cat.id)">
-                {{ cat.name }}
+              <li 
+                [class.active]="selectedCategoryId === null && selectedSubcategoryId === null" 
+                (click)="selectCategory(null)">Barchasi</li>
+              
+              <li *ngFor="let cat of categories" class="category-accordion-item">
+                <div 
+                  class="category-accordion-header"
+                  [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null"
+                  (click)="toggleAccordion(cat.id)"
+                >
+                  <span>{{ cat.name }}</span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    [class.rotated]="openCategoryId === cat.id"
+                    class="accordion-arrow"
+                  ><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <ul class="subcategory-list" *ngIf="openCategoryId === cat.id">
+                  <li
+                    [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null"
+                    (click)="selectCategoryOnly(cat.id)"
+                  >Barchasi</li>
+                  <li 
+                    *ngFor="let sub of getSubsForCategory(cat.id)"
+                    [class.active]="selectedSubcategoryId === sub.id"
+                    (click)="selectSubcategory(sub)"
+                  >
+                    {{ sub.name }}
+                  </li>
+                </ul>
               </li>
             </ul>
+          </div>
+
+          <div class="filter-section">
+            <h3>Narx (so'm)</h3>
+            <div class="price-range">
+              <input type="number" [(ngModel)]="minPrice" (input)="applyFilters()" placeholder="Min" class="glass-input price-input">
+              <span>-</span>
+              <input type="number" [(ngModel)]="maxPrice" (input)="applyFilters()" placeholder="Max" class="glass-input price-input">
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h3>Qo'shimcha</h3>
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="onlyDiscounted" (change)="applyFilters()">
+              <span class="custom-checkbox"></span>
+              Faqat chegirmadagilar
+            </label>
+          </div>
+
+          <div class="filter-section" *ngIf="brands.length > 0">
+            <h3>Brandlar</h3>
+            <div class="brands-list">
+              <label *ngFor="let brand of brands" class="checkbox-label">
+                <input type="checkbox" [checked]="selectedBrandIds.has(brand.id)" (change)="toggleBrand(brand.id)">
+                <span class="custom-checkbox"></span>
+                {{ brand.name }}
+              </label>
+            </div>
           </div>
 
           <div class="filter-section">
@@ -51,6 +105,8 @@ import { WishlistService } from '../../services/wishlist.service';
               <option value="nameAsc">Alifbo bo'yicha (A-Z)</option>
             </select>
           </div>
+
+          <button class="btn-secondary w-full reset-filters-btn" (click)="resetFilters()">Filtrlarni tozalash</button>
         </aside>
 
         <!-- Product Grid -->
@@ -100,7 +156,7 @@ import { WishlistService } from '../../services/wishlist.service';
                     </ng-container>
 
                     <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
-                    <span class="category-badge">{{ product.category?.name || 'Kategoriyasiz' }}</span>
+                    <span class="category-badge">{{ product.subcategory?.name || 'Kategoriyasiz' }}</span>
                     <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
                     <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
                   </div>
@@ -199,7 +255,7 @@ import { WishlistService } from '../../services/wishlist.service';
                 </ng-container>
 
                 <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
-                <span class="category-badge">{{ product.category?.name || 'Kategoriyasiz' }}</span>
+                <span class="category-badge">{{ product.subcategory?.name || 'Kategoriyasiz' }}</span>
                 <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
                 <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
               </div>
@@ -397,31 +453,183 @@ import { WishlistService } from '../../services/wishlist.service';
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.5rem;
     }
 
-    .category-list li {
-      padding: 0.75rem 1rem;
+    .category-list > li {
       border-radius: var(--border-radius-sm);
-      cursor: pointer;
       color: var(--text-secondary);
+      font-weight: 500;
       transition: var(--transition-smooth);
       font-size: 0.95rem;
-      font-weight: 500;
-      margin-bottom: 0.1rem;
     }
 
-    .category-list li:hover {
+    .category-list > li:not(.category-accordion-item) {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+    }
+
+    .category-list > li:not(.category-accordion-item):hover {
       background: rgba(255, 255, 255, 0.03);
       color: var(--text-primary);
       transform: translateX(3px);
     }
 
-    .category-list li.active {
+    .category-list > li.active {
       background: rgba(0, 242, 254, 0.08);
       border-left: 3px solid var(--primary-color);
       color: var(--primary-color);
       font-weight: 600;
+    }
+
+    .category-accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-radius: var(--border-radius-sm);
+      transition: var(--transition-smooth);
+    }
+
+    .category-accordion-header:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-primary);
+    }
+
+    .category-accordion-header.active {
+      background: rgba(0, 242, 254, 0.08);
+      border-left: 3px solid var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .accordion-arrow {
+      transition: transform 0.3s ease;
+      opacity: 0.7;
+    }
+
+    .accordion-arrow.rotated {
+      transform: rotate(180deg);
+      color: var(--primary-color);
+      opacity: 1;
+    }
+
+    .subcategory-list {
+      list-style: none;
+      margin-top: 0.25rem;
+      margin-left: 1rem;
+      padding-left: 0.5rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      animation: subcatFadeIn 0.25s ease-out forwards;
+    }
+
+    @keyframes subcatFadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .subcategory-list > li {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .subcategory-list > li:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      transform: translateX(2px);
+    }
+
+    .subcategory-list > li.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+      font-weight: 600;
+    }
+
+    .price-range {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .price-input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .brands-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .brands-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .brands-list::-webkit-scrollbar-thumb {
+      background: var(--glass-border);
+      border-radius: 4px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .checkbox-label:hover {
+      color: var(--text-primary);
+    }
+
+    .checkbox-label input {
+      display: none;
+    }
+
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .checkbox-label input:checked + .custom-checkbox {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .checkbox-label input:checked + .custom-checkbox::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .reset-filters-btn {
+      margin-top: 1rem;
+      padding: 0.6rem;
+      font-size: 0.9rem;
     }
 
     .w-full {
@@ -844,9 +1052,6 @@ import { WishlistService } from '../../services/wishlist.service';
     @media (max-width: 1024px) {
       .catalog-layout { grid-template-columns: 1fr; }
       .filters-sidebar { position: static; }
-      .category-list { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
-      .category-list li { padding: 0.4rem 0.8rem; border-radius: 50px; border: 1px solid var(--glass-border); }
-      .category-list li.active { border-left: none; border: 1px solid var(--primary-color); }
       .products-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
@@ -1004,13 +1209,23 @@ export class CatalogComponent implements OnInit {
   products: any[] = [];
   filteredProducts: any[] = [];
   categories: any[] = [];
+  subcategories: any[] = [];
+  brands: any[] = [];
   cartItems: any[] = [];
   wishlistProductIds = new Set<number>();
   
   isLoading = true;
   searchTerm = '';
   selectedCategoryId: number | null = null;
-  selectedBrandId: number | null = null;
+  selectedSubcategoryId: number | null = null;
+  openCategoryId: number | null = null;
+  
+  // Universal Filters
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  onlyDiscounted = false;
+  selectedBrandIds: Set<number> = new Set<number>();
+  
   sortBy = 'newest';
   addingProductId: number | null = null;
 
@@ -1067,8 +1282,12 @@ export class CatalogComponent implements OnInit {
       if (params['q']) {
         this.searchTerm = params['q'];
       }
+      if (params['category']) {
+        this.selectedCategoryId = +params['category'];
+        this.openCategoryId = this.selectedCategoryId;
+      }
       if (params['brand']) {
-        this.selectedBrandId = +params['brand'];
+        this.selectedBrandIds.add(+params['brand']);
       }
       this.loadData();
     });
@@ -1092,6 +1311,18 @@ export class CatalogComponent implements OnInit {
       }
     });
 
+    this.productService.getSubcategories().subscribe({
+      next: (subs) => {
+        this.subcategories = subs;
+      }
+    });
+
+    this.productService.getBrands().subscribe({
+      next: (brands) => {
+        this.brands = brands;
+      }
+    });
+
     // Mahsulotlarni yuklash
     this.productService.getProducts().subscribe({
       next: (prods) => {
@@ -1107,6 +1338,37 @@ export class CatalogComponent implements OnInit {
 
   selectCategory(id: number | null): void {
     this.selectedCategoryId = id;
+    this.selectedSubcategoryId = null;
+    this.openCategoryId = id;
+    this.applyFilters();
+  }
+
+  selectCategoryOnly(categoryId: number): void {
+    this.selectedCategoryId = categoryId;
+    this.selectedSubcategoryId = null;
+    this.applyFilters();
+  }
+
+  selectSubcategory(sub: any): void {
+    this.selectedCategoryId = sub.category?.id || null;
+    this.selectedSubcategoryId = sub.id;
+    this.applyFilters();
+  }
+
+  toggleAccordion(categoryId: number): void {
+    this.openCategoryId = this.openCategoryId === categoryId ? null : categoryId;
+  }
+
+  getSubsForCategory(categoryId: number): any[] {
+    return this.subcategories.filter(s => s.category?.id === categoryId);
+  }
+
+  toggleBrand(brandId: number): void {
+    if (this.selectedBrandIds.has(brandId)) {
+      this.selectedBrandIds.delete(brandId);
+    } else {
+      this.selectedBrandIds.add(brandId);
+    }
     this.applyFilters();
   }
 
@@ -1115,12 +1377,10 @@ export class CatalogComponent implements OnInit {
 
     // 1. Kategoriya bo'yicha filtr
     if (this.selectedCategoryId !== null) {
-      result = result.filter(p => p.category && p.category.id === this.selectedCategoryId);
+      result = result.filter(p => p.subcategory?.category?.id === this.selectedCategoryId);
     }
-
-    // Brand bo'yicha filtr
-    if (this.selectedBrandId !== null) {
-      result = result.filter(p => p.brand && p.brand.id === this.selectedBrandId);
+    if (this.selectedSubcategoryId !== null) {
+      result = result.filter(p => p.subcategory?.id === this.selectedSubcategoryId);
     }
 
     // 2. Qidiruv bo'yicha filtr
@@ -1129,13 +1389,27 @@ export class CatalogComponent implements OnInit {
       result = result.filter(p => p.name.toLowerCase().includes(term));
     }
 
-    // 3. Saralash (Sort)
+    // 3. Universal Filters (Price, Brands, Discount)
+    if (this.minPrice !== null && this.minPrice !== undefined) {
+      result = result.filter(p => this.getFinalPrice(p.price, p.discount) >= this.minPrice!);
+    }
+    if (this.maxPrice !== null && this.maxPrice !== undefined) {
+      result = result.filter(p => this.getFinalPrice(p.price, p.discount) <= this.maxPrice!);
+    }
+    if (this.onlyDiscounted) {
+      result = result.filter(p => p.discount && p.discount > 0);
+    }
+    if (this.selectedBrandIds.size > 0) {
+      result = result.filter(p => p.brand && this.selectedBrandIds.has(p.brand.id));
+    }
+
+    // 4. Saralash (Sort)
     switch (this.sortBy) {
       case 'priceAsc':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => this.getFinalPrice(a.price, a.discount) - this.getFinalPrice(b.price, b.discount));
         break;
       case 'priceDesc':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => this.getFinalPrice(b.price, b.discount) - this.getFinalPrice(a.price, a.discount));
         break;
       case 'nameAsc':
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -1154,7 +1428,11 @@ export class CatalogComponent implements OnInit {
   resetFilters(): void {
     this.searchTerm = '';
     this.selectedCategoryId = null;
-    this.selectedBrandId = null;
+    this.selectedSubcategoryId = null;
+    this.selectedBrandIds.clear();
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.onlyDiscounted = false;
     this.sortBy = 'newest';
     this.applyFilters();
   }
@@ -1162,6 +1440,10 @@ export class CatalogComponent implements OnInit {
   getTitle(): string {
     if (this.searchTerm.trim()) {
       return `"${this.searchTerm}" bo'yicha natijalar`;
+    }
+    if (this.selectedSubcategoryId !== null) {
+      const sub = this.subcategories.find(s => s.id === this.selectedSubcategoryId);
+      return sub ? sub.name : 'Mahsulotlar';
     }
     if (this.selectedCategoryId !== null) {
       const cat = this.categories.find(c => c.id === this.selectedCategoryId);
@@ -1218,7 +1500,7 @@ export class CatalogComponent implements OnInit {
     
     this.categories.forEach(cat => {
       const catProds = this.products
-        .filter(p => p.category && p.category.id === cat.id)
+        .filter(p => p.subcategory?.category?.id === cat.id)
         .slice(0, 4);
       
       if (catProds.length > 0) {

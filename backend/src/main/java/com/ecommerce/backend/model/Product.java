@@ -36,8 +36,8 @@ public class Product {
     private Integer stockQuantity;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @JoinColumn(name = "subcategory_id")
+    private Subcategory subcategory;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")

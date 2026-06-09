@@ -95,7 +95,7 @@ import { WishlistService } from '../../services/wishlist.service';
               </div>
               
               <div class="deal-actions">
-                <button class="btn-primary btn-deal" (click)="addToCart(product)">
+                <button class="btn-primary btn-deal" (click)="addToCart(product, $event)">
                   Savatga qo'shish
                 </button>
                 <button
@@ -119,17 +119,37 @@ import { WishlistService } from '../../services/wishlist.service';
           <h3>Kategoriyalar</h3>
           <ul class="category-list">
             <li 
-              [class.active]="selectedCategoryId === null"
+              [class.active]="selectedCategoryId === null && selectedSubcategoryId === null"
               (click)="selectCategory(null)"
             >
               Barcha mahsulotlar
             </li>
-            <li 
-              *ngFor="let category of categories"
-              [class.active]="selectedCategoryId === category.id"
-              (click)="selectCategory(category.id)"
-            >
-              {{ category.name }}
+            <li *ngFor="let category of categories" class="category-accordion-item">
+              <div 
+                class="category-accordion-header"
+                [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null"
+                (click)="toggleAccordion(category.id)"
+              >
+                <span>{{ category.name }}</span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  [class.rotated]="openCategoryId === category.id"
+                  class="accordion-arrow"
+                ><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <ul class="subcategory-list" *ngIf="openCategoryId === category.id">
+                <li
+                  [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null"
+                  (click)="selectCategoryOnly(category.id, category.name)"
+                >Barchasi</li>
+                <li 
+                  *ngFor="let sub of getSubsForCategory(category.id)"
+                  [class.active]="selectedSubcategoryId === sub.id"
+                  (click)="selectSubcategory(sub)"
+                >
+                  {{ sub.name }}
+                </li>
+              </ul>
             </li>
           </ul>
         </aside>
@@ -224,7 +244,7 @@ import { WishlistService } from '../../services/wishlist.service';
                           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                         </button>
                         <button 
-                          (click)="addToCart(product)" 
+                          (click)="addToCart(product, $event)" 
                           [disabled]="addingProductId === product.id"
                           class="btn-add-to-cart"
                         >
@@ -592,28 +612,104 @@ import { WishlistService } from '../../services/wishlist.service';
 
     .category-list {
       list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
-    .category-list li {
-      padding: 0.75rem 1rem;
+    .category-list > li {
       border-radius: var(--border-radius-sm);
       color: var(--text-secondary);
-      cursor: pointer;
       font-weight: 500;
       transition: var(--transition-smooth);
-      margin-bottom: 0.5rem;
     }
 
-    .category-list li:hover {
+    .category-list > li:not(.category-accordion-item) {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+    }
+
+    .category-list > li:not(.category-accordion-item):hover {
       background: rgba(255, 255, 255, 0.03);
       color: var(--text-primary);
       transform: translateX(3px);
     }
 
-    .category-list li.active {
+    .category-list > li.active {
       background: rgba(0, 242, 254, 0.08);
       border-left: 3px solid var(--primary-color);
       color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .category-accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-radius: var(--border-radius-sm);
+      transition: var(--transition-smooth);
+    }
+
+    .category-accordion-header:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-primary);
+    }
+
+    .category-accordion-header.active {
+      background: rgba(0, 242, 254, 0.08);
+      border-left: 3px solid var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .accordion-arrow {
+      transition: transform 0.3s ease;
+      opacity: 0.7;
+    }
+
+    .accordion-arrow.rotated {
+      transform: rotate(180deg);
+      color: var(--primary-color);
+      opacity: 1;
+    }
+
+    .subcategory-list {
+      list-style: none;
+      margin-top: 0.25rem;
+      margin-left: 1rem;
+      padding-left: 0.5rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      animation: subcatFadeIn 0.25s ease-out forwards;
+    }
+
+    @keyframes subcatFadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .subcategory-list > li {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .subcategory-list > li:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      transform: translateX(2px);
+    }
+
+    .subcategory-list > li.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
       font-weight: 600;
     }
 
@@ -1292,6 +1388,9 @@ import { WishlistService } from '../../services/wishlist.service';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   categories: any[] = [];
+  subcategories: any[] = [];
+  openCategoryId: number | null = null;
+  selectedSubcategoryId: number | null = null;
   products: any[] = [];
   discountedProducts: any[] = [];
   cartItems: any[] = [];
@@ -1448,6 +1547,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
     });
+    this.productService.getSubcategories().subscribe(subs => {
+      this.subcategories = subs;
+    });
   }
 
   loadBrands(): void {
@@ -1504,6 +1606,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   selectCategory(categoryId: number | null): void {
     this.selectedCategoryId = categoryId;
+    this.selectedSubcategoryId = null;
+    this.openCategoryId = categoryId;
     this.searchQuery = '';
     if (categoryId === null) {
       this.loadAllProducts();
@@ -1512,14 +1616,50 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  selectCategoryOnly(categoryId: number, name: string): void {
+    this.selectedCategoryId = categoryId;
+    this.selectedSubcategoryId = null;
+    this.searchQuery = '';
+    this.loadProductsByCategory(categoryId);
+  }
+
+  selectSubcategory(sub: any): void {
+    this.selectedCategoryId = sub.category?.id || null;
+    this.selectedSubcategoryId = sub.id;
+    this.searchQuery = '';
+    this.isLoading = true;
+    this.catalogTitle = sub.name;
+    this.productService.getProductsBySubcategory(sub.id).subscribe({
+      next: (prods) => {
+        this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
+    });
+  }
+
+  toggleAccordion(categoryId: number): void {
+    this.openCategoryId = this.openCategoryId === categoryId ? null : categoryId;
+  }
+
+  getSubsForCategory(categoryId: number): any[] {
+    return this.subcategories.filter(s => s.category?.id === categoryId);
+  }
+
   resetCatalog(): void {
     this.selectCategory(null);
   }
 
-  addToCart(product: any): void {
+  addToCart(product: any, event?: Event): void {
     if (!this.authService.isLoggedIn()) {
       this.showToast('Savatga mahsulot qo\'shish uchun avval tizimga kiring!', 'snack-warning');
       return;
+    }
+
+    // Savatga uchish animatsiyasi
+    if (event) {
+      this.flyToCartAnimation(event);
     }
 
     this.addingProductId = product.id;
@@ -1532,6 +1672,71 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.addingProductId = null;
       }
     });
+  }
+
+  private flyToCartAnimation(event: Event): void {
+    const button = event.currentTarget as HTMLElement;
+    const card = button.closest('.product-card, .deal-card');
+    if (!card) return;
+
+    const img = card.querySelector('.product-img') as HTMLImageElement;
+    if (!img) return;
+
+    const cartIcon = document.querySelector('.cart-link, .mobile-cart') as HTMLElement;
+    if (!cartIcon) return;
+
+    // Kloni yaratamiz
+    const clone = img.cloneNode(true) as HTMLImageElement;
+    const rect = img.getBoundingClientRect();
+
+    // Dastlabki holati
+    Object.assign(clone.style, {
+      position: 'fixed',
+      top: rect.top + 'px',
+      left: rect.left + 'px',
+      width: rect.width + 'px',
+      height: rect.height + 'px',
+      objectFit: 'cover',
+      borderRadius: '8px',
+      zIndex: '99999',
+      transition: 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)',
+      pointerEvents: 'none',
+      boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+    });
+
+    document.body.appendChild(clone);
+
+    // Animatsiya uchun reflow talab qilinadi
+    clone.offsetHeight; 
+
+    // Savat koordinatalarini aniqlash
+    const cartRect = cartIcon.getBoundingClientRect();
+    const cartCenterX = cartRect.left + cartRect.width / 2;
+    const cartCenterY = cartRect.top + cartRect.height / 2;
+
+    // Klonning oxirgi manziliga yetib borishi
+    Object.assign(clone.style, {
+      top: (cartCenterY - 15) + 'px', // O'rtasiga tushishi uchun
+      left: (cartCenterX - 15) + 'px',
+      width: '30px',
+      height: '30px',
+      opacity: '0.2',
+      borderRadius: '50%',
+      transform: 'scale(0.5)'
+    });
+
+    // Tugaganda o'chirish va savatchaga zarba (bump) effekti berish
+    setTimeout(() => {
+      clone.remove();
+      
+      // Bump effekti
+      cartIcon.style.transform = 'scale(1.2)';
+      cartIcon.style.transition = 'transform 0.2s ease';
+      setTimeout(() => {
+        cartIcon.style.transform = 'scale(1)';
+      }, 200);
+
+    }, 800);
   }
 
   isInWishlist(productId: number): boolean {

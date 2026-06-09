@@ -15,6 +15,11 @@ export class ProductService {
     return this.http.get<any[]>(`${this.baseApiUrl}/categories`);
   }
 
+  // --- Brands ---
+  getBrands(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/brands`);
+  }
+
   getCategoryById(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseApiUrl}/categories/${id}`);
   }
@@ -47,6 +52,31 @@ export class ProductService {
 
   getProductsByCategory(categoryId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseApiUrl}/products/category/${categoryId}`);
+  }
+
+  getProductsBySubcategory(subcategoryId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/products/subcategory/${subcategoryId}`);
+  }
+
+  // --- Subcategories ---
+  getSubcategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/subcategories`);
+  }
+
+  getSubcategoriesByCategory(categoryId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/subcategories/category/${categoryId}`);
+  }
+
+  createSubcategory(sub: any): Observable<any> {
+    return this.http.post<any>(`${this.baseApiUrl}/subcategories`, sub);
+  }
+
+  updateSubcategory(id: number, sub: any): Observable<any> {
+    return this.http.put<any>(`${this.baseApiUrl}/subcategories/${id}`, sub);
+  }
+
+  deleteSubcategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/subcategories/${id}`);
   }
 
   createProduct(product: any): Observable<any> {

@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-profile',
@@ -19,8 +20,16 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
       <div class="profile-layout">
         <!-- User Info -->
         <aside class="profile-sidebar glass-panel">
-          <div class="user-avatar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <div class="user-avatar-container">
+            <div class="user-avatar">
+              <img *ngIf="user?.profilePicture" [src]="user.profilePicture" alt="Avatar" class="avatar-img" />
+              <svg *ngIf="!user?.profilePicture" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <button class="avatar-upload-btn" (click)="avatarInput.click()" [disabled]="isAvatarUploading" title="Rasm yuklash">
+              <svg *ngIf="!isAvatarUploading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <div *ngIf="isAvatarUploading" class="avatar-spinner"></div>
+            </button>
+            <input type="file" #avatarInput class="hidden-file-input" (change)="onAvatarSelected($event)" accept="image/*" style="display:none;" />
           </div>
           <h2 class="user-name">{{ user?.firstName }} {{ user?.lastName }}</h2>
           <p class="user-username">&#64;{{ user?.username }}</p>
@@ -46,7 +55,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               </div>
               <div class="info-content">
                 <span class="info-label">Telefon</span>
-                <span class="info-value">{{ user?.phoneNumber || 'Ko\\'rilmagan' }}</span>
+                <span class="info-value">{{ user?.phoneNumber || "Ko'rilmagan" }}</span>
               </div>
             </div>
 
@@ -56,7 +65,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
               </div>
               <div class="info-content">
                 <span class="info-label">Manzil</span>
-                <span class="info-value">{{ user?.address || 'Ko\\'rilmagan' }}</span>
+                <span class="info-value">{{ user?.address || "Ko'rilmagan" }}</span>
               </div>
             </div>
           </div>
@@ -76,14 +85,118 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 
           <div class="sidebar-divider"></div>
 
+          <!-- Profile Edit Toggle -->
+          <button (click)="toggleEditForm()" class="btn-secondary w-full btn-edit-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span>{{ showEditForm ? "Bekor qilish" : "Ma'lumotlarni tahrirlash" }}</span>
+          </button>
+
+          <!-- Profile Edit Form -->
+          <div *ngIf="showEditForm" class="edit-form-container">
+            <form [formGroup]="editForm" (ngSubmit)="onUpdateProfile()" class="edit-form">
+              <div *ngIf="editError" class="mini-alert mini-alert-error">{{ editError }}</div>
+              <div *ngIf="editSuccess" class="mini-alert mini-alert-success">{{ editSuccess }}</div>
+
+              <div class="form-group-mini">
+                <label for="username">Foydalanuvchi nomi (Login)</label>
+                <input
+                  type="text"
+                  id="username"
+                  formControlName="username"
+                  class="glass-input glass-input-sm"
+                  [class.invalid]="editSubmitted && ef['username'].errors"
+                  placeholder="Username"
+                />
+                <div *ngIf="editSubmitted && ef['username'].errors" class="validation-msg">
+                  <span *ngIf="ef['username'].errors['required']">Login majburiy!</span>
+                </div>
+              </div>
+
+              <div class="form-group-mini">
+                <label for="firstName">Ism</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  formControlName="firstName"
+                  class="glass-input glass-input-sm"
+                  [class.invalid]="editSubmitted && ef['firstName'].errors"
+                  placeholder="Ismingiz"
+                />
+                <div *ngIf="editSubmitted && ef['firstName'].errors" class="validation-msg">
+                  <span *ngIf="ef['firstName'].errors['required']">Ism majburiy!</span>
+                </div>
+              </div>
+
+              <div class="form-group-mini">
+                <label for="lastName">Familiya</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  formControlName="lastName"
+                  class="glass-input glass-input-sm"
+                  [class.invalid]="editSubmitted && ef['lastName'].errors"
+                  placeholder="Familiyangiz"
+                />
+                <div *ngIf="editSubmitted && ef['lastName'].errors" class="validation-msg">
+                  <span *ngIf="ef['lastName'].errors['required']">Familiya majburiy!</span>
+                </div>
+              </div>
+
+              <div class="form-group-mini">
+                <label for="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  class="glass-input glass-input-sm"
+                  [class.invalid]="editSubmitted && ef['email'].errors"
+                  placeholder="Email manzilingiz"
+                />
+                <div *ngIf="editSubmitted && ef['email'].errors" class="validation-msg">
+                  <span *ngIf="ef['email'].errors['required']">Email majburiy!</span>
+                  <span *ngIf="ef['email'].errors['email']">Noto'g'ri email shakli!</span>
+                </div>
+              </div>
+
+              <div class="form-group-mini">
+                <label for="phoneNumber">Telefon</label>
+                <input
+                  type="text"
+                  id="phoneNumber"
+                  formControlName="phoneNumber"
+                  class="glass-input glass-input-sm"
+                  placeholder="+998991234567"
+                />
+              </div>
+
+              <div class="form-group-mini">
+                <label for="address">Manzil</label>
+                <input
+                  type="text"
+                  id="address"
+                  formControlName="address"
+                  class="glass-input glass-input-sm"
+                  placeholder="Shahar, Tuman, Ko'cha, Uy"
+                />
+              </div>
+
+              <button type="submit" [disabled]="isEditLoading" class="btn-primary w-full btn-sm">
+                <span *ngIf="!isEditLoading">Saqlash</span>
+                <span *ngIf="isEditLoading">Saqlanmoqda...</span>
+              </button>
+            </form>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
           <!-- Password Change Toggle -->
-          <button (click)="showPasswordForm = !showPasswordForm" class="btn-secondary w-full btn-password-toggle">
+          <button (click)="showPasswordForm = !showPasswordForm" class="btn-secondary w-full btn-password-toggle" style="margin-bottom: 0.5rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            <span>{{ showPasswordForm ? 'Bekor qilish' : 'Parolni o\\'zgartirish' }}</span>
+            <span>{{ showPasswordForm ? "Bekor qilish" : "Parolni o'zgartirish" }}</span>
           </button>
 
           <!-- Password Change Form -->
-          <div *ngIf="showPasswordForm" class="password-form-container" @slideDown>
+          <div *ngIf="showPasswordForm" class="password-form-container">
             <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="password-form">
               <div *ngIf="passwordError" class="mini-alert mini-alert-error">{{ passwordError }}</div>
               <div *ngIf="passwordSuccess" class="mini-alert mini-alert-success">{{ passwordSuccess }}</div>
@@ -231,6 +344,11 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
       align-items: center;
     }
 
+    .user-avatar-container {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
     .user-avatar {
       width: 100px;
       height: 100px;
@@ -241,7 +359,50 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
       align-items: center;
       justify-content: center;
       color: #a855f7;
-      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-upload-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      border: none;
+      color: #04080f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 242, 254, 0.4);
+      transition: var(--transition-smooth);
+    }
+
+    .avatar-upload-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(0, 242, 254, 0.6);
+    }
+
+    .avatar-upload-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .avatar-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(4, 8, 15, 0.25);
+      border-top-color: #04080f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
     .user-name {
@@ -384,6 +545,37 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
     .btn-password-toggle:hover {
       background: rgba(168, 85, 247, 0.1);
       border-color: #a855f7;
+    }
+
+    .btn-edit-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-color: rgba(168, 85, 247, 0.3);
+      color: #a855f7;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-edit-toggle:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+    }
+
+    .edit-form-container {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--glass-border);
     }
 
     /* Password Form */
@@ -641,10 +833,22 @@ export class ProfileComponent implements OnInit {
   passwordError = '';
   passwordSuccess = '';
 
+  // Profile edit
+  showEditForm = false;
+  editForm!: FormGroup;
+  editSubmitted = false;
+  isEditLoading = false;
+  editError = '';
+  editSuccess = '';
+
+  // Avatar upload
+  isAvatarUploading = false;
+
   constructor(
     private authService: AuthService,
     private orderService: OrderService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -656,6 +860,15 @@ export class ProfileComponent implements OnInit {
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
+
+    this.editForm = this.fb.group({
+      username: [this.user?.username || '', Validators.required],
+      firstName: [this.user?.firstName || '', Validators.required],
+      lastName: [this.user?.lastName || '', Validators.required],
+      email: [this.user?.email || '', [Validators.required, Validators.email]],
+      phoneNumber: [this.user?.phoneNumber || ''],
+      address: [this.user?.address || '']
+    });
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -727,5 +940,99 @@ export class ProfileComponent implements OnInit {
       case 'CANCELLED': return 'status-cancelled';
       default: return '';
     }
+  }
+
+  toggleEditForm(): void {
+    this.showEditForm = !this.showEditForm;
+    if (this.showEditForm) {
+      this.editForm.patchValue({
+        username: this.user?.username || '',
+        firstName: this.user?.firstName || '',
+        lastName: this.user?.lastName || '',
+        email: this.user?.email || '',
+        phoneNumber: this.user?.phoneNumber || '',
+        address: this.user?.address || ''
+      });
+    }
+  }
+
+  get ef() { return this.editForm.controls; }
+
+  onUpdateProfile(): void {
+    this.editSubmitted = true;
+    this.editError = '';
+    this.editSuccess = '';
+
+    if (this.editForm.invalid) {
+      return;
+    }
+
+    this.isEditLoading = true;
+
+    const payload = {
+      username: this.editForm.value.username,
+      firstName: this.editForm.value.firstName,
+      lastName: this.editForm.value.lastName,
+      email: this.editForm.value.email,
+      phoneNumber: this.editForm.value.phoneNumber,
+      address: this.editForm.value.address,
+      profilePicture: this.user?.profilePicture
+    };
+
+    this.authService.updateProfile(payload).subscribe({
+      next: (res: any) => {
+        this.isEditLoading = false;
+        this.user = this.authService.currentUserValue;
+        this.editSuccess = 'Profil ma\'lumotlari muvaffaqiyatli saqlandi!';
+        this.editSubmitted = false;
+        setTimeout(() => {
+          this.showEditForm = false;
+          this.editSuccess = '';
+        }, 3000);
+      },
+      error: (err) => {
+        this.isEditLoading = false;
+        this.editError = err.error?.error || 'Profil ma\'lumotlarini saqlashda xatolik yuz berdi!';
+      }
+    });
+  }
+
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.isAvatarUploading = true;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any>('http://localhost:8080/api/upload/image', formData).subscribe({
+      next: (res) => {
+        const payload = {
+          firstName: this.user?.firstName,
+          lastName: this.user?.lastName,
+          email: this.user?.email,
+          phoneNumber: this.user?.phoneNumber,
+          address: this.user?.address,
+          profilePicture: res.imageUrl
+        };
+
+        this.authService.updateProfile(payload).subscribe({
+          next: () => {
+            this.user = this.authService.currentUserValue;
+            this.isAvatarUploading = false;
+          },
+          error: (err) => {
+            this.isAvatarUploading = false;
+            alert('Profil rasmini saqlashda xatolik: ' + (err.error?.error || err.message));
+          }
+        });
+      },
+      error: (err) => {
+        this.isAvatarUploading = false;
+        alert('Rasmni yuklashda xatolik: ' + (err.error?.error || err.message));
+      }
+    });
   }
 }

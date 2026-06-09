@@ -47,4 +47,6 @@ public class User {
 
     @Size(max = 20)
     private String phoneNumber;
+
+    private String profilePicture;
 }

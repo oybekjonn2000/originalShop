@@ -24,7 +24,7 @@ public class FileUploadController {
     private String uploadDir;
 
     @PostMapping("/image")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Fayl bo'sh!"));

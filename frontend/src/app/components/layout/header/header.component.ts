@@ -62,8 +62,9 @@ import { ElementRef } from '@angular/core';
             </a>
             <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">Admin Panel</a>
             <div class="user-menu">
-              <a routerLink="/profile" class="username-display" style="text-decoration:none;display:flex;align-items:center;gap:5px">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <a routerLink="/profile" class="username-display" style="text-decoration:none;display:flex;align-items:center;gap:8px">
+                <img *ngIf="currentUser?.profilePicture" [src]="currentUser.profilePicture" class="header-avatar" alt="Avatar" />
+                <svg *ngIf="!currentUser?.profilePicture" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 {{ currentUser?.firstName || currentUser?.username }}
               </a>
               <button (click)="logout()" class="btn-logout" title="Chiqish">
@@ -319,6 +320,15 @@ import { ElementRef } from '@angular/core';
       font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-primary);
+    }
+
+    .header-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--primary-color);
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
     }
 
     .btn-logout {

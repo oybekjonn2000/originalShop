@@ -62,4 +62,17 @@ export class AuthService {
   changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/change-password`, data);
   }
+
+  updateProfile(profileData: any): Observable<any> {
+    return this.http.put<any>(`http://localhost:8080/api/users/profile`, profileData).pipe(
+      tap(updatedUser => {
+        const currentUser = this.currentUserValue;
+        if (currentUser && updatedUser) {
+          const newUser = { ...currentUser, ...updatedUser };
+          localStorage.setItem('currentUser', JSON.stringify(newUser));
+          this.currentUserSubject.next(newUser);
+        }
+      })
+    );
+  }
 }

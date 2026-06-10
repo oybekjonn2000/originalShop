@@ -3,7 +3,8 @@ INSERT INTO categories (id, name, description) VALUES
 (2, 'Clothing & Apparel', 'Clothes, footwear and fashion accessories'),
 (3, 'Computers & Laptops', 'Laptops, desktops and computer parts'),
 (4, 'Home Appliances', 'Appliances for smart home and kitchen'),
-(5, 'Sports & Outdoors', 'Sporting goods and outdoor gear');
+(5, 'Sports & Outdoors', 'Sporting goods and outdoor gear')
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO subcategories (id, name, description, category_id) VALUES
 -- Electronics (category_id: 1)
@@ -30,7 +31,8 @@ INSERT INTO subcategories (id, name, description, category_id) VALUES
 (17, 'Fitness Gear', 'Gym and home fitness equipment', 5),
 (18, 'Bicycles', 'Mountain and city bikes', 5),
 (19, 'Tents', 'Camping and outdoor tents', 5),
-(20, 'Sport Bags', 'Backpacks and fitness bags', 5);
+(20, 'Sport Bags', 'Backpacks and fitness bags', 5)
+ON CONFLICT (id) DO NOTHING;
 
 
 INSERT INTO brands (id, name, image_url) VALUES
@@ -43,7 +45,8 @@ INSERT INTO brands (id, name, image_url) VALUES
 (7, 'Asus', 'https://example.com/brands/asus.png'),
 (8, 'Dell', 'https://example.com/brands/dell.png'),
 (9, 'HP', 'https://example.com/brands/hp.png'),
-(10, 'LG', 'https://example.com/brands/lg.png');
+(10, 'LG', 'https://example.com/brands/lg.png') 
+ON CONFLICT (id) DO NOTHING;
 
 
 

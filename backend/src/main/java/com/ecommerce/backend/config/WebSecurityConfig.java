@@ -69,9 +69,12 @@ public class WebSecurityConfig {
                 // Public auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 
-                // Public view endpoints for products and categories
+                // Public view endpoints for products, categories, subcategories and brands
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/subcategories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/category-banners/**").permitAll()
                 
                 // Allow public to send contact messages
                 .requestMatchers(HttpMethod.POST, "/api/messages").permitAll()

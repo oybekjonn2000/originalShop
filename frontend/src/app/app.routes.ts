@@ -97,6 +97,11 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'admin/banner-control',
+    loadComponent: () => import('./components/admin/banner-control/banner-control.component').then(m => m.BannerControlComponent),
+    canActivate: [authGuard, adminGuard]
+  },
+  {
     path: 'wishlist',
     loadComponent: () => import('./components/wishlist/wishlist.component').then(m => m.WishlistComponent),
     canActivate: [authGuard]

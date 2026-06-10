@@ -52,7 +52,7 @@ import { WishlistService } from '../../services/wishlist.service';
 
         <!-- Product Specs Info -->
         <div class="info-wrapper glass-panel">
-          <span class="category-tag">{{ product.category?.name }}</span>
+          <span class="category-tag">{{ product.subcategory?.category?.name || product.subcategory?.name || product.category?.name }}</span>
           <h1 class="product-title">{{ product.name }}</h1>
           
           <div class="price-box" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;">
@@ -95,14 +95,22 @@ import { WishlistService } from '../../services/wishlist.service';
             </div>
 
             <div class="cart-wish-row">
-              <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
-                <span *ngIf="!isAdding">Savatga qo'shish ({{ getDiscountedPrice(product.price, product.discount) * quantity | number:'1.0-0' }} so'm)</span>
-                <span *ngIf="isAdding">Qo'shilmoqda...</span>
-              </button>
+              <ng-container *ngIf="!addedToCart; else goToCartBtn">
+                <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
+                  <span *ngIf="!isAdding">Savatga qo'shish ({{ getDiscountedPrice(product.price, product.discount) * quantity | number:'1.0-0' }} so'm)</span>
+                  <span *ngIf="isAdding">Qo'shilmoqda...</span>
+                </button>
+              </ng-container>
+              <ng-template #goToCartBtn>
+                <a routerLink="/cart" class="btn-go-to-cart flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                  Savatga o'tish
+                </a>
+              </ng-template>
               <button
                 class="btn-wish detail-wish-btn"
                 [class.wished]="isInWishlist(product.id)"
-                (click)="toggleWishlist(product)"
+                (click)="toggleWishlist(product); flyHeartToWishlist($event)"
                 title="Sevimlilarga qo'shish"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -529,6 +537,36 @@ import { WishlistService } from '../../services/wishlist.service';
       flex: 1;
     }
 
+    .btn-go-to-cart {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.5rem;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: cartBtnAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-go-to-cart:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5);
+      transform: translateY(-2px);
+    }
+
+    @keyframes cartBtnAppear {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
     .not-available-message {
       padding: 1rem;
       border-radius: var(--border-radius-sm);
@@ -810,6 +848,7 @@ export class ProductDetailComponent implements OnInit {
   quantity = 1;
   isLoading = true;
   isAdding = false;
+  addedToCart = false;
   similarProducts: any[] = [];
   recentlyViewedProducts: any[] = [];
   activeImageIndex = 0;
@@ -871,9 +910,59 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
+  flyHeartToWishlist(event: MouseEvent): void {
+    const btn = event.currentTarget as HTMLElement;
+    const srcRect = btn.getBoundingClientRect();
+
+    // Header'dagi wishlist ikonini topamiz
+    const target = document.querySelector('.wishlist-link') as HTMLElement;
+    if (!target) return;
+    const tgtRect = target.getBoundingClientRect();
+
+    // Uchuvchi yurak elementini yaratamiz
+    const heart = document.createElement('div');
+    heart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#ff4d6d" stroke="#ff4d6d" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    heart.style.cssText = `
+      position: fixed;
+      left: ${srcRect.left + srcRect.width / 2 - 13}px;
+      top: ${srcRect.top + srcRect.height / 2 - 13}px;
+      width: 26px;
+      height: 26px;
+      pointer-events: none;
+      z-index: 999999;
+      filter: drop-shadow(0 0 10px rgba(255,77,109,0.9));
+      transition: left 0.75s cubic-bezier(0.4,0,0.2,1),
+                  top 0.75s cubic-bezier(0.4,0,0.2,1),
+                  opacity 0.25s ease 0.55s,
+                  transform 0.75s cubic-bezier(0.34,1.56,0.64,1);
+      transform: scale(1);
+      opacity: 1;
+    `;
+    document.body.appendChild(heart);
+
+    // Animatsiyani boshlash uchun bir frame kutamiz
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        heart.style.left = `${tgtRect.left + tgtRect.width / 2 - 13}px`;
+        heart.style.top = `${tgtRect.top + tgtRect.height / 2 - 13}px`;
+        heart.style.opacity = '0';
+        heart.style.transform = 'scale(0.3)';
+      });
+    });
+
+    // Animatsiya tugagach elementni o'chiramiz va ikonni "pop" qilamiz
+    setTimeout(() => {
+      if (heart.parentNode) heart.parentNode.removeChild(heart);
+      // Wishlist iconiga "pop" effekti
+      target.classList.add('heart-pop');
+      setTimeout(() => target.classList.remove('heart-pop'), 450);
+    }, 750);
+  }
+
   loadProduct(id: number): void {
     this.isLoading = true;
     this.activeImageIndex = 0;
+    this.addedToCart = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.productService.getProductById(id).subscribe({
       next: (prod) => {
@@ -1013,6 +1102,7 @@ export class ProductDetailComponent implements OnInit {
     this.cartService.addToCart(this.product.id, this.quantity).subscribe({
       next: () => {
         this.isAdding = false;
+        this.addedToCart = true;
         this.showToast(`Savatga ${this.quantity} ta mahsulot qo'shildi!`, 'snack-success');
         this.quantity = 1;
       },

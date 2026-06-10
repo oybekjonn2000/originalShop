@@ -40,8 +40,9 @@ import { Subscription } from 'rxjs';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" title="Asosiy">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           </a>
-          <a routerLink="/catalog" routerLinkActive="active" class="nav-link" title="Katalog">
+          <a routerLink="/catalog" routerLinkActive="active" class="nav-link catalog-nav-link" title="Katalog">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span class="catalog-label">Katalog</span>
           </a>
           <a routerLink="/about" routerLinkActive="active" class="nav-link" title="Biz haqimizda">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -368,6 +369,16 @@ import { Subscription } from 'rxjs';
       padding-right: 1.5rem;
     }
 
+    .wishlist-link.heart-pop {
+      animation: wishlistHeartPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes wishlistHeartPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.5); filter: drop-shadow(0 0 8px rgba(255,77,109,0.9)); }
+      100% { transform: scale(1); }
+    }
+
     .wishlist-badge {
       position: absolute;
       top: -3px;
@@ -393,6 +404,25 @@ import { Subscription } from 'rxjs';
     .admin-link:hover, .admin-link.active {
       background: rgba(247, 107, 28, 0.1) !important;
       border-color: #f76b1c;
+    }
+
+    .catalog-nav-link {
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+    }
+
+    .catalog-nav-link:hover, .catalog-nav-link.active {
+      border-color: var(--primary-color);
+      color: var(--primary-color) !important;
+      background: rgba(0, 242, 254, 0.07);
+    }
+
+    .catalog-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
     .user-menu {

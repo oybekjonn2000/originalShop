@@ -7,6 +7,7 @@ import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { CategoryBannerService, CategoryBanner } from '../../services/category-banner.service';
 
 @Component({
   selector: 'app-home',
@@ -299,9 +300,81 @@ import { WishlistService } from '../../services/wishlist.service';
           </div>
         </main>
       </div>
-    </div>
+      </div>
 
-    <!-- Material Snackbar Toast -->
+      <!-- Custom Category Banners -->
+      <ng-container *ngFor="let banner of categoryBanners">
+        <section class="custom-category-section fade-in-el" *ngIf="banner.products && banner.products.length > 0">
+          <!-- Collage Banner -->
+          <div class="custom-category-banner">
+            
+            <div class="collage-grid" [ngClass]="'collage-' + Math.min(banner.imageUrls?.length || (banner.imageUrl ? 1 : 0), 4)">
+               <ng-container *ngIf="banner.imageUrls?.length; else singleImg">
+                 <div class="collage-item" *ngFor="let img of banner.imageUrls?.slice(0, 4); let i = index" [ngClass]="'item-' + i">
+                   <img [src]="img" alt="Banner Image" />
+                 </div>
+               </ng-container>
+               <ng-template #singleImg>
+                 <div class="collage-item item-0" *ngIf="banner.imageUrl">
+                   <img [src]="banner.imageUrl" alt="Banner Image" />
+                 </div>
+               </ng-template>
+            </div>
+
+            <div class="banner-overlay">
+              <h2>{{ banner.categoryName }}</h2>
+              <a [routerLink]="['/catalog']" [queryParams]="{ category: banner.categoryId }" class="btn-primary" style="text-decoration: none;">Barchasini ko'rish</a>
+            </div>
+          </div>
+          
+          <!-- Horizontal Scroll Products -->
+          <div class="deals-scroll-container mt-3">
+            <div *ngFor="let product of banner.products" class="deal-card glass-card">
+              <div class="product-img-wrapper">
+                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                
+                <!-- Card Image Slider Controls -->
+                <ng-container *ngIf="getProductImages(product).length > 1">
+                  <button class="card-slider-arrow prev" (click)="prevCardImage(product, $event)">❮</button>
+                  <button class="card-slider-arrow next" (click)="nextCardImage(product, $event)">❯</button>
+                  <div class="card-slider-dots">
+                    <span *ngFor="let img of getProductImages(product); let idx = index" 
+                          class="card-slider-dot" 
+                          [class.active]="(product.activeImageIndex || 0) === idx"
+                          (click)="setCardImage(product, idx, $event)">
+                    </span>
+                  </div>
+                </ng-container>
+
+                <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
+              </div>
+              
+              <div class="product-info">
+                <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
+                <div class="deal-price-section">
+                  <div *ngIf="product.discount" class="new-price" style="font-size: 1.2rem; color: var(--danger-color);">
+                    {{ getFinalPrice(product.price, product.discount) | number:'1.0-0' }} so'm
+                    <span class="old-price" style="font-size:0.8rem; margin-left:0.5rem; text-decoration:line-through; color:var(--text-secondary)">{{ product.price | number:'1.0-0' }}</span>
+                  </div>
+                  <div *ngIf="!product.discount" class="new-price" style="font-size: 1.2rem; color: var(--primary-color);">
+                    {{ product.price | number:'1.0-0' }} so'm
+                  </div>
+                </div>
+                <div class="deal-actions">
+                  <button class="btn-primary btn-deal" style="background: var(--primary-gradient); box-shadow: 0 4px 15px var(--primary-glow); border: none; flex: 1;" (click)="addToCart(product, $event)">
+                    Savatga
+                  </button>
+                  <button class="btn-wish deal-wish-btn" [class.wished]="isInWishlist(product.id)" (click)="toggleWishlist(product, $event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isInWishlist(product.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+   
     <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
       <div class="mat-snack-icon">
         <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -540,6 +613,33 @@ import { WishlistService } from '../../services/wishlist.service';
       display: flex;
       align-items: center;
       background: linear-gradient(135deg, rgba(23, 29, 43, 0.6) 0%, rgba(10, 13, 20, 0.6) 100%);
+    }
+
+    /* ── Light theme hero overrides ── */
+    :host-context([data-theme="light"]) .hero-banner {
+      background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 60%, #6366f1 100%);
+      box-shadow: 0 12px 40px rgba(37, 99, 235, 0.25);
+    }
+
+    :host-context([data-theme="light"]) .hero-tag {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.45);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+    }
+
+    :host-context([data-theme="light"]) .hero-text h1 {
+      background: linear-gradient(to right, #ffffff, #e0f2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    :host-context([data-theme="light"]) .hero-text p {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    :host-context([data-theme="light"]) .hero-glow-effect {
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 100%);
     }
 
     .hero-text {
@@ -1310,6 +1410,87 @@ import { WishlistService } from '../../services/wishlist.service';
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
     }
 
+    /* ======= Custom Category Banner ======= */
+    .custom-category-section {
+      margin-bottom: 4rem;
+    }
+    
+    .custom-category-banner {
+      width: 100%;
+      height: 300px;
+      border-radius: var(--border-radius-lg);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      box-shadow: var(--shadow-md);
+      background: var(--glass-bg);
+    }
+    
+    .collage-grid {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: grid;
+      gap: 3px;
+      z-index: 0;
+    }
+    .collage-grid img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .collage-grid img:hover {
+      transform: scale(1.05);
+    }
+    
+    .collage-1 { grid-template-columns: 1fr; }
+    
+    .collage-2 { grid-template-columns: 1fr 1fr; }
+    
+    .collage-3 {
+      grid-template-columns: 2fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .collage-3 .item-0 { grid-row: 1 / 3; }
+    
+    .collage-4 {
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .collage-4 .item-0 { grid-row: 1 / 3; }
+    .collage-4 .item-1 { grid-column: 2 / 4; grid-row: 1 / 2; }
+    
+    .custom-category-banner::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to right, rgba(11, 14, 20, 0.9) 0%, rgba(11, 14, 20, 0.6) 40%, rgba(11, 14, 20, 0.1) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .banner-overlay {
+      position: relative;
+      z-index: 2;
+      padding: 0 4rem;
+      color: white;
+      max-width: 600px;
+    }
+    
+    .banner-overlay h2 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: white;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    
+    .mt-3 {
+      margin-top: 1.5rem;
+    }
+
     /* ======= Pagination ======= */
     .mat-paginator {
       display: flex;
@@ -1458,6 +1639,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   dealsInterval: any;
 
   wishlistProductIds = new Set<number>();
+  categoryBanners: (CategoryBanner & { products?: any[] })[] = [];
 
   constructor(
     private productService: ProductService,
@@ -1465,6 +1647,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private brandService: BrandService,
     private wishlistService: WishlistService,
+    private bannerService: CategoryBannerService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -1475,6 +1658,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loadCategories();
     this.loadDiscountedProducts();
     this.loadBrands();
+    this.loadCategoryBanners();
 
     // Listen to query parameters for search queries
     this.route.queryParams.subscribe(params => {
@@ -1561,6 +1745,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadDiscountedProducts(): void {
     this.productService.getProducts().subscribe(prods => {
       this.discountedProducts = prods.filter(p => p.isActive && p.discount && p.discount > 0);
+    });
+  }
+
+  loadCategoryBanners(): void {
+    this.bannerService.getAllBanners().subscribe(banners => {
+      this.categoryBanners = banners;
+      this.categoryBanners.forEach(banner => {
+        this.productService.getProductsByCategory(banner.categoryId).subscribe(prods => {
+          banner.products = prods.filter(p => p.isActive).slice(0, 10);
+        });
+      });
     });
   }
 
@@ -1707,7 +1902,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     document.body.appendChild(clone);
 
     // Animatsiya uchun reflow talab qilinadi
-    clone.offsetHeight; 
+    clone.offsetHeight;
 
     // Savat koordinatalarini aniqlash
     const cartRect = cartIcon.getBoundingClientRect();
@@ -1728,7 +1923,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Tugaganda o'chirish va savatchaga zarba (bump) effekti berish
     setTimeout(() => {
       clone.remove();
-      
+
       // Bump effekti
       cartIcon.style.transform = 'scale(1.2)';
       cartIcon.style.transition = 'transform 0.2s ease';

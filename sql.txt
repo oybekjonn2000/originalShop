@@ -1,3 +1,52 @@
+INSERT INTO categories (id, name, description) VALUES
+(1, 'Electronics', 'Gadgets, devices and electronic appliances'),
+(2, 'Clothing & Apparel', 'Clothes, footwear and fashion accessories'),
+(3, 'Computers & Laptops', 'Laptops, desktops and computer parts'),
+(4, 'Home Appliances', 'Appliances for smart home and kitchen'),
+(5, 'Sports & Outdoors', 'Sporting goods and outdoor gear');
+
+INSERT INTO subcategories (id, name, description, category_id) VALUES
+-- Electronics (category_id: 1)
+(1, 'Smartphones', 'Mobile phones and smartphones', 1),
+(2, 'Smartwatches', 'Wearable smart devices', 1),
+(3, 'Headphones', 'Audio devices and headphones', 1),
+(4, 'Cameras', 'Digital cameras and lenses', 1),
+-- Clothing & Apparel (category_id: 2)
+(5, 'T-Shirts', 'Men and women t-shirts', 2),
+(6, 'Shoes & Sneakers', 'Athletic and casual footwear', 2),
+(7, 'Jackets', 'Winter and casual jackets', 2),
+(8, 'Jeans', 'Denim pants and jeans', 2),
+-- Computers & Laptops (category_id: 3)
+(9, 'Gaming Laptops', 'High performance gaming laptops', 3),
+(10, 'Office Laptops', 'Laptops for business and study', 3),
+(11, 'Monitors', 'Display screens and monitors', 3),
+(12, 'Keyboards & Mice', 'Input computer peripherals', 3),
+-- Home Appliances (category_id: 4)
+(13, 'Refrigerators', 'Smart fridges and cooling systems', 4),
+(14, 'Microwaves', 'Kitchen microwave ovens', 4),
+(15, 'Vacuum Cleaners', 'Robot and manual vacuum cleaners', 4),
+(16, 'Washing Machines', 'Automatic washing machines', 4),
+-- Sports & Outdoors (category_id: 5)
+(17, 'Fitness Gear', 'Gym and home fitness equipment', 5),
+(18, 'Bicycles', 'Mountain and city bikes', 5),
+(19, 'Tents', 'Camping and outdoor tents', 5),
+(20, 'Sport Bags', 'Backpacks and fitness bags', 5);
+
+
+INSERT INTO brands (id, name, image_url) VALUES
+(1, 'Apple', 'https://example.com/brands/apple.png'),
+(2, 'Samsung', 'https://example.com/brands/samsung.png'),
+(3, 'Sony', 'https://example.com/brands/sony.png'),
+(4, 'Nike', 'https://example.com/brands/nike.png'),
+(5, 'Adidas', 'https://example.com/brands/adidas.png'),
+(6, 'Xiaomi', 'https://example.com/brands/xiaomi.png'),
+(7, 'Asus', 'https://example.com/brands/asus.png'),
+(8, 'Dell', 'https://example.com/brands/dell.png'),
+(9, 'HP', 'https://example.com/brands/hp.png'),
+(10, 'LG', 'https://example.com/brands/lg.png');
+
+
+
 INSERT INTO products (id, name, description, full_description, price, image_url, stock_quantity, brand_id, subcategory_id, is_active, discount) VALUES
 (1, 'iPhone 15 Pro', 'Latest Apple smartphone', 'Detailed full description for iPhone 15 Pro', 999.99, 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=600&auto=format&fit=crop', 50, 1, 1, true, 0.0),
 (2, 'Galaxy S24 Ultra', 'Flagship Samsung phone', 'Detailed full description for Galaxy S24 Ultra', 1199.99, 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop', 45, 2, 1, true, 5.0),
@@ -101,48 +150,4 @@ INSERT INTO products (id, name, description, full_description, price, image_url,
 (100, 'LG Ergo Monitor 32', '4K Ultrafine screen with ergonomic arm', 'Detailed description for LG Ergo', 499.99, 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=600&auto=format&fit=crop', 15, 10, 11, true, 5.0)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO subcategories (id, name, description, category_id) VALUES
--- Electronics (category_id: 1)
-(1, 'Smartphones', 'Mobile phones and smartphones', 1),
-(2, 'Smartwatches', 'Wearable smart devices', 1),
-(3, 'Headphones', 'Audio devices and headphones', 1),
-(4, 'Cameras', 'Digital cameras and lenses', 1),
--- Clothing & Apparel (category_id: 2)
-(5, 'T-Shirts', 'Men and women t-shirts', 2),
-(6, 'Shoes & Sneakers', 'Athletic and casual footwear', 2),
-(7, 'Jackets', 'Winter and casual jackets', 2),
-(8, 'Jeans', 'Denim pants and jeans', 2),
--- Computers & Laptops (category_id: 3)
-(9, 'Gaming Laptops', 'High performance gaming laptops', 3),
-(10, 'Office Laptops', 'Laptops for business and study', 3),
-(11, 'Monitors', 'Display screens and monitors', 3),
-(12, 'Keyboards & Mice', 'Input computer peripherals', 3),
--- Home Appliances (category_id: 4)
-(13, 'Refrigerators', 'Smart fridges and cooling systems', 4),
-(14, 'Microwaves', 'Kitchen microwave ovens', 4),
-(15, 'Vacuum Cleaners', 'Robot and manual vacuum cleaners', 4),
-(16, 'Washing Machines', 'Automatic washing machines', 4),
--- Sports & Outdoors (category_id: 5)
-(17, 'Fitness Gear', 'Gym and home fitness equipment', 5),
-(18, 'Bicycles', 'Mountain and city bikes', 5),
-(19, 'Tents', 'Camping and outdoor tents', 5),
-(20, 'Sport Bags', 'Backpacks and fitness bags', 5);
 
-INSERT INTO brands (id, name, image_url) VALUES
-(1, 'Apple', 'https://example.com/brands/apple.png'),
-(2, 'Samsung', 'https://example.com/brands/samsung.png'),
-(3, 'Sony', 'https://example.com/brands/sony.png'),
-(4, 'Nike', 'https://example.com/brands/nike.png'),
-(5, 'Adidas', 'https://example.com/brands/adidas.png'),
-(6, 'Xiaomi', 'https://example.com/brands/xiaomi.png'),
-(7, 'Asus', 'https://example.com/brands/asus.png'),
-(8, 'Dell', 'https://example.com/brands/dell.png'),
-(9, 'HP', 'https://example.com/brands/hp.png'),
-(10, 'LG', 'https://example.com/brands/lg.png');
-
-INSERT INTO categories (id, name, description) VALUES
-(1, 'Electronics', 'Gadgets, devices and electronic appliances'),
-(2, 'Clothing & Apparel', 'Clothes, footwear and fashion accessories'),
-(3, 'Computers & Laptops', 'Laptops, desktops and computer parts'),
-(4, 'Home Appliances', 'Appliances for smart home and kitchen'),
-(5, 'Sports & Outdoors', 'Sporting goods and outdoor gear');

@@ -17,10 +17,6 @@ import { ProductService } from '../../../services/product.service';
           <p class="subtitle">Mahsulot subkategoriyalarini yaratish, tahrirlash va o'chirish</p>
         </div>
         <div class="header-actions">
-          <button (click)="deleteAllSubcategories()" class="btn-danger" style="display: inline-flex; align-items: center; gap: 5px; padding: 0.6rem 1rem; border: none; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; color: white;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            Barchasini O'chirish
-          </button>
           <a routerLink="/admin" class="btn-secondary back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
             Orqaga
@@ -219,7 +215,7 @@ import { ProductService } from '../../../services/product.service';
     .empty-state { grid-column: 1 / -1; padding: 5rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--text-secondary); }
     .empty-state svg { opacity: 0.3; } .empty-state h3 { font-size: 1.3rem; color: var(--text-primary); } .empty-state p { font-size: 0.95rem; margin-bottom: 0.5rem; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease; }
-    .modal-card { width: 100%; max-width: 520px; padding: 2.5rem; border-radius: var(--border-radius-lg); }
+    .modal-card { width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 2.5rem; border-radius: var(--border-radius-lg); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; }
     .modal-header h2 { font-size: 1.4rem; font-weight: 700; }
     .btn-close { background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); }

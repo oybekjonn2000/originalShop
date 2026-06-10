@@ -31,23 +31,28 @@ public class BrandController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public Brand createBrand(@Valid @RequestBody Brand brand) {
         return brandService.createBrand(brand);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Brand> updateBrand(@PathVariable Long id, @Valid @RequestBody Brand brandDetails) {
         return ResponseEntity.ok(brandService.updateBrand(id, brandDetails));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Brand muvaffaqiyatli o'chirildi!");
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllBrands() {
+        brandService.deleteAllBrands();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Barcha brandlar muvaffaqiyatli o'chirildi!");
         return ResponseEntity.ok(response);
     }
 }

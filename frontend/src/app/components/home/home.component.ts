@@ -300,25 +300,20 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           </div>
         </main>
       </div>
-      </div>
 
       <!-- Custom Category Banners -->
       <ng-container *ngFor="let banner of categoryBanners">
-        <section class="custom-category-section fade-in-el" *ngIf="banner.products && banner.products.length > 0">
-          <!-- Collage Banner -->
+        <section class="custom-category-section fade-in-el">
+          <!-- Collage Banner turned into Auto-sliding Carousel -->
           <div class="custom-category-banner">
             
-            <div class="collage-grid" [ngClass]="'collage-' + Math.min(banner.imageUrls?.length || (banner.imageUrl ? 1 : 0), 4)">
-               <ng-container *ngIf="banner.imageUrls?.length; else singleImg">
-                 <div class="collage-item" *ngFor="let img of banner.imageUrls?.slice(0, 4); let i = index" [ngClass]="'item-' + i">
-                   <img [src]="img" alt="Banner Image" />
-                 </div>
-               </ng-container>
-               <ng-template #singleImg>
-                 <div class="collage-item item-0" *ngIf="banner.imageUrl">
-                   <img [src]="banner.imageUrl" alt="Banner Image" />
-                 </div>
-               </ng-template>
+            <div class="category-banner-carousel">
+              <div 
+                class="carousel-image-slide" 
+                *ngFor="let img of (banner.imageUrls?.length ? banner.imageUrls : [banner.imageUrl]); let idx = index"
+                [class.active]="(banner.currentSlideIndex || 0) === idx"
+                [style.backgroundImage]="'url(' + img + ')'">
+              </div>
             </div>
 
             <div class="banner-overlay">
@@ -328,7 +323,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           </div>
           
           <!-- Horizontal Scroll Products -->
-          <div class="deals-scroll-container mt-3">
+          <div class="deals-scroll-container mt-3" *ngIf="banner.products && banner.products.length > 0">
             <div *ngFor="let product of banner.products" class="deal-card glass-card">
               <div class="product-img-wrapper">
                 <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
@@ -373,9 +368,9 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           </div>
         </section>
       </ng-container>
+      </div>
 
-   
-    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
       <div class="mat-snack-icon">
         <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -1428,39 +1423,22 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       background: var(--glass-bg);
     }
     
-    .collage-grid {
+    .category-banner-carousel {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      display: grid;
-      gap: 3px;
       z-index: 0;
     }
-    .collage-grid img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease;
+    .carousel-image-slide {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
     }
-    .collage-grid img:hover {
-      transform: scale(1.05);
+    .carousel-image-slide.active {
+      opacity: 1;
     }
-    
-    .collage-1 { grid-template-columns: 1fr; }
-    
-    .collage-2 { grid-template-columns: 1fr 1fr; }
-    
-    .collage-3 {
-      grid-template-columns: 2fr 1fr;
-      grid-template-rows: 1fr 1fr;
-    }
-    .collage-3 .item-0 { grid-row: 1 / 3; }
-    
-    .collage-4 {
-      grid-template-columns: 2fr 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-    }
-    .collage-4 .item-0 { grid-row: 1 / 3; }
-    .collage-4 .item-1 { grid-column: 2 / 4; grid-row: 1 / 2; }
     
     .custom-category-banner::after {
       content: '';
@@ -1639,7 +1617,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   dealsInterval: any;
 
   wishlistProductIds = new Set<number>();
-  categoryBanners: (CategoryBanner & { products?: any[] })[] = [];
+  categoryBanners: (CategoryBanner & { products?: any[], currentSlideIndex?: number })[] = [];
+  bannersInterval: any;
 
   constructor(
     private productService: ProductService,
@@ -1691,6 +1670,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     if (this.dealsInterval) {
       clearInterval(this.dealsInterval);
+    }
+    if (this.bannersInterval) {
+      clearInterval(this.bannersInterval);
     }
   }
 
@@ -1752,11 +1734,27 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.bannerService.getAllBanners().subscribe(banners => {
       this.categoryBanners = banners;
       this.categoryBanners.forEach(banner => {
+        banner.currentSlideIndex = 0;
         this.productService.getProductsByCategory(banner.categoryId).subscribe(prods => {
           banner.products = prods.filter(p => p.isActive).slice(0, 10);
         });
       });
+      this.startBannersAutoSlide();
     });
+  }
+
+  startBannersAutoSlide(): void {
+    if (this.bannersInterval) {
+      clearInterval(this.bannersInterval);
+    }
+    this.bannersInterval = setInterval(() => {
+      this.categoryBanners.forEach(banner => {
+        const totalImages = banner.imageUrls?.length || (banner.imageUrl ? 1 : 0);
+        if (totalImages > 1) {
+          banner.currentSlideIndex = ((banner.currentSlideIndex || 0) + 1) % totalImages;
+        }
+      });
+    }, 2000);
   }
 
   loadAllProducts(): void {

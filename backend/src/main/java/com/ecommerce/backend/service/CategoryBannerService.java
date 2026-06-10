@@ -45,6 +45,28 @@ public class CategoryBannerService {
         return mapToDTO(saved);
     }
 
+    public CategoryBannerDTO updateBanner(Long id, CategoryBannerDTO dto) {
+        CategoryBanner banner = categoryBannerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Banner not found with id: " + id));
+
+        // Check if category changed and if banner for the new category already exists
+        if (!banner.getCategory().getId().equals(dto.getCategoryId()) &&
+                categoryBannerRepository.existsByCategoryId(dto.getCategoryId())) {
+            throw new RuntimeException("Banner for this category already exists!");
+        }
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
+
+        banner.setCategory(category);
+        banner.setImageUrl(dto.getImageUrl());
+        banner.setImageUrls(dto.getImageUrls() != null ? dto.getImageUrls() : new java.util.ArrayList<>());
+        banner.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
+
+        CategoryBanner saved = categoryBannerRepository.save(banner);
+        return mapToDTO(saved);
+    }
+
     public void deleteBanner(Long id) {
         if (!categoryBannerRepository.existsById(id)) {
             throw new RuntimeException("Banner not found!");

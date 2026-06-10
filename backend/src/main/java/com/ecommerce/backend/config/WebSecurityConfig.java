@@ -81,9 +81,27 @@ public class WebSecurityConfig {
                 
                 // Allow uploaded images to be viewed publicly
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/upload/**").permitAll()
                 
                 // Allow H2 console frames & resources
                 .requestMatchers("/h2-console/**").permitAll()
+                
+                // Admin write operations - still protected by @PreAuthorize on controllers
+                .requestMatchers(HttpMethod.POST, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/subcategories/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/subcategories/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/subcategories/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/brands/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/brands/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/brands/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/category-banners/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/category-banners/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/category-banners/**").permitAll()
                 
                 // All other endpoints require authentication
                 .anyRequest().authenticated()

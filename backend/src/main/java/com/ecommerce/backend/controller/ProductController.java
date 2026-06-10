@@ -46,23 +46,28 @@ public class ProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public Product createProduct(@Valid @RequestBody Product product) {
         return productService.createProduct(product);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product productDetails) {
         return ResponseEntity.ok(productService.updateProduct(id, productDetails));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Mahsulot muvaffaqiyatli o'chirildi!");
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllProducts() {
+        productService.deleteAllProducts();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Barcha mahsulotlar muvaffaqiyatli o'chirildi!");
         return ResponseEntity.ok(response);
     }
 }

@@ -27,6 +27,10 @@ export class CategoryBannerService {
     return this.http.post<CategoryBanner>(this.apiUrl, banner);
   }
 
+  updateBanner(id: number, banner: Partial<CategoryBanner>): Observable<CategoryBanner> {
+    return this.http.put<CategoryBanner>(`${this.apiUrl}/${id}`, banner);
+  }
+
   deleteBanner(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }

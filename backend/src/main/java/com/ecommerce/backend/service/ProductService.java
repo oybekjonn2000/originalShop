@@ -104,4 +104,8 @@ public class ProductService {
         Product product = getProductById(id);
         productRepository.delete(product);
     }
+
+    public void deleteAllProducts() {
+        productRepository.deleteAll();
+    }
 }

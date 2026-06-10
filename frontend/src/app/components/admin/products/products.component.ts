@@ -17,10 +17,16 @@ import { BrandService } from '../../../services/brand.service';
           <h1>Mahsulotlar Boshqaruvi</h1>
           <p class="subtitle">Katalogdagi barcha mahsulotlarni qo'shish, tahrirlash va o'chirish</p>
         </div>
-        <button (click)="openAddModal()" class="btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Yangi Mahsulot
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button (click)="deleteAllProducts()" class="btn-danger" style="display: flex; align-items: center; gap: 5px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            Barchasini O'chirish
+          </button>
+          <button (click)="openAddModal()" class="btn-primary" style="display: flex; align-items: center; gap: 5px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Yangi Mahsulot
+          </button>
+        </div>
       </div>
 
       <!-- Search & Filter -->
@@ -1260,6 +1266,20 @@ export class ProductsComponent implements OnInit {
         this.closeConfirmModal();
       }
     });
+  }
+
+  deleteAllProducts(): void {
+    if (confirm("Rostdan ham BARCHA mahsulotlarni o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi!")) {
+      this.productService.deleteAllProducts().subscribe({
+        next: () => {
+          this.loadAll();
+          this.showToast("Barcha mahsulotlar muvaffaqiyatli o'chirildi!", "snack-success");
+        },
+        error: (err) => {
+          this.showToast(err.error?.message || "O'chirishda xatolik yuz berdi!", "snack-error");
+        }
+      });
+    }
   }
 
   showToast(message: string, type: 'snack-success' | 'snack-error' | 'snack-warning' = 'snack-success'): void {

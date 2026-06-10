@@ -42,4 +42,8 @@ public class SubcategoryService {
     public void deleteSubcategory(Long id) {
         subcategoryRepository.deleteById(id);
     }
+
+    public void deleteAllSubcategories() {
+        subcategoryRepository.deleteAll();
+    }
 }

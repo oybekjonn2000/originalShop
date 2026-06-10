@@ -37,4 +37,8 @@ public class BrandService {
         Brand brand = getBrandById(id);
         brandRepository.delete(brand);
     }
+
+    public void deleteAllBrands() {
+        brandRepository.deleteAll();
+    }
 }

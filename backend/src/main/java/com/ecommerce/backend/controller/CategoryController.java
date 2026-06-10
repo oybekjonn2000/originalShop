@@ -31,23 +31,28 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public Category createCategory(@Valid @RequestBody Category category) {
         return categoryService.createCategory(category);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Category> updateCategory(@PathVariable Long id, @Valid @RequestBody Category categoryDetails) {
         return ResponseEntity.ok(categoryService.updateCategory(id, categoryDetails));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Kategoriya muvaffaqiyatli o'chirildi!");
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllCategories() {
+        categoryService.deleteAllCategories();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Barcha kategoriyalar muvaffaqiyatli o'chirildi!");
         return ResponseEntity.ok(response);
     }
 }

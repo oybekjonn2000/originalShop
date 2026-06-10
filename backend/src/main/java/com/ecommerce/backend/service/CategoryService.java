@@ -37,4 +37,8 @@ public class CategoryService {
         Category category = getCategoryById(id);
         categoryRepository.delete(category);
     }
+
+    public void deleteAllCategories() {
+        categoryRepository.deleteAll();
+    }
 }

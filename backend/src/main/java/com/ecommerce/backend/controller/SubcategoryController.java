@@ -31,21 +31,24 @@ public class SubcategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Subcategory> createSubcategory(@RequestBody Subcategory subcategory) {
         return ResponseEntity.ok(subcategoryService.createSubcategory(subcategory));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Subcategory> updateSubcategory(@PathVariable Long id, @RequestBody Subcategory subcategory) {
         return ResponseEntity.ok(subcategoryService.updateSubcategory(id, subcategory));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteSubcategory(@PathVariable Long id) {
         subcategoryService.deleteSubcategory(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllSubcategories() {
+        subcategoryService.deleteAllSubcategories();
         return ResponseEntity.ok().build();
     }
 }

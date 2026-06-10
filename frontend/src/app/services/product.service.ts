@@ -90,4 +90,16 @@ export class ProductService {
   deleteProduct(id: number): Observable<any> {
     return this.http.delete<any>(`${this.baseApiUrl}/products/${id}`);
   }
+
+  deleteAllProducts(): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/products`);
+  }
+
+  deleteAllCategories(): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/categories`);
+  }
+
+  deleteAllSubcategories(): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/subcategories`);
+  }
 }

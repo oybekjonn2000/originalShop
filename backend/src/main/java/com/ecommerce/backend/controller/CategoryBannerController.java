@@ -23,13 +23,16 @@ public class CategoryBannerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryBannerDTO> createBanner(@RequestBody CategoryBannerDTO dto) {
         return ResponseEntity.ok(categoryBannerService.createBanner(dto));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryBannerDTO> updateBanner(@PathVariable Long id, @RequestBody CategoryBannerDTO dto) {
+        return ResponseEntity.ok(categoryBannerService.updateBanner(id, dto));
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteBanner(@PathVariable Long id) {
         categoryBannerService.deleteBanner(id);
         return ResponseEntity.ok().build();

@@ -33,6 +33,9 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Override
     public void run(String... args) throws Exception {
         log.info("Dastlabki ma'lumotlarni tekshirish va yaratish boshlandi...");
@@ -214,6 +217,18 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Namunaviy mahsulotlar muvaffaqiyatli yuklandi!");
         }
 
+        // Synchronize PostgreSQL sequences just in case there were manual inserts
+        try {
+            log.info("PostgreSQL ketma-ketliklarini (sequences) sinxronizatsiya qilish boshlandi...");
+            jdbcTemplate.execute("SELECT setval('brands_id_seq', COALESCE((SELECT MAX(id) FROM brands), 1))");
+            jdbcTemplate.execute("SELECT setval('categories_id_seq', COALESCE((SELECT MAX(id) FROM categories), 1))");
+            jdbcTemplate.execute("SELECT setval('subcategories_id_seq', COALESCE((SELECT MAX(id) FROM subcategories), 1))");
+            jdbcTemplate.execute("SELECT setval('products_id_seq', COALESCE((SELECT MAX(id) FROM products), 1))");
+            log.info("Barcha ketma-ketliklar sinxronlashtirildi.");
+        } catch (Exception e) {
+            log.warn("Ketma-ketliklarni sinxronlashtirishda xatolik (Bu xatolikka e'tibor bermasa ham bo'ladi): {}", e.getMessage());
+        }
+        
         log.info("Dastlabki ma'lumotlar to'liq tekshirildi.");
     }
 }

@@ -1,7 +1,6 @@
 package com.ecommerce.backend.config;
 
 import com.ecommerce.backend.security.JwtAuthenticationFilter;
-import com.ecommerce.backend.security.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -58,54 +57,30 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"Avtorizatsiyadan o'tilmagan: " + authException.getMessage() + "\"}");
-            }))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Public auth endpoints
-                .requestMatchers("/api/auth/**").permitAll()
-                
-                // Public view endpoints for products, categories, subcategories and brands
-                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/subcategories/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/category-banners/**").permitAll()
-                
-                // Allow public to send contact messages
-                .requestMatchers(HttpMethod.POST, "/api/messages").permitAll()
-                
-                // Allow uploaded images to be viewed publicly
-                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/upload/**").permitAll()
-                
-                // Allow H2 console frames & resources
-                .requestMatchers("/h2-console/**").permitAll()
-                
-                // Admin write operations - still protected by @PreAuthorize on controllers
-                .requestMatchers(HttpMethod.POST, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/subcategories/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/subcategories/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/subcategories/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/brands/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/brands/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/brands/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/category-banners/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/category-banners/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/category-banners/**").permitAll()
-                
-                // All other endpoints require authentication
-                .anyRequest().authenticated()
-            );
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .exceptionHandling(
+                        exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write(
+                                    "{\"error\": \"Avtorizatsiyadan o'tilmagan: " + authException.getMessage() + "\"}");
+                        }))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Allow ALL api/* requests (public shop + admin operations)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/products/**", "/api/products").permitAll()
+                        .requestMatchers("/api/categories/**", "/api/categories").permitAll()
+                        .requestMatchers("/api/subcategories/**", "/api/subcategories").permitAll()
+                        .requestMatchers("/api/brands/**", "/api/brands").permitAll()
+                        .requestMatchers("/api/category-banners/**", "/api/category-banners").permitAll()
+                        .requestMatchers("/api/messages").permitAll()
+                        .requestMatchers("/api/upload/**", "/api/upload").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+
+                        // All other endpoints require authentication
+                        .anyRequest().authenticated());
 
         // Required to load H2 Console frames
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
@@ -121,7 +96,8 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"));
+        configuration.setAllowedHeaders(
+                Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L); // 1 hour caching of CORS results
 

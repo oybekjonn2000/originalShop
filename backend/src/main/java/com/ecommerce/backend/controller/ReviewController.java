@@ -5,6 +5,7 @@ import com.ecommerce.backend.security.UserDetailsImpl;
 import com.ecommerce.backend.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,6 +68,58 @@ public class ReviewController {
             return ResponseEntity.ok(List.of());
         }
         return ResponseEntity.ok(reviewService.getReviewedProductIds(userDetails.getId()));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Review>> getAllReviews() {
+        return ResponseEntity.ok(reviewService.getAllReviews());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
+        try {
+            reviewService.deleteReview(id);
+            return ResponseEntity.ok(Map.of("message", "Sharh muvaffaqiyatli o'chirildi!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<List<Review>> getMyReviews(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(reviewService.getReviewsByUserId(userDetails.getId()));
+    }
+
+    @PostMapping("/{id}/reply")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> replyToReview(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody Map<String, String> payload) {
+        String replyText = payload.get("replyText");
+        try {
+            Review review = reviewService.replyToReview(id, userDetails.getUser(), replyText);
+            return ResponseEntity.ok(review);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}/reply")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteReply(@PathVariable Long id) {
+        try {
+            Review review = reviewService.deleteReply(id);
+            return ResponseEntity.ok(review);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }
 

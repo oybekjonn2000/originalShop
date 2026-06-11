@@ -5,6 +5,7 @@ import { OrderService } from '../../services/order.service';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-profile',
@@ -310,6 +311,61 @@ import { HttpClient } from '@angular/common/http';
                 <button routerLink="/orders" class="btn-icon" title="Batafsil">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-divider" style="margin: 2.5rem 0;"></div>
+
+          <h3>Mening Sharhlarim</h3>
+
+          <div *ngIf="isLoadingReviews" class="loading-state">
+            <div class="spinner"></div>
+            <p>Sharhlar yuklanmoqda...</p>
+          </div>
+
+          <div *ngIf="!isLoadingReviews && reviews.length === 0" class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <h4>Hali sharhlar yo'q</h4>
+            <p>Siz xarid qilgan mahsulotlaringiz uchun hali sharh qoldirmadingiz.</p>
+          </div>
+
+          <div *ngIf="!isLoadingReviews && reviews.length > 0" class="reviews-list">
+            <div *ngFor="let rev of reviews" class="review-profile-card">
+              <div class="review-profile-header">
+                <div class="review-product-info">
+                  <img *ngIf="rev.product?.imageUrl" [src]="rev.product.imageUrl" class="review-prod-thumb" alt="Product" />
+                  <div>
+                    <a [routerLink]="['/product', rev.product?.id]" class="review-product-link">
+                      <strong>{{ rev.product?.name }}</strong>
+                    </a>
+                    <div class="review-date">{{ rev.createdAt | date:'dd.MM.yyyy HH:mm' }}</div>
+                  </div>
+                </div>
+                <div class="stars">
+                  <span *ngFor="let star of [1, 2, 3, 4, 5]" [class.filled]="rev.rating >= star">★</span>
+                </div>
+              </div>
+              <div class="review-body-text">
+                <p>{{ rev.comment }}</p>
+              </div>
+
+              <!-- Admin reply box -->
+              <div *ngIf="rev.replyText" class="admin-reply-box">
+                <div class="reply-header">
+                  <div class="admin-avatar">
+                    <img *ngIf="rev.replier?.profilePicture" [src]="rev.replier.profilePicture" class="admin-avatar-img" />
+                    <svg *ngIf="!rev.replier?.profilePicture" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </div>
+                  <div>
+                    <span class="admin-name">{{ rev.replier?.firstName || rev.replier?.username || 'Admin' }}</span>
+                    <span class="badge-admin">Admin</span>
+                    <span class="reply-date">{{ rev.replyCreatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+                <div class="reply-content">
+                  <p>{{ rev.replyText }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -844,6 +900,168 @@ import { HttpClient } from '@angular/common/http';
       color: #a855f7;
     }
 
+    .reviews-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .review-profile-card {
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.01);
+      padding: 1.25rem;
+      transition: var(--transition-smooth);
+    }
+
+    .review-profile-card:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(168, 85, 247, 0.25);
+    }
+
+    .review-profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .review-product-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .review-prod-thumb {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .review-product-link {
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+
+    .review-product-link:hover {
+      color: var(--primary-color);
+      text-decoration: underline;
+    }
+
+    .review-date {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    .stars {
+      color: #fbbf24;
+      font-size: 0.95rem;
+    }
+
+    .stars span {
+      opacity: 0.22;
+      margin-right: 1px;
+    }
+
+    .stars span.filled {
+      opacity: 1;
+    }
+
+    .review-body-text {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .review-body-text p {
+      margin: 0;
+    }
+
+    /* Admin reply block */
+    .admin-reply-box {
+      margin-top: 0.75rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(168, 85, 247, 0.05);
+      border-left: 3px solid #a855f7;
+      text-align: left;
+    }
+
+    /* Dark mode override */
+    :host-context([data-theme="dark"]) .admin-reply-box {
+      background: rgba(0, 242, 254, 0.05);
+      border-left: 3px solid #00f2fe;
+    }
+
+    .reply-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .admin-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      overflow: hidden;
+    }
+
+    .admin-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .admin-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-right: 6px;
+    }
+
+    .badge-admin {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 50px;
+      text-transform: uppercase;
+      margin-right: 8px;
+      letter-spacing: 0.02em;
+    }
+
+    :host-context([data-theme="dark"]) .badge-admin {
+      background: rgba(0, 242, 254, 0.15);
+      color: #00f2fe;
+    }
+
+    .reply-date {
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+    }
+
+    .reply-content {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .reply-content p {
+      margin: 0;
+    }
+
     @media (max-width: 800px) {
       .profile-layout {
         grid-template-columns: 1fr;
@@ -854,7 +1072,9 @@ import { HttpClient } from '@angular/common/http';
 export class ProfileComponent implements OnInit {
   user: any = null;
   orders: any[] = [];
+  reviews: any[] = [];
   isLoading = true;
+  isLoadingReviews = true;
 
   // Password change
   showPasswordForm = false;
@@ -879,12 +1099,14 @@ export class ProfileComponent implements OnInit {
     private authService: AuthService,
     private orderService: OrderService,
     private fb: FormBuilder,
-    private http: HttpClient
+    private http: HttpClient,
+    private reviewService: ReviewService
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.currentUserValue;
     this.loadOrders();
+    this.loadReviews();
 
     this.passwordForm = this.fb.group({
       currentPassword: ['', Validators.required],
@@ -919,6 +1141,19 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
+      }
+    });
+  }
+
+  loadReviews(): void {
+    this.isLoadingReviews = true;
+    this.reviewService.getMyReviews().subscribe({
+      next: (res) => {
+        this.reviews = res;
+        this.isLoadingReviews = false;
+      },
+      error: () => {
+        this.isLoadingReviews = false;
       }
     });
   }

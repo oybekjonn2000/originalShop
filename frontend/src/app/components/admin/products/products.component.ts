@@ -97,8 +97,13 @@ import { BrandService } from '../../../services/brand.service';
               </td>
               <td>
                 <div style="display:flex;flex-direction:column;gap:2px;">
-                  <span style="font-size:0.78rem;color:var(--text-secondary);">{{ product.subcategory?.category?.name || '—' }}</span>
-                  <span>{{ product.subcategory?.name || '—' }}</span>
+                  <span style="font-size:0.75rem;color:var(--text-secondary);">
+                    {{ product.childCategory?.subcategory?.category?.name || product.subcategory?.category?.name || '—' }}
+                  </span>
+                  <span style="font-size:0.78rem;color:var(--text-secondary);">
+                    {{ product.childCategory?.subcategory?.name || product.subcategory?.name || '—' }}
+                  </span>
+                  <span>{{ product.childCategory?.name || '—' }}</span>
                 </div>
               </td>
               <td>{{ product.brand?.name || '—' }}</td>
@@ -180,19 +185,31 @@ import { BrandService } from '../../../services/brand.service';
       </div>
 
       <!-- Modal Overlay -->
-      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+      <div class="modal-overlay" *ngIf="showModal">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ isEditMode ? 'Mahsulotni tahrirlash' : "Yangi mahsulot qo'shish" }}</h2>
             <button (click)="closeModal()" class="btn-close">✕</button>
           </div>
 
-          <form (ngSubmit)="saveProduct()" class="modal-form">
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label class="glass-label">Mahsulot nomi *</label>
-                <input type="text" [(ngModel)]="form.name" name="name" class="glass-input" required placeholder="iPhone 15 Pro" />
+          <form (ngSubmit)="saveProduct()" class="modal-form-grid">
+            <!-- Left Column: inputs -->
+            <div class="form-left-col">
+              <div class="form-row">
+                <div class="form-group flex-1" style="flex: 2;">
+                  <label class="glass-label">Mahsulot nomi *</label>
+                  <input type="text" [(ngModel)]="form.name" name="name" class="glass-input" required placeholder="iPhone 15 Pro" />
+                </div>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Brand</label>
+                  <select [(ngModel)]="form.brandId" name="brandId" class="glass-input">
+                    <option [ngValue]="null">Brand tanlang (ixtiyoriy)</option>
+                    <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
+                  </select>
+                </div>
               </div>
+
+              <div class="form-row">
                 <div class="form-group flex-1">
                   <label class="glass-label">Kategoriya *</label>
                   <select [(ngModel)]="form.categoryId" name="categoryId" class="glass-input" required (change)="onCategoryChange()">
@@ -202,94 +219,98 @@ import { BrandService } from '../../../services/brand.service';
                 </div>
                 <div class="form-group flex-1">
                   <label class="glass-label">Subkategoriya *</label>
-                  <select [(ngModel)]="form.subcategoryId" name="subcategoryId" class="glass-input" required [disabled]="!form.categoryId">
+                  <select [(ngModel)]="form.subcategoryId" name="subcategoryId" class="glass-input" required [disabled]="!form.categoryId" (change)="onSubcategoryChange()">
                     <option [ngValue]="null" disabled>{{ form.categoryId ? 'Subkategoriya tanlang' : 'Avval kategoriya tanlang' }}</option>
                     <option *ngFor="let sub of filteredSubcategories" [ngValue]="sub.id">{{ sub.name }}</option>
                   </select>
                 </div>
-              <div class="form-group flex-1">
-                <label class="glass-label">Brand</label>
-                <select [(ngModel)]="form.brandId" name="brandId" class="glass-input">
-                  <option [ngValue]="null">Brand tanlang (ixtiyoriy)</option>
-                  <option *ngFor="let brand of brands" [ngValue]="brand.id">{{ brand.name }}</option>
-                </select>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Child Kategoriya *</label>
+                  <select [(ngModel)]="form.childCategoryId" name="childCategoryId" class="glass-input" required [disabled]="!form.subcategoryId">
+                    <option [ngValue]="null" disabled>{{ form.subcategoryId ? 'Child kategoriya tanlang' : 'Avval subkategoriya tanlang' }}</option>
+                    <option *ngFor="let child of filteredChildCategories" [ngValue]="child.id">{{ child.name }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label class="glass-label">Narxi (so'm) *</label>
+                  <input type="number" [(ngModel)]="form.price" name="price" class="glass-input" required step="0.01" min="0" placeholder="0.00" />
+                </div>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Chegirma (%)</label>
+                  <input type="number" [(ngModel)]="form.discount" name="discount" class="glass-input" min="0" max="100" placeholder="0" />
+                </div>
+                <div class="form-group flex-1">
+                  <label class="glass-label">Ombordagi soni *</label>
+                  <input type="number" [(ngModel)]="form.stockQuantity" name="stockQuantity" class="glass-input" required min="0" placeholder="0" />
+                </div>
+              </div>
+
+              <div class="form-group checkbox-group" style="margin-top: 0.5rem;">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="form.isActive" name="isActive" class="checkbox-input" />
+                  <span>Mahsulot faol (katalogda ko'rinsin)</span>
+                </label>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="glass-label">Tavsif</label>
-              <textarea [(ngModel)]="form.description" name="description" class="glass-input" rows="3" placeholder="Mahsulot haqida batafsil ma'lumot..."></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="glass-label">Umumiy tafsif</label>
-              <textarea [(ngModel)]="form.fullDescription" name="fullDescription" class="glass-input" rows="5" placeholder="Mahsulotning umumiy, to'liq tafsifi..."></textarea>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label class="glass-label">Narxi (so'm) *</label>
-                <input type="number" [(ngModel)]="form.price" name="price" class="glass-input" required step="0.01" min="0" placeholder="0.00" />
+            <!-- Right Column: textareas & images -->
+            <div class="form-right-col">
+              <div class="form-group">
+                <label class="glass-label">Tavsif</label>
+                <textarea [(ngModel)]="form.description" name="description" class="glass-input" rows="2" placeholder="Mahsulot haqida batafsil ma'lumot..."></textarea>
               </div>
-              <div class="form-group flex-1">
-                <label class="glass-label">Chegirma (%)</label>
-                <input type="number" [(ngModel)]="form.discount" name="discount" class="glass-input" min="0" max="100" placeholder="0" />
-              </div>
-              <div class="form-group flex-1">
-                <label class="glass-label">Ombordagi soni *</label>
-                <input type="number" [(ngModel)]="form.stockQuantity" name="stockQuantity" class="glass-input" required min="0" placeholder="0" />
-              </div>
-            </div>
 
-            <!-- Rasmlar Yuklash Qismi (10 tagacha) -->
-            <div class="form-group">
-              <label class="glass-label">
-                Mahsulot Rasmlari (10 tagacha)
-                <span class="drag-hint">· tartibini o'zgartirish uchun sudrab qo'ying</span>
-              </label>
-              <div class="multi-image-grid">
-                <div
-                  *ngFor="let img of allImageUrls; let i = index"
-                  class="multi-image-item"
-                  [class.dragging]="dragIndex === i"
-                  [class.drag-over]="dragOverIndex === i && dragIndex !== i"
-                  draggable="true"
-                  (dragstart)="onDragStart(i, $event)"
-                  (dragover)="onDragOver(i, $event)"
-                  (dragleave)="onDragLeave($event)"
-                  (drop)="onDrop(i, $event)"
-                  (dragend)="onDragEnd()"
-                >
-                  <img [src]="img" alt="Rasm" />
-                  <span *ngIf="i === 0" class="main-badge">Asosiy</span>
-                  <div class="drag-icon" title="Sudrab o'zgartirish">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+              <div class="form-group">
+                <label class="glass-label">Umumiy tafsif</label>
+                <textarea [(ngModel)]="form.fullDescription" name="fullDescription" class="glass-input" rows="3" placeholder="Mahsulotning umumiy, to'liq tafsifi..."></textarea>
+              </div>
+
+              <!-- Rasmlar Yuklash Qismi (10 tagacha) -->
+              <div class="form-group" style="margin-top: 0.25rem;">
+                <label class="glass-label">
+                  Mahsulot Rasmlari (10 tagacha)
+                  <span class="drag-hint">· sudrab tartiblang</span>
+                </label>
+                <div class="multi-image-grid">
+                  <div
+                    *ngFor="let img of allImageUrls; let i = index"
+                    class="multi-image-item"
+                    [class.dragging]="dragIndex === i"
+                    [class.drag-over]="dragOverIndex === i && dragIndex !== i"
+                    draggable="true"
+                    (dragstart)="onDragStart(i, $event)"
+                    (dragover)="onDragOver(i, $event)"
+                    (dragleave)="onDragLeave($event)"
+                    (drop)="onDrop(i, $event)"
+                    (dragend)="onDragEnd()"
+                  >
+                    <img [src]="img" alt="Rasm" />
+                    <span *ngIf="i === 0" class="main-badge">Asosiy</span>
+                    <div class="drag-icon" title="Sudrab o'zgartirish">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+                    </div>
+                    <button type="button" class="remove-img-btn" (click)="removeImage(i, $event)" title="O'chirish">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                   </div>
-                  <button type="button" class="remove-img-btn" (click)="removeImage(i, $event)" title="O'chirish">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  </button>
+                  <div class="add-image-btn" *ngIf="allImageUrls.length < 10" (click)="triggerFileInput()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Qo'shish</span>
+                  </div>
                 </div>
-                <div class="add-image-btn" *ngIf="allImageUrls.length < 10" (click)="triggerFileInput()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                  <span>Rasm qo'shish</span>
+                <input #fileInput type="file" accept="image/*" multiple (change)="onFilesSelected($event)" class="file-input-hidden" />
+                <div *ngIf="isUploading" class="upload-progress">
+                  <div class="upload-spinner"></div>
+                  <span>Yuklanmoqda...</span>
                 </div>
               </div>
-              <input #fileInput type="file" accept="image/*" multiple (change)="onFilesSelected($event)" class="file-input-hidden" />
-              <div *ngIf="isUploading" class="upload-progress">
-                <div class="upload-spinner"></div>
-                <span>Rasm yuklanmoqda...</span>
-              </div>
-              <p *ngIf="allImageUrls.length > 0" class="image-count-hint">{{ allImageUrls.length }} / 10 ta rasm yuklangan · Birinchi rasm asosiy hisoblanadi</p>
             </div>
 
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="form.isActive" name="isActive" class="checkbox-input" />
-                <span>Mahsulot faol (katalogda ko'rinsin)</span>
-              </label>
-            </div>
-
-            <div class="modal-actions">
+            <!-- Footer actions across the bottom -->
+            <div class="modal-actions-full">
               <button type="button" (click)="closeModal()" class="btn-secondary">Bekor qilish</button>
               <button type="submit" [disabled]="isSaving" class="btn-primary">
                 <span *ngIf="isSaving">Saqlanmoqda...</span>
@@ -442,19 +463,30 @@ import { BrandService } from '../../../services/brand.service';
     }
 
     .modal-card {
-      width: 100%;
-      max-width: 660px;
-      padding: 2.5rem;
+      width: 90%;
+      max-width: 1200px;
+      padding: 2rem 2.5rem 1.5rem;
       border-radius: var(--border-radius-lg);
-      max-height: 90vh;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
+      background: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      backdrop-filter: none !important;
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: #0b0e14 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: none !important;
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       border-bottom: 1px solid var(--glass-border);
       padding-bottom: 1rem;
     }
@@ -503,6 +535,27 @@ import { BrandService } from '../../../services/brand.service';
     .modal-form {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      gap: 0;
+    }
+
+    .modal-form-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .form-left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-right-col {
+      display: flex;
+      flex-direction: column;
       gap: 1.25rem;
     }
 
@@ -538,11 +591,14 @@ import { BrandService } from '../../../services/brand.service';
       accent-color: var(--primary-color);
     }
 
-    .modal-actions {
+    .modal-actions-full {
+      grid-column: span 2;
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--glass-border);
     }
 
     /* Confirm Modal CSS */
@@ -780,11 +836,10 @@ import { BrandService } from '../../../services/brand.service';
       letter-spacing: 0;
       margin-left: 0.25rem;
     }
-
     /* Material Snackbar Toast */
     .mat-snackbar {
       position: fixed;
-      bottom: 2rem;
+      top: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
       min-width: 300px;
@@ -799,16 +854,16 @@ import { BrandService } from '../../../services/brand.service';
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
       z-index: 99999;
-      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: snackSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
     .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
     .snack-warning { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24; }
     .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
     .mat-snack-text { flex: 1; line-height: 1.4; }
-    @keyframes snackSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes snackSlideDown {
+      from { opacity: 0; transform: translate(-50%, -30px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
     }
 
     /* ======= Pagination ======= */
@@ -974,12 +1029,15 @@ export class ProductsComponent implements OnInit {
     imageUrls: [] as string[],
     categoryId: null as number | null,
     subcategoryId: null as number | null,
+    childCategoryId: null as number | null,
     brandId: null as number | null,
     isActive: true
   };
 
   subcategories: any[] = [];
   filteredSubcategories: any[] = [];
+  childCategories: any[] = [];
+  filteredChildCategories: any[] = [];
 
   constructor(
     private productService: ProductService,
@@ -994,6 +1052,7 @@ export class ProductsComponent implements OnInit {
   loadAll(): void {
     this.productService.getCategories().subscribe(c => this.categories = c);
     this.productService.getSubcategories().subscribe(s => this.subcategories = s);
+    this.productService.getChildCategories().subscribe(ch => this.childCategories = ch);
     this.brandService.getBrands().subscribe(b => this.brands = b);
     this.productService.getProducts().subscribe(p => {
       this.products = p;
@@ -1006,7 +1065,9 @@ export class ProductsComponent implements OnInit {
       const matchSearch = !this.searchTerm ||
         p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         (p.description && p.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
-      const matchCat = !this.selectedCategoryFilter || p.subcategory?.category?.id === this.selectedCategoryFilter;
+      const matchCat = !this.selectedCategoryFilter || 
+        p.childCategory?.subcategory?.category?.id === this.selectedCategoryFilter || 
+        p.subcategory?.category?.id === this.selectedCategoryFilter;
       return matchSearch && matchCat;
     });
 
@@ -1015,9 +1076,9 @@ export class ProductsComponent implements OnInit {
     } else if (this.sortBy === 'name-desc') {
       result.sort((a, b) => b.name.localeCompare(a.name));
     } else if (this.sortBy === 'category-asc') {
-      result.sort((a, b) => (a.subcategory?.category?.name || '').localeCompare(b.subcategory?.category?.name || ''));
+      result.sort((a, b) => (a.childCategory?.subcategory?.category?.name || a.subcategory?.category?.name || '').localeCompare(b.childCategory?.subcategory?.category?.name || b.subcategory?.category?.name || ''));
     } else if (this.sortBy === 'category-desc') {
-      result.sort((a, b) => (b.subcategory?.category?.name || '').localeCompare(a.subcategory?.category?.name || ''));
+      result.sort((a, b) => (b.childCategory?.subcategory?.category?.name || b.subcategory?.category?.name || '').localeCompare(a.childCategory?.subcategory?.category?.name || a.subcategory?.category?.name || ''));
     } else if (this.sortBy === 'brand-asc') {
       result.sort((a, b) => (a.brand?.name || '').localeCompare(b.brand?.name || ''));
     } else if (this.sortBy === 'brand-desc') {
@@ -1066,8 +1127,9 @@ export class ProductsComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, subcategoryId: null, brandId: null, isActive: true };
+    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, subcategoryId: null, childCategoryId: null, brandId: null, isActive: true };
     this.filteredSubcategories = [];
+    this.filteredChildCategories = [];
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
     this.showModal = true;
@@ -1085,8 +1147,9 @@ export class ProductsComponent implements OnInit {
       stockQuantity: product.stockQuantity,
       imageUrl: product.imageUrl || '',
       imageUrls: product.imageUrls ? [...product.imageUrls] : [],
-      categoryId: product.subcategory?.category?.id || null,
-      subcategoryId: product.subcategory?.id || null,
+      categoryId: product.childCategory?.subcategory?.category?.id || product.subcategory?.category?.id || null,
+      subcategoryId: product.childCategory?.subcategory?.id || product.subcategory?.id || null,
+      childCategoryId: product.childCategory?.id || null,
       brandId: product.brand?.id || null,
       isActive: product.isActive
     };
@@ -1095,6 +1158,12 @@ export class ProductsComponent implements OnInit {
       this.filteredSubcategories = this.subcategories.filter(s => s.category?.id === this.form.categoryId);
     } else {
       this.filteredSubcategories = [];
+    }
+    // Load child categories for existing subcategory
+    if (this.form.subcategoryId) {
+      this.filteredChildCategories = this.childCategories.filter(ch => ch.subcategory?.id === this.form.subcategoryId);
+    } else {
+      this.filteredChildCategories = [];
     }
     this.imagePreviewUrl = this.form.imageUrl || null;
     // Build allImageUrls from imageUrl + imageUrls
@@ -1116,10 +1185,27 @@ export class ProductsComponent implements OnInit {
 
   onCategoryChange(): void {
     this.form.subcategoryId = null;
+    this.form.childCategoryId = null;
+    this.filteredSubcategories = [];
+    this.filteredChildCategories = [];
     if (this.form.categoryId) {
-      this.filteredSubcategories = this.subcategories.filter(s => s.category?.id === this.form.categoryId);
-    } else {
-      this.filteredSubcategories = [];
+      this.productService.getSubcategoriesByCategory(this.form.categoryId).subscribe({
+        next: (data) => {
+          this.filteredSubcategories = data;
+        }
+      });
+    }
+  }
+
+  onSubcategoryChange(): void {
+    this.form.childCategoryId = null;
+    this.filteredChildCategories = [];
+    if (this.form.subcategoryId) {
+      this.productService.getChildCategoriesBySubcategory(this.form.subcategoryId).subscribe({
+        next: (data) => {
+          this.filteredChildCategories = data;
+        }
+      });
     }
   }
 
@@ -1239,8 +1325,8 @@ export class ProductsComponent implements OnInit {
   }
 
   saveProduct(): void {
-    if (!this.form.name || !this.form.price || this.form.subcategoryId === null) {
-      this.showToast('Iltimos, barcha majburiy maydonlarni to\'ldiring! (Kategoriya va Subkategoriya ham tanlang)', 'snack-warning');
+    if (!this.form.name || !this.form.price || this.form.childCategoryId === null) {
+      this.showToast('Iltimos, barcha majburiy maydonlarni to\'ldiring! (Kategoriya, Subkategoriya va Child kategoriya ham tanlang)', 'snack-warning');
       return;
     }
 
@@ -1255,7 +1341,7 @@ export class ProductsComponent implements OnInit {
       imageUrl: this.form.imageUrl,
       imageUrls: this.form.imageUrls,
       isActive: this.form.isActive,
-      subcategory: { id: this.form.subcategoryId },
+      childCategory: { id: this.form.childCategoryId },
       brand: this.form.brandId ? { id: this.form.brandId } : null
     };
 

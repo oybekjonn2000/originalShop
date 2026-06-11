@@ -34,13 +34,13 @@ import { WishlistService } from '../../services/wishlist.service';
             <h3>Kategoriyalar</h3>
             <ul class="category-list">
               <li 
-                [class.active]="selectedCategoryId === null && selectedSubcategoryId === null" 
+                [class.active]="selectedCategoryId === null && selectedSubcategoryId === null && selectedChildCategoryId === null" 
                 (click)="selectCategory(null)">Barchasi</li>
               
               <li *ngFor="let cat of categories" class="category-accordion-item">
                 <div 
                   class="category-accordion-header"
-                  [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null"
+                  [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
                   (click)="toggleAccordion(cat.id)"
                 >
                   <span>{{ cat.name }}</span>
@@ -52,15 +52,38 @@ import { WishlistService } from '../../services/wishlist.service';
                 </div>
                 <ul class="subcategory-list" *ngIf="openCategoryId === cat.id">
                   <li
-                    [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null"
+                    [class.active]="selectedCategoryId === cat.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
                     (click)="selectCategoryOnly(cat.id)"
                   >Barchasi</li>
                   <li 
                     *ngFor="let sub of getSubsForCategory(cat.id)"
-                    [class.active]="selectedSubcategoryId === sub.id"
-                    (click)="selectSubcategory(sub)"
+                    class="subcategory-accordion-item"
                   >
-                    {{ sub.name }}
+                    <div 
+                      class="subcategory-accordion-header"
+                      [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
+                      (click)="toggleSubAccordion(sub.id)"
+                    >
+                      <span>{{ sub.name }}</span>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        [class.rotated]="openSubcategoryId === sub.id"
+                        class="accordion-arrow"
+                      ><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <ul class="childcategory-list" *ngIf="openSubcategoryId === sub.id">
+                      <li
+                        [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
+                        (click)="selectSubcategoryOnly(sub)"
+                      >Barchasi</li>
+                      <li
+                        *ngFor="let child of sub.childCategories"
+                        [class.active]="selectedChildCategoryId === child.id"
+                        (click)="selectChildCategory(child)"
+                      >
+                        {{ child.name }}
+                      </li>
+                    </ul>
                   </li>
                 </ul>
               </li>
@@ -548,6 +571,58 @@ import { WishlistService } from '../../services/wishlist.service';
     }
 
     .subcategory-list > li.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+      font-weight: 600;
+    }
+
+    .subcategory-accordion-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .subcategory-accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+    .subcategory-accordion-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+    .subcategory-accordion-header.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+      font-weight: 600;
+    }
+    .childcategory-list {
+      list-style: none;
+      margin-top: 0.25rem;
+      margin-left: 1rem;
+      padding-left: 0.5rem;
+      border-left: 1px dashed rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .childcategory-list > li {
+      padding: 0.4rem 0.65rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+    .childcategory-list > li:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+    .childcategory-list > li.active {
       color: var(--primary-color);
       background: rgba(0, 242, 254, 0.05);
       font-weight: 600;
@@ -1218,7 +1293,9 @@ export class CatalogComponent implements OnInit {
   searchTerm = '';
   selectedCategoryId: number | null = null;
   selectedSubcategoryId: number | null = null;
+  selectedChildCategoryId: number | null = null;
   openCategoryId: number | null = null;
+  openSubcategoryId: number | null = null;
   
   // Universal Filters
   minPrice: number | null = null;
@@ -1286,6 +1363,18 @@ export class CatalogComponent implements OnInit {
         this.selectedCategoryId = +params['category'];
         this.openCategoryId = this.selectedCategoryId;
       }
+      if (params['subcategory']) {
+        this.selectedSubcategoryId = +params['subcategory'];
+        const sub = this.subcategories.find(s => s.id === this.selectedSubcategoryId);
+        if (sub) {
+          this.selectedCategoryId = sub.category?.id || null;
+          this.openCategoryId = this.selectedCategoryId;
+        }
+        this.openSubcategoryId = this.selectedSubcategoryId;
+      }
+      if (params['childCategory']) {
+        this.selectedChildCategoryId = +params['childCategory'];
+      }
       if (params['brand']) {
         this.selectedBrandIds.add(+params['brand']);
       }
@@ -1308,12 +1397,14 @@ export class CatalogComponent implements OnInit {
     this.productService.getCategories().subscribe({
       next: (cats) => {
         this.categories = cats;
+        this.resolveCategoryHierarchy();
       }
     });
 
     this.productService.getSubcategories().subscribe({
       next: (subs) => {
         this.subcategories = subs;
+        this.resolveCategoryHierarchy();
       }
     });
 
@@ -1336,27 +1427,60 @@ export class CatalogComponent implements OnInit {
     });
   }
 
+  resolveCategoryHierarchy(): void {
+    if (this.selectedChildCategoryId && this.categories.length > 0 && this.subcategories.length > 0) {
+      for (const cat of this.categories) {
+        for (const sub of cat.subcategories || []) {
+          const child = sub.childCategories?.find((c: any) => c.id === this.selectedChildCategoryId);
+          if (child) {
+            this.selectedCategoryId = cat.id;
+            this.selectedSubcategoryId = sub.id;
+            this.openCategoryId = cat.id;
+            this.openSubcategoryId = sub.id;
+            this.applyFilters();
+            return;
+          }
+        }
+      }
+    }
+  }
+
   selectCategory(id: number | null): void {
     this.selectedCategoryId = id;
     this.selectedSubcategoryId = null;
+    this.selectedChildCategoryId = null;
     this.openCategoryId = id;
+    this.openSubcategoryId = null;
     this.applyFilters();
   }
 
   selectCategoryOnly(categoryId: number): void {
     this.selectedCategoryId = categoryId;
     this.selectedSubcategoryId = null;
+    this.selectedChildCategoryId = null;
     this.applyFilters();
   }
 
-  selectSubcategory(sub: any): void {
+  selectSubcategoryOnly(sub: any): void {
     this.selectedCategoryId = sub.category?.id || null;
     this.selectedSubcategoryId = sub.id;
+    this.selectedChildCategoryId = null;
+    this.applyFilters();
+  }
+
+  selectChildCategory(child: any): void {
+    this.selectedCategoryId = child.subcategory?.category?.id || null;
+    this.selectedSubcategoryId = child.subcategory?.id || null;
+    this.selectedChildCategoryId = child.id;
     this.applyFilters();
   }
 
   toggleAccordion(categoryId: number): void {
     this.openCategoryId = this.openCategoryId === categoryId ? null : categoryId;
+  }
+
+  toggleSubAccordion(subcategoryId: number): void {
+    this.openSubcategoryId = this.openSubcategoryId === subcategoryId ? null : subcategoryId;
   }
 
   getSubsForCategory(categoryId: number): any[] {
@@ -1377,10 +1501,13 @@ export class CatalogComponent implements OnInit {
 
     // 1. Kategoriya bo'yicha filtr
     if (this.selectedCategoryId !== null) {
-      result = result.filter(p => p.subcategory?.category?.id === this.selectedCategoryId);
+      result = result.filter(p => p.childCategory?.subcategory?.category?.id === this.selectedCategoryId);
     }
     if (this.selectedSubcategoryId !== null) {
-      result = result.filter(p => p.subcategory?.id === this.selectedSubcategoryId);
+      result = result.filter(p => p.childCategory?.subcategory?.id === this.selectedSubcategoryId);
+    }
+    if (this.selectedChildCategoryId !== null) {
+      result = result.filter(p => p.childCategory?.id === this.selectedChildCategoryId);
     }
 
     // 2. Qidiruv bo'yicha filtr
@@ -1429,6 +1556,7 @@ export class CatalogComponent implements OnInit {
     this.searchTerm = '';
     this.selectedCategoryId = null;
     this.selectedSubcategoryId = null;
+    this.selectedChildCategoryId = null;
     this.selectedBrandIds.clear();
     this.minPrice = null;
     this.maxPrice = null;
@@ -1440,6 +1568,15 @@ export class CatalogComponent implements OnInit {
   getTitle(): string {
     if (this.searchTerm.trim()) {
       return `"${this.searchTerm}" bo'yicha natijalar`;
+    }
+    if (this.selectedChildCategoryId !== null) {
+      for (const cat of this.categories) {
+        for (const sub of cat.subcategories || []) {
+          const child = sub.childCategories?.find((c: any) => c.id === this.selectedChildCategoryId);
+          if (child) return child.name;
+        }
+      }
+      return 'Mahsulotlar';
     }
     if (this.selectedSubcategoryId !== null) {
       const sub = this.subcategories.find(s => s.id === this.selectedSubcategoryId);
@@ -1500,7 +1637,7 @@ export class CatalogComponent implements OnInit {
     
     this.categories.forEach(cat => {
       const catProds = this.products
-        .filter(p => p.subcategory?.category?.id === cat.id)
+        .filter(p => p.childCategory?.subcategory?.category?.id === cat.id)
         .slice(0, 4);
       
       if (catProds.length > 0) {

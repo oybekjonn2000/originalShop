@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
+import { Subscription } from 'rxjs';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
@@ -15,6 +16,64 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="home-container fade-in-el">
+      <!-- Premium Catalog Portal Window -->
+      <div class="catalog-portal-window" *ngIf="isCatalogOpen" (click)="$event.stopPropagation()">
+        <div class="portal-header">
+          <div class="portal-title-wrapper">
+            <span class="portal-logo-glow">NexShop</span>
+            <span class="portal-title-sep">/</span>
+            <h2>Mahsulotlar Katalogi</h2>
+          </div>
+          <button class="portal-close-btn" (click)="closeCatalogPortal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            Yopish
+          </button>
+        </div>
+
+        <div class="portal-body">
+          <!-- Left sidebar (Main Categories) -->
+          <aside class="portal-sidebar">
+            <div 
+              *ngFor="let cat of categories" 
+              class="portal-sidebar-item" 
+              [class.active]="activeCatalogCategory?.id === cat.id"
+              (mouseenter)="setActiveCatalogCategory(cat)"
+              (click)="onCategorySelect(cat)"
+            >
+              <div class="portal-sidebar-item-inner">
+                <span class="portal-cat-icon" *ngIf="!cat.imageUrl">{{ getCategoryIcon(cat.name) }}</span>
+                <img *ngIf="cat.imageUrl" [src]="cat.imageUrl" [alt]="cat.name" class="portal-cat-thumb" />
+                <span class="portal-cat-name">{{ cat.name }}</span>
+              </div>
+              <svg class="portal-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </aside>
+
+          <!-- Right panel (Subcategories and Child Categories) -->
+          <main class="portal-content" *ngIf="activeCatalogCategory">
+            <div class="portal-content-header" (click)="onCategorySelect(activeCatalogCategory)">
+              <h2>{{ activeCatalogCategory.name }}</h2>
+              <span class="portal-view-all">Barchasini ko'rish &rarr;</span>
+            </div>
+
+            <div class="portal-subcategories-grid">
+              <div class="portal-subcat-group" *ngFor="let sub of activeCatalogCategory.subcategories">
+                <h3 class="portal-subcat-title" (click)="onSubcategorySelect(sub)">
+                  {{ sub.name }}
+                </h3>
+                
+                <ul class="portal-childcat-list">
+                  <li *ngFor="let child of sub.childCategories">
+                    <a class="portal-childcat-link" (click)="onChildCategorySelect(child)">
+                      {{ child.name }}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
       <!-- Brands Reels Slider -->
       <section class="brands-reels-section" *ngIf="brands.length > 0">
         <div class="brands-reels-container">
@@ -120,7 +179,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           <h3>Kategoriyalar</h3>
           <ul class="category-list">
             <li 
-              [class.active]="selectedCategoryId === null && selectedSubcategoryId === null"
+              [class.active]="selectedCategoryId === null && selectedSubcategoryId === null && selectedChildCategoryId === null"
               (click)="selectCategory(null)"
             >
               Barcha mahsulotlar
@@ -128,7 +187,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
             <li *ngFor="let category of categories" class="category-accordion-item">
               <div 
                 class="category-accordion-header"
-                [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null"
+                [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
                 (click)="toggleAccordion(category.id)"
               >
                 <span>{{ category.name }}</span>
@@ -140,15 +199,38 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
               </div>
               <ul class="subcategory-list" *ngIf="openCategoryId === category.id">
                 <li
-                  [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null"
+                  [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
                   (click)="selectCategoryOnly(category.id, category.name)"
                 >Barchasi</li>
                 <li 
                   *ngFor="let sub of getSubsForCategory(category.id)"
-                  [class.active]="selectedSubcategoryId === sub.id"
-                  (click)="selectSubcategory(sub)"
+                  class="subcategory-accordion-item"
                 >
-                  {{ sub.name }}
+                  <div 
+                    class="subcategory-accordion-header"
+                    [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
+                    (click)="toggleSubAccordion(sub.id)"
+                  >
+                    <span>{{ sub.name }}</span>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      [class.rotated]="openSubcategoryId === sub.id"
+                      class="accordion-arrow"
+                    ><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <ul class="childcategory-list" *ngIf="openSubcategoryId === sub.id">
+                    <li
+                      [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
+                      (click)="selectSubcategoryOnly(sub)"
+                    >Barchasi</li>
+                    <li
+                      *ngFor="let child of sub.childCategories"
+                      [class.active]="selectedChildCategoryId === child.id"
+                      (click)="selectChildCategory(child)"
+                    >
+                      {{ child.name }}
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </li>
@@ -388,6 +470,303 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
+      position: relative;
+    }
+
+    /* ============================================
+       PREMIUM CATALOG PORTAL OVERLAY
+       ============================================ */
+    .catalog-portal-window {
+      position: absolute;
+      top: 0;
+      left: 1rem;
+      right: 1rem;
+      min-height: 550px;
+      max-height: 750px;
+      background: #ffffff !important;
+      color: #111827;
+      z-index: 999;
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      animation: portalSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      overflow: hidden;
+      opacity: 1 !important;
+    }
+
+    :host-context([data-theme="dark"]) .catalog-portal-window {
+      background: #0b0e14 !important;
+      color: #f3f4f6;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes portalSlideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.02);
+    }
+    :host-context([data-theme="dark"]) .portal-header {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .portal-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .portal-logo-glow {
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px var(--primary-glow));
+    }
+    .portal-title-sep {
+      color: var(--text-secondary);
+      opacity: 0.5;
+      font-weight: 300;
+    }
+    .portal-header h2 {
+      font-size: 1.3rem;
+      margin: 0;
+      color: var(--text-primary);
+    }
+    .portal-close-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .portal-close-btn:hover {
+      background: var(--danger-color);
+      color: white;
+      border-color: var(--danger-color);
+      box-shadow: 0 0 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .portal-body {
+      display: flex;
+      flex: 1;
+      height: calc(100% - 70px);
+      overflow: hidden;
+    }
+
+    .portal-sidebar {
+      width: 280px;
+      border-right: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.01);
+      overflow-y: auto;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    :host-context([data-theme="dark"]) .portal-sidebar {
+      background: rgba(255, 255, 255, 0.01);
+    }
+    .portal-sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .portal-sidebar::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+    :host-context([data-theme="dark"]) .portal-sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .portal-sidebar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-secondary);
+      border-left: 3px solid transparent;
+    }
+    .portal-sidebar-item:hover, .portal-sidebar-item.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.04);
+      border-left-color: var(--primary-color);
+    }
+    .portal-sidebar-item-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .portal-cat-icon {
+      font-size: 1.2rem;
+    }
+    .portal-cat-thumb {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .portal-cat-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .portal-chevron {
+      opacity: 0;
+      transition: var(--transition-smooth);
+      color: var(--primary-color);
+    }
+    .portal-sidebar-item:hover .portal-chevron, .portal-sidebar-item.active .portal-chevron {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+
+    .portal-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+    :host-context([data-theme="dark"]) .portal-content {
+      background: #0b0e14;
+    }
+    .portal-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .portal-content::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 4px;
+    }
+    .portal-content-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--primary-color);
+      cursor: pointer;
+    }
+    .portal-content-header h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .portal-view-all {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      transition: transform 0.2s;
+    }
+    .portal-content-header:hover .portal-view-all {
+      transform: translateX(4px);
+    }
+    .portal-subcategories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 2rem;
+      align-items: start;
+    }
+    .portal-subcat-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .portal-subcat-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .portal-subcat-title:hover {
+      color: var(--primary-color);
+    }
+    .portal-childcat-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .portal-childcat-link {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+    .portal-childcat-link:hover {
+      color: var(--primary-color);
+      padding-left: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .catalog-portal-window {
+        left: 0.5rem;
+        right: 0.5rem;
+        max-height: 80vh;
+      }
+      .portal-body {
+        flex-direction: column;
+      }
+      .portal-sidebar {
+        width: 100%;
+        height: 120px;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        padding: 0.5rem;
+        gap: 0.5rem;
+      }
+      .portal-sidebar-item {
+        flex-direction: column;
+        padding: 0.5rem 1rem;
+        min-width: 120px;
+        text-align: center;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        justify-content: center;
+      }
+      .portal-sidebar-item.active {
+        border-bottom-color: var(--primary-color);
+      }
+      .portal-sidebar-item-inner {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .portal-chevron {
+        display: none;
+      }
+      .portal-content {
+        padding: 1rem;
+      }
+      .portal-subcategories-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
     }
 
     /* Brands Reels Styles */
@@ -803,6 +1182,58 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     }
 
     .subcategory-list > li.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+      font-weight: 600;
+    }
+
+    .subcategory-accordion-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .subcategory-accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+    .subcategory-accordion-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+    .subcategory-accordion-header.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+      font-weight: 600;
+    }
+    .childcategory-list {
+      list-style: none;
+      margin-top: 0.25rem;
+      margin-left: 1rem;
+      padding-left: 0.5rem;
+      border-left: 1px dashed rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .childcategory-list > li {
+      padding: 0.4rem 0.65rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+    .childcategory-list > li:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+    .childcategory-list > li.active {
       color: var(--primary-color);
       background: rgba(0, 242, 254, 0.05);
       font-weight: 600;
@@ -1549,7 +1980,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   categories: any[] = [];
   subcategories: any[] = [];
   openCategoryId: number | null = null;
+  openSubcategoryId: number | null = null;
   selectedSubcategoryId: number | null = null;
+  selectedChildCategoryId: number | null = null;
   products: any[] = [];
   discountedProducts: any[] = [];
   cartItems: any[] = [];
@@ -1558,6 +1991,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   catalogTitle: string = 'Barcha mahsulotlar';
   isLoading = true;
   addingProductId: number | null = null;
+
+  isCatalogOpen = false;
+  activeCatalogCategory: any = null;
+  private catalogOpenSub?: Subscription;
 
   // Pagination
   currentPage = 1;
@@ -1639,13 +2076,26 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loadBrands();
     this.loadCategoryBanners();
 
+    this.catalogOpenSub = this.productService.isCatalogOpen$.subscribe(isOpen => {
+      this.isCatalogOpen = isOpen;
+      if (isOpen && this.categories.length > 0 && !this.activeCatalogCategory) {
+        this.activeCatalogCategory = this.categories[0];
+      }
+    });
+
     // Listen to query parameters for search queries
     this.route.queryParams.subscribe(params => {
       this.searchQuery = params['q'] || '';
       this.selectedCategoryId = params['category'] ? +params['category'] : null;
+      this.selectedSubcategoryId = params['subcategory'] ? +params['subcategory'] : null;
+      this.selectedChildCategoryId = params['childCategory'] ? +params['childCategory'] : null;
 
       if (this.searchQuery) {
         this.searchProducts(this.searchQuery);
+      } else if (this.selectedChildCategoryId !== null) {
+        this.loadProductsByChildCategory(this.selectedChildCategoryId);
+      } else if (this.selectedSubcategoryId !== null) {
+        this.loadProductsBySubcategory(this.selectedSubcategoryId);
       } else if (this.selectedCategoryId !== null) {
         this.loadProductsByCategory(this.selectedCategoryId);
       } else {
@@ -1673,6 +2123,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     if (this.bannersInterval) {
       clearInterval(this.bannersInterval);
+    }
+    if (this.catalogOpenSub) {
+      this.catalogOpenSub.unsubscribe();
     }
   }
 
@@ -1712,10 +2165,32 @@ export class HomeComponent implements OnInit, OnDestroy {
   loadCategories(): void {
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
+      this.resolveCategoryHierarchy();
+      if (this.isCatalogOpen && !this.activeCatalogCategory && cats.length > 0) {
+        this.activeCatalogCategory = cats[0];
+      }
     });
     this.productService.getSubcategories().subscribe(subs => {
       this.subcategories = subs;
+      this.resolveCategoryHierarchy();
     });
+  }
+
+  resolveCategoryHierarchy(): void {
+    if (this.selectedChildCategoryId && this.categories.length > 0 && this.subcategories.length > 0) {
+      for (const cat of this.categories) {
+        for (const sub of cat.subcategories || []) {
+          const child = sub.childCategories?.find((c: any) => c.id === this.selectedChildCategoryId);
+          if (child) {
+            this.selectedCategoryId = cat.id;
+            this.selectedSubcategoryId = sub.id;
+            this.openCategoryId = cat.id;
+            this.openSubcategoryId = sub.id;
+            return;
+          }
+        }
+      }
+    }
   }
 
   loadBrands(): void {
@@ -1785,6 +2260,28 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadProductsBySubcategory(subcategoryId: number): void {
+    this.isLoading = true;
+    this.productService.getProductsBySubcategory(subcategoryId).subscribe({
+      next: (prods) => {
+        this.products = prods.filter(p => p.isActive);
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
+    });
+  }
+
+  loadProductsByChildCategory(childCategoryId: number): void {
+    this.isLoading = true;
+    this.productService.getProductsByChildCategory(childCategoryId).subscribe({
+      next: (prods) => {
+        this.products = prods.filter(p => p.isActive);
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
+    });
+  }
+
   searchProducts(query: string): void {
     this.isLoading = true;
     this.catalogTitle = `"${query}" bo'yicha qidiruv natijalari`;
@@ -1800,7 +2297,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   selectCategory(categoryId: number | null): void {
     this.selectedCategoryId = categoryId;
     this.selectedSubcategoryId = null;
+    this.selectedChildCategoryId = null;
     this.openCategoryId = categoryId;
+    this.openSubcategoryId = null;
     this.searchQuery = '';
     if (categoryId === null) {
       this.loadAllProducts();
@@ -1812,28 +2311,37 @@ export class HomeComponent implements OnInit, OnDestroy {
   selectCategoryOnly(categoryId: number, name: string): void {
     this.selectedCategoryId = categoryId;
     this.selectedSubcategoryId = null;
+    this.selectedChildCategoryId = null;
     this.searchQuery = '';
     this.loadProductsByCategory(categoryId);
   }
 
-  selectSubcategory(sub: any): void {
+  selectSubcategoryOnly(sub: any): void {
     this.selectedCategoryId = sub.category?.id || null;
     this.selectedSubcategoryId = sub.id;
+    this.selectedChildCategoryId = null;
     this.searchQuery = '';
     this.isLoading = true;
     this.catalogTitle = sub.name;
-    this.productService.getProductsBySubcategory(sub.id).subscribe({
-      next: (prods) => {
-        this.products = prods.filter(p => p.isActive);
-        this.currentPage = 1;
-        this.isLoading = false;
-      },
-      error: () => this.isLoading = false
-    });
+    this.loadProductsBySubcategory(sub.id);
+  }
+
+  selectChildCategory(child: any): void {
+    this.selectedCategoryId = child.subcategory?.category?.id || null;
+    this.selectedSubcategoryId = child.subcategory?.id || null;
+    this.selectedChildCategoryId = child.id;
+    this.searchQuery = '';
+    this.isLoading = true;
+    this.catalogTitle = child.name;
+    this.loadProductsByChildCategory(child.id);
   }
 
   toggleAccordion(categoryId: number): void {
     this.openCategoryId = this.openCategoryId === categoryId ? null : categoryId;
+  }
+
+  toggleSubAccordion(subcategoryId: number): void {
+    this.openSubcategoryId = this.openSubcategoryId === subcategoryId ? null : subcategoryId;
   }
 
   getSubsForCategory(categoryId: number): any[] {
@@ -2021,5 +2529,56 @@ export class HomeComponent implements OnInit, OnDestroy {
   setCardImage(product: any, index: number, event: Event): void {
     event.stopPropagation();
     product.activeImageIndex = index;
+  }
+
+  getCategoryIcon(name: string): string {
+    const n = name.toLowerCase();
+    if (n.includes('smartfon') || n.includes('telefon')) return '📱';
+    if (n.includes('audio') || n.includes('naushnik')) return '🎧';
+    if (n.includes('noutbuk') || n.includes('kompyuter') || n.includes('notebook')) return '💻';
+    if (n.includes('tv') || n.includes('televizor') || n.includes('proyektor')) return '📺';
+    if (n.includes('uy uchun') || n.includes('kir yuvish') || n.includes('changyutgich')) return '🏠';
+    if (n.includes('oshxona') || n.includes('mikrotolqinli') || n.includes('duxovka')) return '🍳';
+    if (n.includes('go\'zallik') || n.includes('parvarish') || n.includes('fen')) return '🧴';
+    if (n.includes('aqlli') || n.includes('smart')) return '💡';
+    if (n.includes('o\'yin') || n.includes('game') || n.includes('playstation')) return '🎮';
+    if (n.includes('sport') || n.includes('trenajor')) return '⚽';
+    if (n.includes('avto')) return '🚗';
+    if (n.includes('bolalar') || n.includes('o\'yinchoq')) return '🧸';
+    return '📦';
+  }
+
+  setActiveCatalogCategory(cat: any): void {
+    this.activeCatalogCategory = cat;
+  }
+
+  closeCatalogPortal(): void {
+    this.productService.isCatalogOpen$.next(false);
+  }
+
+  onCategorySelect(cat: any): void {
+    this.selectCategoryOnly(cat.id, cat.name);
+    this.closeCatalogPortal();
+    this.scrollToCatalog();
+  }
+
+  onSubcategorySelect(sub: any): void {
+    this.selectSubcategoryOnly(sub);
+    this.closeCatalogPortal();
+    this.scrollToCatalog();
+  }
+
+  onChildCategorySelect(child: any): void {
+    this.selectChildCategory(child);
+    this.closeCatalogPortal();
+    this.scrollToCatalog();
+  }
+
+  scrollToCatalog(): void {
+    setTimeout(() => {
+      if (this.catalogAnchor) {
+        this.catalogAnchor.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 }

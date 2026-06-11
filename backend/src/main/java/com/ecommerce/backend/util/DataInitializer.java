@@ -1,10 +1,7 @@
 package com.ecommerce.backend.util;
 
 import com.ecommerce.backend.model.*;
-import com.ecommerce.backend.repository.CategoryRepository;
-import com.ecommerce.backend.repository.ProductRepository;
-import com.ecommerce.backend.repository.SubcategoryRepository;
-import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -26,6 +23,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private SubcategoryRepository subcategoryRepository;
+
+    @Autowired
+    private ChildCategoryRepository childCategoryRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -126,90 +126,122 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Subkategoriyalar muvaffaqiyatli yaratildi.");
         }
 
+        // 3.5. Initialize ChildCategories
+        if (childCategoryRepository.count() == 0) {
+            List<Subcategory> subs = subcategoryRepository.findAll();
+            
+            Subcategory appleIphone = subs.stream().filter(s -> s.getName().equals("Apple iPhone")).findFirst().orElse(null);
+            Subcategory samsungGalaxy = subs.stream().filter(s -> s.getName().equals("Samsung Galaxy")).findFirst().orElse(null);
+            Subcategory macbook = subs.stream().filter(s -> s.getName().equals("MacBook")).findFirst().orElse(null);
+            Subcategory gaming = subs.stream().filter(s -> s.getName().equals("Gaming Noutbuklar")).findFirst().orElse(null);
+            Subcategory quloqchinlar = subs.stream().filter(s -> s.getName().equals("Quloqchinlar")).findFirst().orElse(null);
+            Subcategory sichqoncha = subs.stream().filter(s -> s.getName().equals("Sichqoncha va Klaviatura")).findFirst().orElse(null);
+            
+            if (appleIphone != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("Apple smartfonlar").subcategory(appleIphone).build());
+            }
+            if (samsungGalaxy != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("Samsung smartfonlar").subcategory(samsungGalaxy).build());
+            }
+            if (macbook != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("MacBook noutbuklar").subcategory(macbook).build());
+            }
+            if (gaming != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("Asus ROG").subcategory(gaming).build());
+            }
+            if (quloqchinlar != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("Simsiz quloqchinlar").subcategory(quloqchinlar).build());
+            }
+            if (sichqoncha != null) {
+                childCategoryRepository.save(ChildCategory.builder().name("Logitech sichqonchalar").subcategory(sichqoncha).build());
+            }
+            log.info("Child kategoriyalar yaratildi.");
+        }
+
         // 4. Initialize Products (faqat bo'sh bo'lganda)
         if (productRepository.count() == 0) {
-            // Subkategoriyalarni olish
-            Subcategory iphoneSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("Apple iPhone")).findFirst().orElse(null);
-            Subcategory samsungSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("Samsung Galaxy")).findFirst().orElse(null);
-            Subcategory macbookSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("MacBook")).findFirst().orElse(null);
-            Subcategory gamingSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("Gaming Noutbuklar")).findFirst().orElse(null);
-            Subcategory quloqchinSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("Quloqchinlar")).findFirst().orElse(null);
-            Subcategory sichqonchaSub = subcategoryRepository.findAll().stream()
-                    .filter(s -> s.getName().equals("Sichqoncha va Klaviatura")).findFirst().orElse(null);
+            // Childkategoriyalarni olish
+            ChildCategory appleSmart = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("Apple smartfonlar")).findFirst().orElse(null);
+            ChildCategory samsungSmart = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("Samsung smartfonlar")).findFirst().orElse(null);
+            ChildCategory macbookPro = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("MacBook noutbuklar")).findFirst().orElse(null);
+            ChildCategory asusRog = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("Asus ROG")).findFirst().orElse(null);
+            ChildCategory airpods = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("Simsiz quloqchinlar")).findFirst().orElse(null);
+            ChildCategory logitechMouse = childCategoryRepository.findAll().stream()
+                    .filter(c -> c.getName().equals("Logitech sichqonchalar")).findFirst().orElse(null);
 
-            if (iphoneSub != null) {
+            if (appleSmart != null) {
                 productRepository.save(Product.builder()
                         .name("iPhone 15 Pro Max")
                         .description("Titan korpus, A17 Pro super chip, 5x optik yaqinlashtiruvchi kamera va o'ta tiniq displey. 256GB xotira bilan jihozlangan premium smartfon.")
                         .price(1399.99)
                         .imageUrl("https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(15)
-                        .subcategory(iphoneSub)
+                        .childCategory(appleSmart)
                         .isActive(true)
                         .build());
             }
 
-            if (samsungSub != null) {
+            if (samsungSmart != null) {
                 productRepository.save(Product.builder()
                         .name("Samsung Galaxy S24 Ultra")
                         .description("Galaxy AI intellektual yordamchisi, 200MP ultra-kamera, o'rnatilgan S-Pen stilus va titanium korpusga ega eng so'nggi flagman.")
                         .price(1249.99)
                         .imageUrl("https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(12)
-                        .subcategory(samsungSub)
+                        .childCategory(samsungSmart)
                         .isActive(true)
                         .build());
             }
 
-            if (macbookSub != null) {
+            if (macbookPro != null) {
                 productRepository.save(Product.builder()
                         .name("MacBook Pro 16 M3 Max")
                         .description("Apple M3 Max super chipi, 36GB birlashgan xotira, 1TB tezkor SSD. Grafika ustasi va dasturchilar uchun eng mukammal ish quroli.")
                         .price(3499.99)
                         .imageUrl("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(8)
-                        .subcategory(macbookSub)
+                        .childCategory(macbookPro)
                         .isActive(true)
                         .build());
             }
 
-            if (gamingSub != null) {
+            if (asusRog != null) {
                 productRepository.save(Product.builder()
                         .name("ASUS ROG Zephyrus G14")
                         .description("AMD Ryzen 9, RTX 4070 grafika, 120Hz OLED o'yin displeyi. Yengil, ammo o'ta baquvvat o'yin noutbuki.")
                         .price(1899.99)
                         .imageUrl("https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(5)
-                        .subcategory(gamingSub)
+                        .childCategory(asusRog)
                         .isActive(true)
                         .build());
             }
 
-            if (quloqchinSub != null) {
+            if (airpods != null) {
                 productRepository.save(Product.builder()
                         .name("Apple AirPods Pro 2")
                         .description("Active Noise Cancellation shovqinni kamaytirish tizimi, Adaptive Audio rejami, 6 soatgacha uzluksiz ishlaydigan quloqchin.")
                         .price(249.99)
                         .imageUrl("https://images.unsplash.com/photo-1588449668365-d15e397f6787?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(30)
-                        .subcategory(quloqchinSub)
+                        .childCategory(airpods)
                         .isActive(true)
                         .build());
             }
 
-            if (sichqonchaSub != null) {
+            if (logitechMouse != null) {
                 productRepository.save(Product.builder()
                         .name("Logitech MX Master 3S")
                         .description("Ergonomik dizayn, 8K DPI datchik, har qanday yuzada ishlay oladigan va deyarli ovozsiz kliklanadigan professional simsiz sichqoncha.")
                         .price(99.99)
                         .imageUrl("https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?q=80&w=600&auto=format&fit=crop")
                         .stockQuantity(25)
-                        .subcategory(sichqonchaSub)
+                        .childCategory(logitechMouse)
                         .isActive(true)
                         .build());
             }
@@ -223,10 +255,20 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("SELECT setval('brands_id_seq', COALESCE((SELECT MAX(id) FROM brands), 1))");
             jdbcTemplate.execute("SELECT setval('categories_id_seq', COALESCE((SELECT MAX(id) FROM categories), 1))");
             jdbcTemplate.execute("SELECT setval('subcategories_id_seq', COALESCE((SELECT MAX(id) FROM subcategories), 1))");
+            jdbcTemplate.execute("SELECT setval('child_categories_id_seq', COALESCE((SELECT MAX(id) FROM child_categories), 1))");
             jdbcTemplate.execute("SELECT setval('products_id_seq', COALESCE((SELECT MAX(id) FROM products), 1))");
             log.info("Barcha ketma-ketliklar sinxronlashtirildi.");
         } catch (Exception e) {
             log.warn("Ketma-ketliklarni sinxronlashtirishda xatolik (Bu xatolikka e'tibor bermasa ham bo'ladi): {}", e.getMessage());
+        }
+
+        // Migrate existing products that only have subcategory_id to their new child_category_id
+        try {
+            log.info("Eski mahsulotlarni child kategoriyalarga migratsiya qilish boshlandi...");
+            jdbcTemplate.execute("UPDATE products SET child_category_id = (SELECT cc.id FROM child_categories cc WHERE cc.subcategory_id = products.subcategory_id) WHERE child_category_id IS NULL AND subcategory_id IS NOT NULL");
+            log.info("Eski mahsulotlar child kategoriyalar bilan muvaffaqiyatli bog'landi.");
+        } catch (Exception e) {
+            log.warn("Mahsulotlarni migratsiya qilishda xatolik (Bu xatolikka e'tibor bermasa ham bo'ladi): {}", e.getMessage());
         }
         
         log.info("Dastlabki ma'lumotlar to'liq tekshirildi.");

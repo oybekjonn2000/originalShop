@@ -16,7 +16,10 @@ public class SubcategoryController {
     private final SubcategoryService subcategoryService;
 
     @GetMapping
-    public List<Subcategory> getAllSubcategories() {
+    public List<Subcategory> getAllSubcategories(@RequestParam(required = false) Long categoryId) {
+        if (categoryId != null) {
+            return subcategoryService.getSubcategoriesByCategory(categoryId);
+        }
         return subcategoryService.getAllSubcategories();
     }
 

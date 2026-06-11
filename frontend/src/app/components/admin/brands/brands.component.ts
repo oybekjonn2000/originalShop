@@ -55,49 +55,89 @@ import { BrandService } from '../../../services/brand.service';
         <p>Brandlar yuklanmoqda...</p>
       </div>
 
-      <!-- Brands Grid -->
-      <div *ngIf="!isLoading" class="brands-grid">
-        <div
-          *ngFor="let brand of filteredBrands"
-          class="brand-card glass-panel"
-        >
-          <div class="brand-card-img" [style.backgroundImage]="'url(' + (brand.imageUrl || 'assets/placeholder.png') + ')'">
-          </div>
-          <div class="brand-card-info">
-            <h3>{{ brand.name }}</h3>
-            <span class="brand-id">ID: {{ brand.id }}</span>
-            <div class="brand-timestamps" *ngIf="brand.createdAt">
-              <div class="timestamp-row" title="Yaratilgan vaqt">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>{{ brand.createdAt | date:'short' }}</span>
-              </div>
-              <div class="timestamp-row" title="Oxirgi tahrir" *ngIf="brand.updatedAt && brand.updatedAt !== brand.createdAt">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                <span>{{ brand.updatedAt | date:'short' }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="brand-card-actions">
-            <button (click)="openEditModal(brand)" class="btn-icon btn-edit" title="Tahrirlash">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            </button>
-            <button (click)="deleteBrand(brand.id)" class="btn-icon btn-delete" title="O'chirish">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-          </div>
-        </div>
+      <!-- Brands Table -->
+      <div *ngIf="!isLoading" class="glass-table-container">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>Rasm</th>
+              <th>ID</th>
+              <th>Brand Nomi</th>
+              <th>Vaqt</th>
+              <th>Amallar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let brand of pagedBrands">
+              <td>
+                <img [src]="brand.imageUrl || 'assets/placeholder.png'" [alt]="brand.name" class="brand-thumb" />
+              </td>
+              <td>{{ brand.id }}</td>
+              <td><strong>{{ brand.name }}</strong></td>
+              <td class="time-col">
+                <div class="time-container" *ngIf="brand.createdAt">
+                  <div class="time-row" title="Yaratilgan vaqt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>{{ brand.createdAt | date:'short' }}</span>
+                  </div>
+                  <div class="time-row" title="Oxirgi tahrir" *ngIf="brand.updatedAt && brand.updatedAt !== brand.createdAt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>{{ brand.updatedAt | date:'short' }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="actions-col">
+                <button (click)="openEditModal(brand)" class="btn-icon btn-edit" title="Tahrirlash">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button (click)="deleteBrand(brand.id)" class="btn-icon btn-delete" title="O'chirish">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredBrands.length === 0">
+              <td colspan="5" class="empty-row">Brandlar topilmadi</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <!-- Empty state -->
-        <div *ngIf="filteredBrands.length === 0" class="empty-state glass-panel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <h3>Brandlar topilmadi</h3>
-          <p>Yangi brand qo'shish uchun tugmani bosing.</p>
-          <button (click)="openAddModal()" class="btn-primary">Yangi Brand</button>
+      <!-- Pagination -->
+      <div class="mat-paginator" *ngIf="filteredBrands.length > pageSize">
+        <div class="mat-paginator-container">
+          <div class="mat-paginator-range-label">
+            {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredBrands.length) }} / {{ filteredBrands.length }}
+          </div>
+          <div class="mat-paginator-navigation">
+            <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi sahifa">
+              &#171;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">
+              &#8249;
+            </button>
+            <ng-container *ngFor="let p of pageNumbers()">
+              <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">
+              &#8250;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi sahifa">
+              &#187;
+            </button>
+          </div>
+          <div class="mat-paginator-page-size">
+            <span>Sahifada:</span>
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Modal Overlay -->
-      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+      <div class="modal-overlay" *ngIf="showModal">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ isEditMode ? 'Brandni tahrirlash' : "Yangi brand qo'shish" }}</h2>
@@ -190,6 +230,16 @@ import { BrandService } from '../../../services/brand.service';
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
+    }
+
+    .brand-thumb {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px;
     }
 
     .page-header {
@@ -438,12 +488,21 @@ import { BrandService } from '../../../services/brand.service';
     }
 
     .modal-card {
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
+      width: 90%;
+      max-width: 550px;
       padding: 2.5rem;
       border-radius: var(--border-radius-lg);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      backdrop-filter: none !important;
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: #0b0e14 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: none !important;
     }
 
     .modal-header {
@@ -507,11 +566,10 @@ import { BrandService } from '../../../services/brand.service';
       justify-content: flex-end;
       margin-top: 0.5rem;
     }
-
     /* Material Snackbar Toast */
     .mat-snackbar {
       position: fixed;
-      bottom: 2rem;
+      top: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
       min-width: 300px;
@@ -526,15 +584,15 @@ import { BrandService } from '../../../services/brand.service';
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
       z-index: 99999;
-      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: snackSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
     .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
     .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
     .mat-snack-text { flex: 1; line-height: 1.4; }
-    @keyframes snackSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes snackSlideDown {
+      from { opacity: 0; transform: translate(-50%, -30px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
     }
 
     /* Confirm Modal CSS */
@@ -712,6 +770,38 @@ export class BrandsComponent implements OnInit {
   imagePreviewUrl: string | null = null;
   isUploading = false;
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 10;
+  Math = Math;
+  get totalPages(): number {
+    return Math.ceil(this.filteredBrands.length / this.pageSize);
+  }
+  get pagedBrands(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredBrands.slice(start, start + this.pageSize);
+  }
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    let start = Math.max(1, cur - 2);
+    let end = Math.min(total, cur + 2);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+      end = Math.min(total, start + 4);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
+
   constructor(private brandService: BrandService, private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -724,6 +814,7 @@ export class BrandsComponent implements OnInit {
       next: (brands) => {
         this.brands = brands;
         this.filteredBrands = brands;
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: () => {
@@ -733,6 +824,7 @@ export class BrandsComponent implements OnInit {
   }
 
   filterBrands(): void {
+    this.currentPage = 1;
     if (!this.searchTerm) {
       this.filteredBrands = this.brands;
       return;

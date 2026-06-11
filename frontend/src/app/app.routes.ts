@@ -77,6 +77,11 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'admin/child-categories',
+    loadComponent: () => import('./components/admin/child-categories/child-categories.component').then(m => m.ChildCategoriesComponent),
+    canActivate: [authGuard, adminGuard]
+  },
+  {
     path: 'admin/brands',
     loadComponent: () => import('./components/admin/brands/brands.component').then(m => m.BrandsComponent),
     canActivate: [authGuard, adminGuard]
@@ -94,6 +99,11 @@ export const routes: Routes = [
   {
     path: 'admin/users',
     loadComponent: () => import('./components/admin/users/users.component').then(m => m.UsersComponent),
+    canActivate: [authGuard, adminGuard]
+  },
+  {
+    path: 'admin/reviews',
+    loadComponent: () => import('./components/admin/reviews/reviews.component').then(m => m.ReviewsComponent),
     canActivate: [authGuard, adminGuard]
   },
   {

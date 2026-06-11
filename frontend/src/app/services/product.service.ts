@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
   private baseApiUrl = 'http://localhost:8080/api';
+  public isCatalogOpen$ = new BehaviorSubject<boolean>(false);
 
   constructor(private http: HttpClient) {}
 
@@ -56,6 +57,30 @@ export class ProductService {
 
   getProductsBySubcategory(subcategoryId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseApiUrl}/products/subcategory/${subcategoryId}`);
+  }
+
+  getProductsByChildCategory(childCategoryId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/products/child-category/${childCategoryId}`);
+  }
+
+  getChildCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/child-categories`);
+  }
+
+  getChildCategoriesBySubcategory(subcategoryId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseApiUrl}/child-categories/subcategory/${subcategoryId}`);
+  }
+
+  createChildCategory(child: any): Observable<any> {
+    return this.http.post<any>(`${this.baseApiUrl}/child-categories`, child);
+  }
+
+  updateChildCategory(id: number, child: any): Observable<any> {
+    return this.http.put<any>(`${this.baseApiUrl}/child-categories/${id}`, child);
+  }
+
+  deleteChildCategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseApiUrl}/child-categories/${id}`);
   }
 
   // --- Subcategories ---

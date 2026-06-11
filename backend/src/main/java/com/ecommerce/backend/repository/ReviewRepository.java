@@ -11,6 +11,8 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByProductIdOrderByCreatedAtDesc(Long productId);
     boolean existsByUserIdAndProductId(Long userId, Long productId);
+    List<Review> findAllByOrderByCreatedAtDesc();
+    List<Review> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     @Query("SELECT r.product.id FROM Review r WHERE r.user.id = :userId")
     List<Long> findProductIdsByUserId(@Param("userId") Long userId);

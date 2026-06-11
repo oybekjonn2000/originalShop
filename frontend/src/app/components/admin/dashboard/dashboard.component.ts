@@ -91,6 +91,14 @@ import { AuthService } from '../../../services/auth.service';
             <p>Ichki kategoriyalarni boshqaring</p>
           </a>
 
+          <a routerLink="/admin/child-categories" class="action-card glass-panel">
+            <div class="action-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8M12 10H8.5c-1.5 0-3 1.5-3 3v9M12 10h3.5c1.5 0 3 1.5 3 3v9"/></svg>
+            </div>
+            <h3>Child Kategoriyalar</h3>
+            <p>Child kategoriyalarni boshqaring</p>
+          </a>
+
           <a routerLink="/admin/brands" class="action-card glass-panel">
             <div class="action-icon" style="background: linear-gradient(135deg, #22c55e, #10b981);">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 0 1-8 0"></path><line x1="12" y1="8" x2="12" y2="16"></line></svg>
@@ -137,6 +145,14 @@ import { AuthService } from '../../../services/auth.service';
             </div>
             <h3>Foydalanuvchilar</h3>
             <p>Mijozlar va adminlar ro'yxati</p>
+          </a>
+
+          <a routerLink="/admin/reviews" class="action-card glass-panel">
+            <div class="action-icon" style="background: linear-gradient(135deg, #fb7185, #f43f5e);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <h3>Sharhlar</h3>
+            <p>Mijozlar tomonidan yozilgan sharhlar</p>
           </a>
         </div>
       </div>

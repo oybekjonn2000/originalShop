@@ -3,9 +3,11 @@ package com.ecommerce.backend.service;
 import com.ecommerce.backend.model.Brand;
 import com.ecommerce.backend.model.Product;
 import com.ecommerce.backend.model.Subcategory;
+import com.ecommerce.backend.model.ChildCategory;
 import com.ecommerce.backend.repository.BrandRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.SubcategoryRepository;
+import com.ecommerce.backend.repository.ChildCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,9 @@ public class ProductService {
     private SubcategoryRepository subcategoryRepository;
 
     @Autowired
+    private ChildCategoryRepository childCategoryRepository;
+
+    @Autowired
     private BrandRepository brandRepository;
 
     public List<Product> getAllProducts() {
@@ -36,11 +41,15 @@ public class ProductService {
     }
 
     public List<Product> getProductsByCategory(Long categoryId) {
-        return productRepository.findBySubcategoryCategoryId(categoryId);
+        return productRepository.findByChildCategorySubcategoryCategoryId(categoryId);
     }
 
     public List<Product> getProductsBySubcategory(Long subcategoryId) {
-        return productRepository.findBySubcategoryId(subcategoryId);
+        return productRepository.findByChildCategorySubcategoryId(subcategoryId);
+    }
+
+    public List<Product> getProductsByChildCategory(Long childCategoryId) {
+        return productRepository.findByChildCategoryId(childCategoryId);
     }
 
     public Product getProductById(Long id) {
@@ -52,10 +61,10 @@ public class ProductService {
         if (product.getImageUrls() != null && product.getImageUrls().size() > 10) {
             throw new RuntimeException("Mahsulot rasmlari soni 10 tadan oshmasligi kerak!");
         }
-        if (product.getSubcategory() != null && product.getSubcategory().getId() != null) {
-            Subcategory subcategory = subcategoryRepository.findById(product.getSubcategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + product.getSubcategory().getId()));
-            product.setSubcategory(subcategory);
+        if (product.getChildCategory() != null && product.getChildCategory().getId() != null) {
+            ChildCategory childCategory = childCategoryRepository.findById(product.getChildCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Child kategoriya topilmadi ID: " + product.getChildCategory().getId()));
+            product.setChildCategory(childCategory);
         }
         if (product.getBrand() != null && product.getBrand().getId() != null) {
             Brand brand = brandRepository.findById(product.getBrand().getId())
@@ -82,12 +91,12 @@ public class ProductService {
         product.setDiscount(productDetails.getDiscount());
         product.setFullDescription(productDetails.getFullDescription());
 
-        if (productDetails.getSubcategory() != null && productDetails.getSubcategory().getId() != null) {
-            Subcategory subcategory = subcategoryRepository.findById(productDetails.getSubcategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + productDetails.getSubcategory().getId()));
-            product.setSubcategory(subcategory);
-        } else if (productDetails.getSubcategory() == null) {
-            product.setSubcategory(null);
+        if (productDetails.getChildCategory() != null && productDetails.getChildCategory().getId() != null) {
+            ChildCategory childCategory = childCategoryRepository.findById(productDetails.getChildCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Child kategoriya topilmadi ID: " + productDetails.getChildCategory().getId()));
+            product.setChildCategory(childCategory);
+        } else if (productDetails.getChildCategory() == null) {
+            product.setChildCategory(null);
         }
 
         if (productDetails.getBrand() != null && productDetails.getBrand().getId() != null) {

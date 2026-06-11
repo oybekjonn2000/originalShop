@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ProductService } from '../../../services/product.service';
 
 @Component({
@@ -54,52 +55,98 @@ import { ProductService } from '../../../services/product.service';
         <p>Kategoriyalar yuklanmoqda...</p>
       </div>
 
-      <!-- Categories Grid -->
-      <div *ngIf="!isLoading" class="categories-grid">
-        <div
-          *ngFor="let category of filteredCategories"
-          class="category-card glass-panel"
-        >
-          <div class="category-card-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          </div>
-          <div class="category-card-info">
-            <h3>{{ category.name }}</h3>
-            <p *ngIf="category.description; else noDesc">{{ category.description }}</p>
-            <ng-template #noDesc><p class="no-desc">Tavsif kiritilmagan</p></ng-template>
-            <span class="category-id">ID: {{ category.id }}</span>
-            <div class="category-timestamps" *ngIf="category.createdAt">
-              <div class="timestamp-row" title="Yaratilgan vaqt">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>{{ category.createdAt | date:'short' }}</span>
-              </div>
-              <div class="timestamp-row" title="Oxirgi tahrir" *ngIf="category.updatedAt && category.updatedAt !== category.createdAt">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                <span>{{ category.updatedAt | date:'short' }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="category-card-actions">
-            <button (click)="openEditModal(category)" class="btn-icon btn-edit" title="Tahrirlash">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            </button>
-            <button (click)="deleteCategory(category.id)" class="btn-icon btn-delete" title="O'chirish">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-          </div>
-        </div>
+      <!-- Categories Table -->
+      <div *ngIf="!isLoading" class="glass-table-container">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Kategoriya Nomi</th>
+              <th>Tavsif</th>
+              <th>Vaqt</th>
+              <th>Amallar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let category of pagedCategories">
+              <td>{{ category.id }}</td>
+              <td>
+                <div class="category-cell">
+                  <img *ngIf="category.imageUrl" [src]="category.imageUrl" [alt]="category.name" class="category-thumb" />
+                  <div *ngIf="!category.imageUrl" class="category-thumb-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </div>
+                  <span class="category-name"><strong>{{ category.name }}</strong></span>
+                </div>
+              </td>
+              <td>
+                <span *ngIf="category.description; else noDesc">{{ category.description }}</span>
+                <ng-template #noDesc><span class="no-desc">Tavsif kiritilmagan</span></ng-template>
+              </td>
+              <td class="time-col">
+                <div class="time-container" *ngIf="category.createdAt">
+                  <div class="time-row" title="Yaratilgan vaqt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>{{ category.createdAt | date:'short' }}</span>
+                  </div>
+                  <div class="time-row" title="Oxirgi tahrir" *ngIf="category.updatedAt && category.updatedAt !== category.createdAt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>{{ category.updatedAt | date:'short' }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="actions-col">
+                <button (click)="openEditModal(category)" class="btn-icon btn-edit" title="Tahrirlash">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button (click)="deleteCategory(category.id)" class="btn-icon btn-delete" title="O'chirish">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredCategories.length === 0">
+              <td colspan="5" class="empty-row">Kategoriyalar topilmadi</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <!-- Empty state -->
-        <div *ngIf="filteredCategories.length === 0" class="empty-state glass-panel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <h3>Kategoriyalar topilmadi</h3>
-          <p>Yangi kategoriya qo'shish uchun tugmani bosing.</p>
-          <button (click)="openAddModal()" class="btn-primary">Yangi Kategoriya</button>
+      <!-- Pagination -->
+      <div class="mat-paginator" *ngIf="filteredCategories.length > pageSize">
+        <div class="mat-paginator-container">
+          <div class="mat-paginator-range-label">
+            {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredCategories.length) }} / {{ filteredCategories.length }}
+          </div>
+          <div class="mat-paginator-navigation">
+            <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi sahifa">
+              &#171;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">
+              &#8249;
+            </button>
+            <ng-container *ngFor="let p of pageNumbers()">
+              <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">
+              &#8250;
+            </button>
+            <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi sahifa">
+              &#187;
+            </button>
+          </div>
+          <div class="mat-paginator-page-size">
+            <span>Sahifada:</span>
+            <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Modal Overlay -->
-      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+      <div class="modal-overlay" *ngIf="showModal">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>{{ isEditMode ? 'Kategoriyani tahrirlash' : "Yangi kategoriya qo'shish" }}</h2>
@@ -131,6 +178,28 @@ import { ProductService } from '../../../services/product.service';
               ></textarea>
             </div>
 
+            <!-- Image Upload -->
+            <div class="form-group">
+              <label class="glass-label">Kategoriya Rasmi</label>
+              <div class="image-upload-area" (click)="triggerFileInput()" [class.has-image]="imagePreviewUrl">
+                <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Kategoriya rasmi" class="image-preview" />
+                <div *ngIf="!imagePreviewUrl" class="upload-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <p>Rasmni tanlash uchun bosing</p>
+                  <span>JPG, PNG, WEBP — maksimum 10MB</span>
+                </div>
+                <div *ngIf="imagePreviewUrl" class="image-overlay">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  Rasmni almashtirish
+                </div>
+                <input #categoryFileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input-hidden" />
+              </div>
+              <div *ngIf="isUploading" class="upload-progress">
+                <div class="upload-spinner"></div>
+                <span>Rasm yuklanmoqda...</span>
+              </div>
+            </div>
+
             <div *ngIf="errorMsg" class="error-msg">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
               {{ errorMsg }}
@@ -138,7 +207,7 @@ import { ProductService } from '../../../services/product.service';
 
             <div class="modal-actions">
               <button type="button" (click)="closeModal()" class="btn-secondary">Bekor qilish</button>
-              <button type="submit" [disabled]="isSaving" class="btn-primary">
+              <button type="submit" [disabled]="isSaving || isUploading" class="btn-primary">
                 <span *ngIf="!isSaving">{{ isEditMode ? 'Saqlash' : "Qo'shish" }}</span>
                 <span *ngIf="isSaving">Saqlanmoqda...</span>
               </button>
@@ -445,12 +514,21 @@ import { ProductService } from '../../../services/product.service';
     }
 
     .modal-card {
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
+      width: 90%;
+      max-width: 550px;
       padding: 2.5rem;
       border-radius: var(--border-radius-lg);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      backdrop-filter: none !important;
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: #0b0e14 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: none !important;
     }
 
     .modal-header {
@@ -514,11 +592,10 @@ import { ProductService } from '../../../services/product.service';
       justify-content: flex-end;
       margin-top: 0.5rem;
     }
-
     /* Material Snackbar Toast */
     .mat-snackbar {
       position: fixed;
-      bottom: 2rem;
+      top: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
       min-width: 300px;
@@ -533,15 +610,15 @@ import { ProductService } from '../../../services/product.service';
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
       z-index: 99999;
-      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: snackSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
     .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
     .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
     .mat-snack-text { flex: 1; line-height: 1.4; }
-    @keyframes snackSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes snackSlideDown {
+      from { opacity: 0; transform: translate(-50%, -30px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
     }
 
     /* Confirm Modal CSS */
@@ -587,6 +664,134 @@ import { ProductService } from '../../../services/product.service';
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
       transform: translateY(-2px);
     }
+    /* Category Row Styles */
+    .category-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .category-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .category-thumb-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+    .category-name {
+      color: var(--text-primary);
+    }
+
+    /* Image Upload Area */
+    .image-upload-area {
+      position: relative;
+      border: 2px dashed var(--glass-border);
+      border-radius: 12px;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .image-upload-area:hover {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.05);
+    }
+
+    .image-upload-area.has-image {
+      border-style: solid;
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .upload-placeholder p {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .upload-placeholder span {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+
+    .image-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      min-height: 160px;
+      max-height: 200px;
+    }
+
+    .image-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .image-upload-area:hover .image-overlay {
+      opacity: 1;
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .upload-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      color: #a855f7;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .upload-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(168, 85, 247, 0.3);
+      border-top-color: #a855f7;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
 
     @media (max-width: 640px) {
       .header-actions { flex-direction: column; align-items: stretch; }
@@ -595,6 +800,10 @@ import { ProductService } from '../../../services/product.service';
   `]
 })
 export class CategoriesComponent implements OnInit {
+  @ViewChild('categoryFileInput') categoryFileInput!: ElementRef<HTMLInputElement>;
+  imagePreviewUrl: string | null = null;
+  isUploading = false;
+
   categories: any[] = [];
   filteredCategories: any[] = [];
   searchTerm = '';
@@ -614,10 +823,43 @@ export class CategoriesComponent implements OnInit {
 
   form = {
     name: '',
-    description: ''
+    description: '',
+    imageUrl: ''
   };
 
-  constructor(private productService: ProductService) {}
+  // Pagination
+  currentPage = 1;
+  pageSize = 10;
+  Math = Math;
+  get totalPages(): number {
+    return Math.ceil(this.filteredCategories.length / this.pageSize);
+  }
+  get pagedCategories(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredCategories.slice(start, start + this.pageSize);
+  }
+  pageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    let start = Math.max(1, cur - 2);
+    let end = Math.min(total, cur + 2);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+      end = Math.min(total, start + 4);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+  }
+
+  constructor(private productService: ProductService, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadCategories();
@@ -629,6 +871,7 @@ export class CategoriesComponent implements OnInit {
       next: (cats) => {
         this.categories = cats;
         this.filteredCategories = cats;
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: () => {
@@ -638,6 +881,7 @@ export class CategoriesComponent implements OnInit {
   }
 
   filterCategories(): void {
+    this.currentPage = 1;
     if (!this.searchTerm) {
       this.filteredCategories = this.categories;
       return;
@@ -652,7 +896,9 @@ export class CategoriesComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '' };
+    this.form = { name: '', description: '', imageUrl: '' };
+    this.imagePreviewUrl = null;
+    this.isUploading = false;
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -660,13 +906,61 @@ export class CategoriesComponent implements OnInit {
   openEditModal(category: any): void {
     this.isEditMode = true;
     this.editingId = category.id;
-    this.form = { name: category.name, description: category.description || '' };
+    this.form = { name: category.name, description: category.description || '', imageUrl: category.imageUrl || '' };
+    this.imagePreviewUrl = category.imageUrl || null;
+    this.isUploading = false;
     this.errorMsg = '';
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.imagePreviewUrl = null;
+    this.isUploading = false;
+  }
+
+  triggerFileInput(): void {
+    if (this.categoryFileInput && this.categoryFileInput.nativeElement) {
+      this.categoryFileInput.nativeElement.value = '';
+      this.categoryFileInput.nativeElement.click();
+    } else {
+      const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+
+    // Local preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.imagePreviewUrl = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to backend
+    this.isUploading = true;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any>('http://localhost:8080/api/upload/image', formData).subscribe({
+      next: (res) => {
+        this.form.imageUrl = res.imageUrl;
+        this.isUploading = false;
+        this.triggerToast('Rasm yuklandi!', 'snack-success');
+      },
+      error: () => {
+        this.isUploading = false;
+        this.triggerToast('Rasmni yuklashda xatolik!', 'snack-error');
+      }
+    });
   }
 
   saveCategory(): void {
@@ -678,7 +972,11 @@ export class CategoriesComponent implements OnInit {
     this.isSaving = true;
     this.errorMsg = '';
 
-    const payload = { name: this.form.name.trim(), description: this.form.description.trim() };
+    const payload = { 
+      name: this.form.name.trim(), 
+      description: this.form.description.trim(),
+      imageUrl: this.form.imageUrl.trim()
+    };
 
     const request$ = this.isEditMode && this.editingId
       ? this.productService.updateCategory(this.editingId, payload)

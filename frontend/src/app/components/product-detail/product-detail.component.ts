@@ -53,7 +53,7 @@ import { ReviewService } from '../../services/review.service';
 
         <!-- Product Specs Info -->
         <div class="info-wrapper glass-panel">
-          <span class="category-tag">{{ product.subcategory?.category?.name || product.subcategory?.name || product.category?.name }}</span>
+          <span class="category-tag">{{ product.childCategory?.subcategory?.category?.name || product.subcategory?.category?.name || product.childCategory?.subcategory?.name || product.subcategory?.name || product.childCategory?.name || product.category?.name }}</span>
           <h1 class="product-title">{{ product.name }}</h1>
           
           <div class="price-box" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;">
@@ -183,8 +183,8 @@ import { ReviewService } from '../../services/review.service';
 
         <!-- Reviews List -->
         <div *ngIf="reviews.length > 0; else noReviews" class="reviews-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
-          <div *ngFor="let r of reviews" class="review-card" style="padding: 1.5rem; border-radius: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.04);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div *ngFor="let r of reviews" class="review-card" style="padding: 1.5rem; border-radius: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem;">
                   {{ (r.user.firstName ? r.user.firstName[0] : r.user.username[0]) | uppercase }}
@@ -198,7 +198,6 @@ import { ReviewService } from '../../services/review.service';
                       {{ '@' + r.user.username }}
                     </small>
                     <span style="color: rgba(255,255,255,0.15)">|</span>
-                    <!-- User review rating stars -->
                     <div style="display: flex; align-items: center; gap: 0.1rem;">
                       <span *ngFor="let star of stars">
                         <svg 
@@ -219,7 +218,56 @@ import { ReviewService } from '../../services/review.service';
               </div>
               <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ r.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
             </div>
+            
             <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">{{ r.comment }}</p>
+
+            <!-- Admin Reply Box (inline) -->
+            <div *ngIf="r.replyText" class="admin-reply-box-inline" style="margin-top: 0.5rem; padding: 1rem; border-radius: 8px; background: rgba(168, 85, 247, 0.04); border-left: 3px solid #a855f7; display: flex; flex-direction: column; gap: 0.35rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 20px; height: 20px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); overflow: hidden; font-size: 0.75rem;">
+                    <img *ngIf="r.replier?.profilePicture" [src]="r.replier.profilePicture" style="width:100%; height:100%; object-fit:cover;" />
+                    <span *ngIf="!r.replier?.profilePicture">A</span>
+                  </div>
+                  <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">{{ r.replier?.firstName || r.replier?.username || 'Admin' }}</span>
+                  <span class="badge-admin-detail" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.02em;">Admin</span>
+                  <span style="color: var(--text-secondary); font-size: 0.72rem;">{{ r.replyCreatedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                </div>
+              </div>
+              <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">{{ r.replyText }}</p>
+            </div>
+
+            <!-- Admin Actions & Reply Form -->
+            <div *ngIf="isAdmin" style="margin-top: 0.25rem;">
+              <div style="display: flex; gap: 10px;" *ngIf="replyingToReviewId !== r.id">
+                <button (click)="toggleReplyForm(r.id)" class="btn-admin-reply" style="background:none; border:none; color:var(--primary-color); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0; display:flex; align-items:center; gap:4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  {{ r.replyText ? 'Javobni tahrirlash' : 'Javob yozish' }}
+                </button>
+                <button *ngIf="r.replyText" (click)="deleteAdminReply(r.id)" class="btn-admin-reply-delete" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0; display:flex; align-items:center; gap:4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Javobni o'chirish
+                </button>
+              </div>
+
+              <!-- Inline Reply form -->
+              <div *ngIf="replyingToReviewId === r.id" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+                <textarea 
+                  [(ngModel)]="adminReplyText" 
+                  placeholder="Javobingizni yozing..." 
+                  class="glass-input" 
+                  style="width: 100%; min-height: 80px; padding: 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); font-size: 0.9rem;"
+                ></textarea>
+                <div style="display: flex; gap: 10px;">
+                  <button (click)="submitAdminReply(r.id)" [disabled]="isSubmittingReply || !adminReplyText.trim()" class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.82rem; border-radius: 6px;">
+                    {{ isSubmittingReply ? 'Saqlanmoqda...' : 'Javobni saqlash' }}
+                  </button>
+                  <button (click)="toggleReplyForm(r.id)" class="btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.82rem; border-radius: 6px;">
+                    Bekor qilish
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -960,6 +1008,11 @@ export class ProductDetailComponent implements OnInit {
   rating = 5;
   stars = [1, 2, 3, 4, 5];
 
+  // Admin reply states
+  replyingToReviewId: number | null = null;
+  adminReplyText = '';
+  isSubmittingReply = false;
+
   get isAdmin(): boolean {
     return this.authService.isAdmin();
   }
@@ -1284,5 +1337,48 @@ export class ProductDetailComponent implements OnInit {
     this.toastType = type;
     this.showToastNotif = true;
     this.toastTimer = setTimeout(() => this.showToastNotif = false, 3500);
+  }
+
+  toggleReplyForm(reviewId: number): void {
+    if (this.replyingToReviewId === reviewId) {
+      this.replyingToReviewId = null;
+      this.adminReplyText = '';
+    } else {
+      this.replyingToReviewId = reviewId;
+      const review = this.reviews.find(r => r.id === reviewId);
+      this.adminReplyText = review?.replyText || '';
+    }
+  }
+
+  submitAdminReply(reviewId: number): void {
+    if (!this.adminReplyText.trim()) return;
+    this.isSubmittingReply = true;
+    this.reviewService.replyToReview(reviewId, this.adminReplyText).subscribe({
+      next: () => {
+        this.isSubmittingReply = false;
+        this.replyingToReviewId = null;
+        this.adminReplyText = '';
+        this.showToast('Javobingiz muvaffaqiyatli saqlandi!', 'snack-success');
+        this.loadReviews(this.product.id);
+      },
+      error: (err) => {
+        this.isSubmittingReply = false;
+        this.showToast(err.error?.message || 'Javobni saqlashda xatolik yuz berdi!', 'snack-error');
+      }
+    });
+  }
+
+  deleteAdminReply(reviewId: number): void {
+    if (confirm("Rostdan ham ushbu javobni o'chirmoqchimisiz?")) {
+      this.reviewService.deleteReply(reviewId).subscribe({
+        next: () => {
+          this.showToast('Javob muvaffaqiyatli o\'chirildi!', 'snack-success');
+          this.loadReviews(this.product.id);
+        },
+        error: (err) => {
+          this.showToast('Javobni o\'chirishda xatolik yuz berdi!', 'snack-error');
+        }
+      });
+    }
   }
 }

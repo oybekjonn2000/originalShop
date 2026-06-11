@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -72,6 +73,47 @@ public class ReviewService {
             return List.of();
         }
         return reviewRepository.findProductIdsByUserId(userId);
+    }
+
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    public void deleteReview(Long id) {
+        if (!reviewRepository.existsById(id)) {
+            throw new RuntimeException("Sharh topilmadi!");
+        }
+        reviewRepository.deleteById(id);
+    }
+
+    public Review replyToReview(Long reviewId, User admin, String replyText) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Sharh topilmadi!"));
+
+        if (replyText == null || replyText.trim().isEmpty()) {
+            throw new RuntimeException("Javob matni bo'sh bo'lishi mumkin emas!");
+        }
+
+        review.setReplyText(replyText.trim());
+        review.setReplier(admin);
+        review.setReplyCreatedAt(LocalDateTime.now());
+
+        return reviewRepository.save(review);
+    }
+
+    public Review deleteReply(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Sharh topilmadi!"));
+
+        review.setReplyText(null);
+        review.setReplier(null);
+        review.setReplyCreatedAt(null);
+
+        return reviewRepository.save(review);
+    }
+
+    public List<Review> getReviewsByUserId(Long userId) {
+        return reviewRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }
 

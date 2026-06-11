@@ -35,4 +35,13 @@ public class Review {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String replyText;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "replier_id")
+    private User replier;
+
+    private LocalDateTime replyCreatedAt;
 }

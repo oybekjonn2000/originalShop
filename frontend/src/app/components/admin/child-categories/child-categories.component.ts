@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 
 @Component({
-  selector: 'app-admin-subcategories',
+  selector: 'app-admin-child-categories',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
@@ -13,8 +13,8 @@ import { ProductService } from '../../../services/product.service';
       <!-- Page Header -->
       <div class="page-header">
         <div>
-          <h1>Subkategoriyalar Boshqaruvi</h1>
-          <p class="subtitle">Mahsulot subkategoriyalarini yaratish, tahrirlash va o'chirish</p>
+          <h1>Child Kategoriyalar Boshqaruvi</h1>
+          <p class="subtitle">Mahsulot child kategoriyalarini yaratish, tahrirlash va o'chirish</p>
         </div>
         <div class="header-actions">
           <a routerLink="/admin" class="btn-secondary back-btn">
@@ -23,7 +23,7 @@ import { ProductService } from '../../../services/product.service';
           </a>
           <button (click)="openAddModal()" class="btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Yangi Subkategoriya
+            Yangi Child Kategoriya
           </button>
         </div>
       </div>
@@ -31,88 +31,99 @@ import { ProductService } from '../../../services/product.service';
       <!-- Stats bar -->
       <div class="stats-row">
         <div class="stat-chip glass-panel">
-          <span class="stat-chip-label">Jami Subkategoriyalar</span>
-          <span class="stat-chip-value">{{ subcategories.length }}</span>
+          <span class="stat-chip-label">Jami Child Kategoriyalar</span>
+          <span class="stat-chip-value">{{ childCategories.length }}</span>
         </div>
       </div>
 
-      <!-- Search Bar -->
+      <!-- Search & Filter Bar -->
       <div class="filter-bar glass-panel">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <input
           type="text"
           [(ngModel)]="searchTerm"
-          (input)="filterSubcategories()"
-          placeholder="Subkategoriya nomi bo'yicha qidiring..."
+          (input)="filterChildCategories()"
+          placeholder="Child kategoriya nomi bo'yicha qidiring..."
           class="glass-input search-field"
         />
-        <select [(ngModel)]="filterCategoryId" (change)="filterSubcategories()" class="glass-input filter-select">
+        <select [(ngModel)]="filterCategoryId" (change)="onFilterCategoryChange()" class="glass-input filter-select">
           <option [ngValue]="null">Barcha kategoriyalar</option>
           <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+        </select>
+        <select [(ngModel)]="filterSubcategoryId" (change)="filterChildCategories()" class="glass-input filter-select" [disabled]="filterCategoryId === null">
+          <option [ngValue]="null">Barcha subkategoriyalar</option>
+          <option *ngFor="let sub of filteredFilterSubcategories" [ngValue]="sub.id">{{ sub.name }}</option>
         </select>
       </div>
 
       <!-- Loading -->
       <div *ngIf="isLoading" class="loading-container">
         <div class="spinner"></div>
-        <p>Subkategoriyalar yuklanmoqda...</p>
+        <p>Child kategoriyalar yuklanmoqda...</p>
       </div>
 
-      <!-- Subcategories Table -->
+      <!-- Child Categories Table -->
       <div *ngIf="!isLoading" class="glass-table-container">
         <table class="glass-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Subkategoriya Nomi</th>
-              <th>Asosiy Kategoriya</th>
+              <th>Child Kategoriya Nomi</th>
+              <th>Kategoriya & Subkategoriya</th>
               <th>Tavsif</th>
               <th>Vaqt</th>
               <th>Amallar</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sub of pagedSubcategories">
-              <td>{{ sub.id }}</td>
-              <td><strong>{{ sub.name }}</strong></td>
-              <td>{{ sub.category?.name || '—' }}</td>
+            <tr *ngFor="let child of pagedChildCategories">
+              <td>{{ child.id }}</td>
+              <td><strong>{{ child.name }}</strong></td>
               <td>
-                <span *ngIf="sub.description; else noDesc">{{ sub.description }}</span>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:0.75rem;color:var(--text-secondary);">
+                    {{ child.subcategory?.category?.name || '—' }}
+                  </span>
+                  <span>{{ child.subcategory?.name || '—' }}</span>
+                </div>
+              </td>
+              <td>
+                <span *ngIf="child.description; else noDesc">{{ child.description }}</span>
                 <ng-template #noDesc><span class="no-desc">Tavsif kiritilmagan</span></ng-template>
               </td>
               <td class="time-col">
-                <div class="time-container" *ngIf="sub.createdAt">
+                <div class="time-container" *ngIf="child.createdAt">
                   <div class="time-row" title="Yaratilgan vaqt">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <span>{{ sub.createdAt | date:'short' }}</span>
+                    <span>{{ child.createdAt | date:'short' }}</span>
                   </div>
-                  <div class="time-row" title="Oxirgi tahrir" *ngIf="sub.updatedAt && sub.updatedAt !== sub.createdAt">
+                  <div class="time-row" title="Oxirgi tahrir" *ngIf="child.updatedAt && child.updatedAt !== child.createdAt">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    <span>{{ sub.updatedAt | date:'short' }}</span>
+                    <span>{{ child.updatedAt | date:'short' }}</span>
                   </div>
                 </div>
               </td>
               <td class="actions-col">
-                <button (click)="openEditModal(sub)" class="btn-icon btn-edit" title="Tahrirlash">
+                <button (click)="openEditModal(child)" class="btn-icon btn-edit" title="Tahrirlash">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </button>
-                <button (click)="deleteSubcategory(sub.id)" class="btn-icon btn-delete" title="O'chirish">
+                <button (click)="deleteChildCategory(child.id)" class="btn-icon btn-delete" title="O'chirish">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredSubcategories.length === 0">
-              <td colspan="6" class="empty-row">Subkategoriyalar topilmadi</td>
+            <tr *ngIf="filteredChildCategories.length === 0">
+              <td colspan="6" class="empty-row">Child kategoriyalar topilmadi</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Pagination -->
-      <div class="mat-paginator" *ngIf="filteredSubcategories.length > pageSize">
+      <div class="mat-paginator" *ngIf="filteredChildCategories.length > pageSize">
         <div class="mat-paginator-container">
           <div class="mat-paginator-range-label">
-            {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredSubcategories.length) }} / {{ filteredSubcategories.length }}
+            {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredChildCategories.length) }} / {{ filteredChildCategories.length }}
           </div>
           <div class="mat-paginator-navigation">
             <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi sahifa">
@@ -146,29 +157,36 @@ import { ProductService } from '../../../services/product.service';
       <div class="modal-overlay" *ngIf="showModal">
         <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h2>{{ isEditMode ? 'Subkategoriyani tahrirlash' : "Yangi subkategoriya qo'shish" }}</h2>
+            <h2>{{ isEditMode ? 'Child kategoriyani tahrirlash' : "Yangi child kategoriya qo'shish" }}</h2>
             <button (click)="closeModal()" class="btn-close">✕</button>
           </div>
 
-          <form (ngSubmit)="saveSubcategory()" class="modal-form">
-            
+          <form (ngSubmit)="saveChildCategory()" class="modal-form">
             <div class="form-group">
               <label class="glass-label">Asosiy Kategoriya *</label>
-              <select [(ngModel)]="form.categoryId" name="categoryId" class="glass-input" required>
+              <select [(ngModel)]="form.categoryId" name="categoryId" class="glass-input" required (change)="onModalCategoryChange()">
                 <option [ngValue]="null" disabled>Kategoriyani tanlang</option>
                 <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="glass-label">Subkategoriya nomi *</label>
+              <label class="glass-label">Subkategoriya *</label>
+              <select [(ngModel)]="form.subcategoryId" name="subcategoryId" class="glass-input" required [disabled]="!form.categoryId">
+                <option [ngValue]="null" disabled>{{ form.categoryId ? 'Subkategoriyani tanlang' : 'Avval kategoriya tanlang' }}</option>
+                <option *ngFor="let sub of filteredModalSubcategories" [ngValue]="sub.id">{{ sub.name }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="glass-label">Child Kategoriya nomi *</label>
               <input
                 type="text"
                 [(ngModel)]="form.name"
                 name="name"
                 class="glass-input"
                 required
-                placeholder="Masalan: Apple iPhone, Smart soatlar..."
+                placeholder="Masalan: Apple smartfonlar, O'yin noutbuklari..."
               />
             </div>
 
@@ -179,7 +197,7 @@ import { ProductService } from '../../../services/product.service';
                 name="description"
                 class="glass-input"
                 rows="3"
-                placeholder="Subkategoriya haqida qisqacha ma'lumot..."
+                placeholder="Child kategoriya haqida qisqacha ma'lumot..."
               ></textarea>
             </div>
 
@@ -209,7 +227,7 @@ import { ProductService } from '../../../services/product.service';
             <h2>O'chirishni tasdiqlang</h2>
           </div>
           <div class="confirm-body">
-            <p>Bu subkategoriyani o'chirmoqchimisiz? Undagi mahsulotlar ham ta'sirlanishi mumkin!</p>
+            <p>Bu child kategoriyani o'chirmoqchimisiz? Undagi mahsulotlar ham ta'sirlanishi mumkin!</p>
           </div>
           <div class="modal-actions confirm-actions">
             <button (click)="closeConfirmModal()" class="btn-secondary">Bekor qilish</button>
@@ -218,11 +236,11 @@ import { ProductService } from '../../../services/product.service';
         </div>
       </div>
 
-      <!-- Material Snackbar Toast -->
+      <!-- Toast -->
       <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
         <div class="mat-snack-icon">
           <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
         <span class="mat-snack-text">{{ toastMessage }}</span>
       </div>
@@ -253,7 +271,7 @@ import { ProductService } from '../../../services/product.service';
     .category-card-icon { width: 54px; height: 54px; border-radius: 14px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.1)); border: 1px solid rgba(168, 85, 247, 0.2); display: flex; align-items: center; justify-content: center; color: #a855f7; }
     .category-card-info { flex: 1; }
     .category-card-info h3 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem; }
-    .parent-category { font-size: 0.85rem; color: var(--primary-color); margin-bottom: 0.5rem; display: block;}
+    .parent-category { font-size: 0.85rem; color: var(--primary-color); margin-bottom: 0.2rem; display: block;}
     .category-card-info p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem; }
     .no-desc { font-style: italic; opacity: 0.6; }
     .category-id { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.5; font-weight: 600; }
@@ -308,7 +326,6 @@ import { ProductService } from '../../../services/product.service';
     .modal-form { display: flex; flex-direction: column; gap: 1.25rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
     .error-msg { display: flex; align-items: center; gap: 0.5rem; color: var(--danger-color); font-size: 0.875rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.75rem 1rem; border-radius: 8px; }
-    .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem; }
     
     .mat-snackbar { position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%); min-width: 300px; max-width: 480px; padding: 0.9rem 1.4rem; border-radius: 12px; display: flex; align-items: center; gap: 0.75rem; font-weight: 600; font-size: 0.9rem; backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0,0,0,0.35); z-index: 99999; animation: snackSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
     .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
@@ -326,12 +343,17 @@ import { ProductService } from '../../../services/product.service';
     @media (max-width: 640px) { .header-actions { flex-direction: column; align-items: stretch; } .categories-grid { grid-template-columns: 1fr; } }
   `]
 })
-export class SubcategoriesComponent implements OnInit {
+export class ChildCategoriesComponent implements OnInit {
   categories: any[] = [];
   subcategories: any[] = [];
-  filteredSubcategories: any[] = [];
+  childCategories: any[] = [];
+  filteredChildCategories: any[] = [];
+  filteredFilterSubcategories: any[] = [];
+  filteredModalSubcategories: any[] = [];
+
   searchTerm = '';
   filterCategoryId: number | null = null;
+  filterSubcategoryId: number | null = null;
   isLoading = true;
   showModal = false;
   isEditMode = false;
@@ -349,7 +371,8 @@ export class SubcategoriesComponent implements OnInit {
   form = {
     name: '',
     description: '',
-    categoryId: null as number | null
+    categoryId: null as number | null,
+    subcategoryId: null as number | null
   };
 
   // Pagination
@@ -357,11 +380,11 @@ export class SubcategoriesComponent implements OnInit {
   pageSize = 10;
   Math = Math;
   get totalPages(): number {
-    return Math.ceil(this.filteredSubcategories.length / this.pageSize);
+    return Math.ceil(this.filteredChildCategories.length / this.pageSize);
   }
-  get pagedSubcategories(): any[] {
+  get pagedChildCategories(): any[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredSubcategories.slice(start, start + this.pageSize);
+    return this.filteredChildCategories.slice(start, start + this.pageSize);
   }
   pageNumbers(): number[] {
     const pages: number[] = [];
@@ -394,42 +417,74 @@ export class SubcategoriesComponent implements OnInit {
     this.isLoading = true;
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
-      this.productService.getSubcategories().subscribe({
-        next: (subs) => {
-          this.subcategories = subs;
-          this.filteredSubcategories = subs;
-          this.currentPage = 1;
-          this.isLoading = false;
-        },
-        error: () => {
-          this.isLoading = false;
-        }
+      this.productService.getSubcategories().subscribe(subs => {
+        this.subcategories = subs;
+        this.productService.getChildCategories().subscribe({
+          next: (children) => {
+            this.childCategories = children;
+            this.filterChildCategories();
+            this.isLoading = false;
+          },
+          error: () => {
+            this.isLoading = false;
+          }
+        });
       });
     });
   }
 
-  filterSubcategories(): void {
+  onFilterCategoryChange(): void {
+    this.filterSubcategoryId = null;
+    this.filteredFilterSubcategories = [];
+    if (this.filterCategoryId !== null) {
+      this.productService.getSubcategoriesByCategory(this.filterCategoryId).subscribe({
+        next: (data) => {
+          this.filteredFilterSubcategories = data;
+          this.filterChildCategories();
+        }
+      });
+    } else {
+      this.filterChildCategories();
+    }
+  }
+
+  filterChildCategories(): void {
     this.currentPage = 1;
     const q = this.searchTerm.toLowerCase();
-    this.filteredSubcategories = this.subcategories.filter(s => {
-      const matchSearch = s.name.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q));
-      const matchCat = this.filterCategoryId === null || s.category?.id === this.filterCategoryId;
-      return matchSearch && matchCat;
+    this.filteredChildCategories = this.childCategories.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q));
+      const matchCat = this.filterCategoryId === null || c.subcategory?.category?.id === this.filterCategoryId;
+      const matchSub = this.filterSubcategoryId === null || c.subcategory?.id === this.filterSubcategoryId;
+      return matchSearch && matchCat && matchSub;
     });
   }
 
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', categoryId: null };
+    this.form = { name: '', description: '', categoryId: null, subcategoryId: null };
+    this.filteredModalSubcategories = [];
     this.errorMsg = '';
     this.showModal = true;
   }
 
-  openEditModal(sub: any): void {
+  openEditModal(child: any): void {
     this.isEditMode = true;
-    this.editingId = sub.id;
-    this.form = { name: sub.name, description: sub.description || '', categoryId: sub.category?.id || null };
+    this.editingId = child.id;
+    this.form = {
+      name: child.name,
+      description: child.description || '',
+      categoryId: child.subcategory?.category?.id || null,
+      subcategoryId: child.subcategory?.id || null
+    };
+    this.filteredModalSubcategories = [];
+    if (this.form.categoryId) {
+      this.productService.getSubcategoriesByCategory(this.form.categoryId).subscribe({
+        next: (data) => {
+          this.filteredModalSubcategories = data;
+        }
+      });
+    }
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -438,9 +493,21 @@ export class SubcategoriesComponent implements OnInit {
     this.showModal = false;
   }
 
-  saveSubcategory(): void {
-    if (!this.form.name.trim() || !this.form.categoryId) {
-      this.errorMsg = 'Nomi va Kategoriya tanlanishi majburiy!';
+  onModalCategoryChange(): void {
+    this.form.subcategoryId = null;
+    this.filteredModalSubcategories = [];
+    if (this.form.categoryId) {
+      this.productService.getSubcategoriesByCategory(this.form.categoryId).subscribe({
+        next: (data) => {
+          this.filteredModalSubcategories = data;
+        }
+      });
+    }
+  }
+
+  saveChildCategory(): void {
+    if (!this.form.name.trim() || !this.form.subcategoryId) {
+      this.errorMsg = 'Nomi va Subkategoriya tanlanishi majburiy!';
       return;
     }
 
@@ -450,19 +517,19 @@ export class SubcategoriesComponent implements OnInit {
     const payload = { 
       name: this.form.name.trim(), 
       description: this.form.description.trim(),
-      category: { id: this.form.categoryId }
+      subcategory: { id: this.form.subcategoryId }
     };
 
     const request$ = this.isEditMode && this.editingId
-      ? this.productService.updateSubcategory(this.editingId, payload)
-      : this.productService.createSubcategory(payload);
+      ? this.productService.updateChildCategory(this.editingId, payload)
+      : this.productService.createChildCategory(payload);
 
     request$.subscribe({
       next: () => {
         this.isSaving = false;
         this.closeModal();
         this.loadAll();
-        this.triggerToast(this.isEditMode ? 'Subkategoriya muvaffaqiyatli yangilandi!' : "Yangi subkategoriya qo'shildi!", 'snack-success');
+        this.triggerToast(this.isEditMode ? 'Child kategoriya muvaffaqiyatli yangilandi!' : "Yangi child kategoriya qo'shildi!", 'snack-success');
       },
       error: (err) => {
         this.isSaving = false;
@@ -471,7 +538,7 @@ export class SubcategoriesComponent implements OnInit {
     });
   }
 
-  deleteSubcategory(id: number): void {
+  deleteChildCategory(id: number): void {
     this.itemToDelete = id;
     this.showConfirmModal = true;
   }
@@ -483,10 +550,10 @@ export class SubcategoriesComponent implements OnInit {
 
   confirmDelete(): void {
     if (!this.itemToDelete) return;
-    this.productService.deleteSubcategory(this.itemToDelete).subscribe({
+    this.productService.deleteChildCategory(this.itemToDelete).subscribe({
       next: () => {
         this.loadAll();
-        this.triggerToast("Subkategoriya muvaffaqiyatli o'chirildi!", 'snack-success');
+        this.triggerToast("Child kategoriya muvaffaqiyatli o'chirildi!", 'snack-success');
         this.closeConfirmModal();
       },
       error: (err) => {
@@ -502,19 +569,5 @@ export class SubcategoriesComponent implements OnInit {
     this.toastType = type;
     this.showToast = true;
     this.toastTimer = setTimeout(() => this.showToast = false, 3000);
-  }
-
-  deleteAllSubcategories(): void {
-    if (confirm("Rostdan ham BARCHA subkategoriyalarni o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi!")) {
-      this.productService.deleteAllSubcategories().subscribe({
-        next: () => {
-          this.loadAll();
-          this.triggerToast("Barcha subkategoriyalar muvaffaqiyatli o'chirildi!", "snack-success");
-        },
-        error: (err) => {
-          this.triggerToast(err.error?.message || "O'chirishda xatolik yuz berdi! (Avval mahsulotlarni o'chirib ko'ring)", "snack-error");
-        }
-      });
-    }
   }
 }

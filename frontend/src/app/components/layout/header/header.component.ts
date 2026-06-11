@@ -8,6 +8,7 @@ import { WishlistService } from '../../../services/wishlist.service';
 import { ThemeService } from '../../../services/theme.service';
 import { HostListener, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { ProductService } from '../../../services/product.service';
 
 @Component({
   selector: 'app-header',
@@ -19,6 +20,23 @@ import { Subscription } from 'rxjs';
         <!-- Logo -->
         <a routerLink="/" class="logo">
           <span class="logo-glow">Nex</span>Shop
+        </a>
+
+        <!-- Catalog Button -->
+        <a 
+          href="javascript:void(0)"
+          (click)="onCatalogClick($event)"
+          [class.active]="(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))"
+          class="nav-link catalog-header-btn" 
+          title="Katalog"
+        >
+          <!-- Grid icon when closed -->
+          <svg *ngIf="!(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          
+          <!-- X icon when open -->
+          <svg *ngIf="router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          
+          <span class="catalog-label">Katalog</span>
         </a>
 
         <!-- Search Bar (desktop) -->
@@ -39,27 +57,30 @@ import { Subscription } from 'rxjs';
         <nav class="nav-actions nav-desktop">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" title="Asosiy">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          </a>
-          <a routerLink="/catalog" routerLinkActive="active" class="nav-link catalog-nav-link" title="Katalog">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            <span class="catalog-label">Katalog</span>
+            <span class="nav-text">Asosiy</span>
           </a>
           <a routerLink="/about" routerLinkActive="active" class="nav-link" title="Biz haqimizda">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span class="nav-text">Biz haqimizda</span>
           </a>
           <a routerLink="/contact" routerLinkActive="active" class="nav-link" title="Aloqa">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <span class="nav-text">Aloqa</span>
           </a>
           <a *ngIf="isLoggedIn" routerLink="/wishlist" routerLinkActive="active" class="nav-link wishlist-link" title="Sevimlilar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span class="nav-text">Sevimlilar</span>
             <span *ngIf="wishlistCount > 0" class="wishlist-badge">{{ wishlistCount }}</span>
           </a>
           <a routerLink="/cart" routerLinkActive="active" class="nav-link cart-link" title="Savat">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <span class="nav-text">Savat</span>
             <span *ngIf="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
           </a>
           <ng-container *ngIf="isLoggedIn; else authLinksDesktop">
-            <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link">Admin Panel</a>
+            <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active" class="nav-link admin-link" title="Admin Panel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            </a>
             <div class="user-menu">
               <a routerLink="/profile" class="username-display" style="text-decoration:none;display:flex;align-items:center;gap:8px">
                 <img *ngIf="currentUser?.profilePicture" [src]="currentUser.profilePicture" class="header-avatar" alt="Avatar" />
@@ -171,8 +192,18 @@ import { Subscription } from 'rxjs';
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           Asosiy
         </a>
-        <a routerLink="/catalog" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <a 
+          href="javascript:void(0)"
+          (click)="onCatalogClick($event); closeMenu()"
+          [class.active]="(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))"
+          class="mobile-nav-link"
+        >
+          <!-- Grid icon when closed -->
+          <svg *ngIf="!(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          
+          <!-- X icon when open -->
+          <svg *ngIf="router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          
           Katalog
         </a>
         <a routerLink="/about" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
@@ -278,6 +309,11 @@ import { Subscription } from 'rxjs';
       max-width: 480px;
       display: flex;
       align-items: center;
+      transition: max-width 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .header-container.scrolled .search-box {
+      max-width: 800px;
     }
 
     .search-input {
@@ -342,8 +378,8 @@ import { Subscription } from 'rxjs';
 
     .cart-badge {
       position: absolute;
-      top: -3px;
-      right: -2px;
+      top: -5px;
+      right: -5px;
       background: var(--secondary-gradient);
       color: white;
       font-size: 0.65rem;
@@ -374,8 +410,8 @@ import { Subscription } from 'rxjs';
 
     .wishlist-badge {
       position: absolute;
-      top: -3px;
-      right: -2px;
+      top: -5px;
+      right: -5px;
       background: linear-gradient(135deg, #ff4d6d 0%, #ff758f 100%);
       color: white;
       font-size: 0.65rem;
@@ -390,26 +426,219 @@ import { Subscription } from 'rxjs';
     }
 
     .admin-link {
-      border: 1px dashed rgba(247, 107, 28, 0.4);
+      border: 1.5px dashed rgba(247, 107, 28, 0.45) !important;
       color: #f76b1c !important;
+    }
+
+    .nav-desktop .nav-link {
+      font-weight: 600;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--text-secondary);
+      transition: var(--transition-smooth);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-desktop .nav-link:hover, .nav-desktop .nav-link.active {
+      color: var(--primary-color) !important;
+      border-color: var(--primary-color);
+      background: rgba(37, 99, 235, 0.07);
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    /* Dark Mode overrides */
+    :host-context([data-theme="dark"]) .nav-desktop .nav-link:hover,
+    :host-context([data-theme="dark"]) .nav-desktop .nav-link.active {
+      color: #00f2fe !important;
+      border-color: #00f2fe;
+      background: rgba(0, 242, 254, 0.08);
+      box-shadow: 0 2px 10px rgba(0, 242, 254, 0.25);
     }
 
     .admin-link:hover, .admin-link.active {
       background: rgba(247, 107, 28, 0.1) !important;
-      border-color: #f76b1c;
+      border-color: #f76b1c !important;
+      color: #f76b1c !important;
+      box-shadow: 0 2px 8px rgba(247, 107, 28, 0.3) !important;
     }
 
-    .catalog-nav-link {
-      font-weight: 600;
-      padding: 0.4rem 0.85rem;
-      border: 1px solid var(--glass-border);
+    .catalog-header-btn {
+      font-weight: 700;
+      padding: 0.55rem 1.15rem;
       border-radius: 10px;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%);
+      color: #2563eb !important;
+      border: 1.5px solid rgba(37, 99, 235, 0.25);
     }
 
-    .catalog-nav-link:hover, .catalog-nav-link.active {
-      border-color: var(--primary-color);
-      color: var(--primary-color) !important;
-      background: rgba(0, 242, 254, 0.07);
+    .catalog-header-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.2;
+    }
+
+    .catalog-header-btn:hover, .catalog-header-btn.active {
+      background: var(--primary-gradient);
+      color: #ffffff !important;
+      border-color: transparent;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* Dark mode override */
+    :host-context([data-theme="dark"]) .catalog-header-btn {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(79, 172, 254, 0.1) 100%);
+      color: #00f2fe !important;
+      border: 1.5px solid rgba(0, 242, 254, 0.3);
+    }
+
+    :host-context([data-theme="dark"]) .catalog-header-btn:hover,
+    :host-context([data-theme="dark"]) .catalog-header-btn.active {
+      background: var(--primary-gradient);
+      color: #0b0e14 !important;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.45);
+    }
+
+    /* Megamenu Styles */
+    .nav-link-wrapper {
+      display: inline-block;
+      height: 100%;
+    }
+
+    .megamenu-panel {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 750px;
+      background: rgba(11, 14, 20, 0.95) !important;
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      margin-top: 0.5rem;
+      animation: megamenuFade 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      padding: 0;
+    }
+
+    :host-context([data-theme="light"]) .megamenu-panel {
+      background: rgba(255, 255, 255, 0.98) !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes megamenuFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .megamenu-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 350px;
+    }
+
+    .megamenu-sidebar {
+      background: rgba(0, 0, 0, 0.15);
+      border-right: 1px solid var(--glass-border);
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    :host-context([data-theme="light"]) .megamenu-sidebar {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .megamenu-cat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .megamenu-cat-item:hover, .megamenu-cat-item.active {
+      color: var(--primary-color);
+      background: rgba(0, 242, 254, 0.05);
+    }
+
+    .megamenu-cat-item svg {
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .megamenu-cat-item:hover svg, .megamenu-cat-item.active svg {
+      opacity: 1;
+      transform: translateX(3px);
+    }
+
+    .megamenu-content {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      max-height: 450px;
+    }
+
+    .megamenu-subcats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .megamenu-subcat-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .megamenu-subcat-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0 0 0.25rem 0;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .megamenu-subcat-title:hover {
+      color: var(--primary-color);
+    }
+
+    .megamenu-child-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .megamenu-child-link {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .megamenu-child-link:hover {
+      color: var(--primary-color);
+      padding-left: 3px;
     }
 
     .catalog-label {
@@ -555,10 +784,14 @@ import { Subscription } from 'rxjs';
       .header-container { padding: 0.85rem 1.25rem; }
       .nav-link { font-size: 0.82rem; padding: 0.35rem 0.5rem; }
       .search-box { max-width: 300px; }
+      .header-container.scrolled .search-box {
+        max-width: 450px;
+      }
     }
 
     /* --- MOBILE (max 768px) --- */
     @media (max-width: 768px) {
+      .catalog-header-btn { display: none !important; }
       .header-container {
         width: calc(100% - 1rem);
         padding: 0.75rem 1rem 0;
@@ -716,6 +949,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly themeLabelLight = "Light mavzuga o'tish";
   readonly themeLabelDark  = "Dark mavzuga o'tish";
 
+  categories: any[] = [];
+  activeCategory: any = null;
+  showMegamenu = false;
+
   private subs: Subscription[] = [];
 
   @HostListener('window:scroll', [])
@@ -728,7 +965,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private wishlistService: WishlistService,
     private themeService: ThemeService,
-    private router: Router
+    public productService: ProductService,
+    public router: Router
   ) {}
 
   ngOnInit(): void {
@@ -751,10 +989,33 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.isDark = theme === 'dark';
       })
     );
+
+    this.productService.getCategories().subscribe({
+      next: (data) => {
+        this.categories = data;
+        if (data.length > 0) {
+          this.activeCategory = data[0];
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
+  }
+
+  onCatalogClick(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showMegamenu = false;
+    if (this.router.url.split('?')[0] !== '/') {
+      this.router.navigate(['/']).then(() => {
+        this.productService.isCatalogOpen$.next(true);
+      });
+    } else {
+      const current = this.productService.isCatalogOpen$.value;
+      this.productService.isCatalogOpen$.next(!current);
+    }
   }
 
   toggleTheme(): void {

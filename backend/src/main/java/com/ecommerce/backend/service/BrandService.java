@@ -3,6 +3,7 @@ package com.ecommerce.backend.service;
 import com.ecommerce.backend.model.Brand;
 import com.ecommerce.backend.repository.BrandRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class BrandService {
     private BrandRepository brandRepository;
 
     public List<Brand> getAllBrands() {
-        return brandRepository.findAll();
+        return brandRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
     public Brand getBrandById(Long id) {

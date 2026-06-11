@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -66,6 +66,16 @@ import { BrandService } from '../../../services/brand.service';
           <div class="brand-card-info">
             <h3>{{ brand.name }}</h3>
             <span class="brand-id">ID: {{ brand.id }}</span>
+            <div class="brand-timestamps" *ngIf="brand.createdAt">
+              <div class="timestamp-row" title="Yaratilgan vaqt">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>{{ brand.createdAt | date:'short' }}</span>
+              </div>
+              <div class="timestamp-row" title="Oxirgi tahrir" *ngIf="brand.updatedAt && brand.updatedAt !== brand.createdAt">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <span>{{ brand.updatedAt | date:'short' }}</span>
+              </div>
+            </div>
           </div>
           <div class="brand-card-actions">
             <button (click)="openEditModal(brand)" class="btn-icon btn-edit" title="Tahrirlash">
@@ -340,7 +350,26 @@ import { BrandService } from '../../../services/brand.service';
       font-size: 0.75rem;
       color: var(--text-secondary);
       opacity: 0.5;
-      font-weight: 500;
+      font-weight: 600;
+    }
+
+    .brand-timestamps {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .timestamp-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    .timestamp-row svg {
+      opacity: 0.7;
     }
 
     .brand-card-actions {
@@ -402,9 +431,9 @@ import { BrandService } from '../../../services/brand.service';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 1rem;
+      padding: 50px 1rem 1rem;
       animation: fadeIn 0.2s ease;
     }
 
@@ -656,6 +685,8 @@ import { BrandService } from '../../../services/brand.service';
   `]
 })
 export class BrandsComponent implements OnInit {
+  @ViewChild('brandFileInput') brandFileInput!: ElementRef<HTMLInputElement>;
+  
   brands: any[] = [];
   filteredBrands: any[] = [];
   searchTerm = '';
@@ -736,8 +767,16 @@ export class BrandsComponent implements OnInit {
   }
 
   triggerFileInput(): void {
-    const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
-    if (input) input.click();
+    if (this.brandFileInput && this.brandFileInput.nativeElement) {
+      this.brandFileInput.nativeElement.value = '';
+      this.brandFileInput.nativeElement.click();
+    } else {
+      const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
   }
 
   onFileSelected(event: Event): void {

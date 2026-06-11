@@ -73,6 +73,16 @@ import { ProductService } from '../../../services/product.service';
             <p *ngIf="sub.description; else noDesc">{{ sub.description }}</p>
             <ng-template #noDesc><p class="no-desc">Tavsif kiritilmagan</p></ng-template>
             <span class="category-id">ID: {{ sub.id }}</span>
+            <div class="category-timestamps" *ngIf="sub.createdAt">
+              <div class="timestamp-row" title="Yaratilgan vaqt">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>{{ sub.createdAt | date:'short' }}</span>
+              </div>
+              <div class="timestamp-row" title="Oxirgi tahrir" *ngIf="sub.updatedAt && sub.updatedAt !== sub.createdAt">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <span>{{ sub.updatedAt | date:'short' }}</span>
+              </div>
+            </div>
           </div>
           <div class="category-card-actions">
             <button (click)="openEditModal(sub)" class="btn-icon btn-edit" title="Tahrirlash">
@@ -207,14 +217,34 @@ import { ProductService } from '../../../services/product.service';
     .parent-category { font-size: 0.85rem; color: var(--primary-color); margin-bottom: 0.5rem; display: block;}
     .category-card-info p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem; }
     .no-desc { font-style: italic; opacity: 0.6; }
-    .category-id { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.5; font-weight: 500; }
+    .category-id { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.5; font-weight: 600; }
+    
+    .category-timestamps {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .timestamp-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    .timestamp-row svg {
+      opacity: 0.7;
+    }
+
     .category-card-actions { display: flex; gap: 0.5rem; justify-content: flex-end; border-top: 1px solid var(--glass-border); padding-top: 1rem; }
     .btn-icon { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-smooth); }
     .btn-edit { color: #a855f7; } .btn-edit:hover { background: rgba(168, 85, 247, 0.1); border-color: #a855f7; }
     .btn-delete { color: var(--danger-color); } .btn-delete:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--danger-color); }
     .empty-state { grid-column: 1 / -1; padding: 5rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--text-secondary); }
     .empty-state svg { opacity: 0.3; } .empty-state h3 { font-size: 1.3rem; color: var(--text-primary); } .empty-state p { font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 50px 1rem 1rem; animation: fadeIn 0.2s ease; }
     .modal-card { width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 2.5rem; border-radius: var(--border-radius-lg); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; }
     .modal-header h2 { font-size: 1.4rem; font-weight: 700; }

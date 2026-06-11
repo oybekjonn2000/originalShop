@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryBannerService, CategoryBanner } from '../../../services/category-banner.service';
@@ -71,7 +71,7 @@ import { HttpClient } from '@angular/common/http';
             </div>
 
             <!-- Hidden input file -->
-            <input type="file" class="file-input-hidden" (change)="onFilesSelected($event)" accept="image/*" multiple style="display: none;" />
+            <input #bannerFileInput type="file" class="file-input-hidden" (change)="onFilesSelected($event)" accept="image/*" multiple style="display: none;" />
 
             <div *ngIf="uploading" class="upload-progress">
               <div class="upload-spinner"></div>
@@ -474,6 +474,8 @@ import { HttpClient } from '@angular/common/http';
   `]
 })
 export class BannerControlComponent implements OnInit {
+  @ViewChild('bannerFileInput') bannerFileInput!: ElementRef<HTMLInputElement>;
+  
   banners: CategoryBanner[] = [];
   categories: any[] = [];
 
@@ -538,10 +540,15 @@ export class BannerControlComponent implements OnInit {
   }
 
   triggerFileInput(): void {
-    const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
-    if (input) {
-      input.value = '';
-      input.click();
+    if (this.bannerFileInput && this.bannerFileInput.nativeElement) {
+      this.bannerFileInput.nativeElement.value = '';
+      this.bannerFileInput.nativeElement.click();
+    } else {
+      const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+        input.click();
+      }
     }
   }
 

@@ -3,6 +3,7 @@ package com.ecommerce.backend.service;
 import com.ecommerce.backend.model.Subcategory;
 import com.ecommerce.backend.repository.SubcategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public class SubcategoryService {
     private final SubcategoryRepository subcategoryRepository;
 
     public List<Subcategory> getAllSubcategories() {
-        return subcategoryRepository.findAll();
+        return subcategoryRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
     public Subcategory getSubcategoryById(Long id) {

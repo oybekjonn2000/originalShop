@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -83,6 +83,7 @@ import { BrandService } from '../../../services/brand.service';
                 Status
                 <span class="sort-icon" *ngIf="sortBy.startsWith('status')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
+              <th>Vaqt</th>
               <th>Amallar</th>
             </tr>
           </thead>
@@ -116,6 +117,18 @@ import { BrandService } from '../../../services/brand.service';
                   {{ product.isActive ? 'Faol' : 'Nofaol' }}
                 </span>
               </td>
+              <td class="time-col">
+                <div class="time-container" *ngIf="product.createdAt">
+                  <div class="time-row" title="Yaratilgan vaqt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>{{ product.createdAt | date:'short' }}</span>
+                  </div>
+                  <div class="time-row" title="Oxirgi tahrir" *ngIf="product.updatedAt && product.updatedAt !== product.createdAt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>{{ product.updatedAt | date:'short' }}</span>
+                  </div>
+                </div>
+              </td>
               <td class="actions-col">
                 <button (click)="openEditModal(product)" class="btn-icon btn-edit" title="Tahrirlash">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -126,7 +139,7 @@ import { BrandService } from '../../../services/brand.service';
               </td>
             </tr>
             <tr *ngIf="filteredProducts.length === 0">
-              <td colspan="9" class="empty-row">Mahsulotlar topilmadi</td>
+              <td colspan="10" class="empty-row">Mahsulotlar topilmadi</td>
             </tr>
           </tbody>
         </table>
@@ -422,9 +435,9 @@ import { BrandService } from '../../../services/brand.service';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 1rem;
+      padding: 50px 1rem 1rem;
       animation: fadeIn 0.2s ease;
     }
 
@@ -449,6 +462,25 @@ import { BrandService } from '../../../services/brand.service';
     .modal-header h2 {
       font-size: 1.4rem;
       font-weight: 700;
+    }
+
+    .time-col {
+      min-width: 130px;
+    }
+    .time-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    .time-row svg {
+      opacity: 0.7;
     }
 
     .btn-close {
@@ -870,6 +902,8 @@ import { BrandService } from '../../../services/brand.service';
   `]
 })
 export class ProductsComponent implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  
   products: any[] = [];
   filteredProducts: any[] = [];
   categories: any[] = [];
@@ -1090,10 +1124,15 @@ export class ProductsComponent implements OnInit {
   }
 
   triggerFileInput(): void {
-    const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
-    if (input) {
-      input.value = '';
-      input.click();
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+      this.fileInput.nativeElement.click();
+    } else {
+      const input = document.querySelector('.file-input-hidden') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+        input.click();
+      }
     }
   }
 

@@ -1754,7 +1754,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           banner.currentSlideIndex = ((banner.currentSlideIndex || 0) + 1) % totalImages;
         }
       });
-    }, 2000);
+    }, 5000);
   }
 
   loadAllProducts(): void {

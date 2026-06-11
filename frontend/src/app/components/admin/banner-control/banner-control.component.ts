@@ -21,7 +21,7 @@ import { HttpClient } from '@angular/common/http';
       
       <!-- Banner Form Card (Collapsible) -->
       <div class="admin-card" *ngIf="showForm">
-        <h3>{{ isEditMode ? 'Bannerni Tahrirlash' : 'Yangi Banner Qo\'shish' }}</h3>
+        <h3>{{ isEditMode ? 'Bannerni Tahrirlash' : 'Yangi Banner Qoshish' }}</h3>
         <form (ngSubmit)="onSubmit()" #bannerForm="ngForm" class="banner-form">
           
           <div class="form-row">
@@ -475,7 +475,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class BannerControlComponent implements OnInit {
   @ViewChild('bannerFileInput') bannerFileInput!: ElementRef<HTMLInputElement>;
-  
+
   banners: CategoryBanner[] = [];
   categories: any[] = [];
 

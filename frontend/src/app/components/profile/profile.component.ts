@@ -39,6 +39,16 @@ import { HttpClient } from '@angular/common/http';
 
           <!-- Full Profile Info -->
           <div class="profile-info-list">
+            <a routerLink="/orders" class="btn-orders-link">
+              <div class="info-icon" style="background: linear-gradient(135deg, rgba(0,242,254,0.12), rgba(79,172,254,0.08)); color: var(--primary-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              </div>
+              <div class="info-content">
+                <span class="info-label">Haridlarim</span>
+                <span class="info-value" style="color: var(--primary-color); font-weight: 700;">Mening buyurtmalarim →</span>
+              </div>
+            </a>
+            
             <div class="info-item">
               <div class="info-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -465,6 +475,27 @@ import { HttpClient } from '@angular/common/http';
     .info-item:hover {
       background: rgba(168, 85, 247, 0.05);
       border-color: rgba(168, 85, 247, 0.15);
+    }
+
+    .btn-orders-link {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      background: rgba(0, 242, 254, 0.04);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      text-decoration: none;
+      transition: var(--transition-smooth);
+      width: 100%;
+    }
+
+    .btn-orders-link:hover {
+      background: rgba(0, 242, 254, 0.1);
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 242, 254, 0.15);
     }
 
     .info-icon {

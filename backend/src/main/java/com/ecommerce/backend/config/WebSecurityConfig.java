@@ -70,6 +70,7 @@ public class WebSecurityConfig {
                         // Allow ALL api/* requests (public shop + admin operations)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**", "/api/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers("/api/categories/**", "/api/categories").permitAll()
                         .requestMatchers("/api/subcategories/**", "/api/subcategories").permitAll()
                         .requestMatchers("/api/brands/**", "/api/brands").permitAll()

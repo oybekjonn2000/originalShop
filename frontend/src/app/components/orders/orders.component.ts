@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="orders-container fade-in-el">
       <h1 class="page-title">Mening buyurtmalarim</h1>
@@ -28,7 +30,6 @@ import { OrderService } from '../../services/order.service';
               <span class="order-id">Buyurtma #{{ order.id }}</span>
               <span class="order-date">{{ order.orderDate | date:'medium' }}</span>
             </div>
-
             <div class="header-status">
               <span class="badge" [ngClass]="getStatusClass(order.status)">
                 {{ order.status }}
@@ -41,21 +42,108 @@ import { OrderService } from '../../services/order.service';
             <strong>Yetkazib berish manzili:</strong> {{ order.shippingAddress }}
           </div>
 
-          <!-- Items Accordion / Details -->
+          <!-- Items list -->
           <div class="order-items-detail">
             <h4>Mahsulotlar</h4>
             <div class="items-list">
-              <div *ngFor="let item of order.orderItems" class="detail-item">
-                <div class="item-img-mini">
-                  <img [src]="item.product.imageUrl" [alt]="item.product.name" />
+              <div *ngFor="let item of order.orderItems" class="item-wrapper">
+                <!-- Item row -->
+                <div class="detail-item">
+                  <div class="item-img-mini">
+                    <img [src]="item.product.imageUrl" [alt]="item.product.name" />
+                  </div>
+                  <div class="item-name-qty">
+                    <span class="name">{{ item.product.name }}</span>
+                    <span class="qty">Soni: {{ item.quantity }} ta</span>
+                  </div>
+                  <div class="item-right">
+                    <div class="item-subtotal">
+                      {{ item.price * item.quantity | number:'1.0-0' }} so'm
+                      <small class="unit-price">({{ item.price | number:'1.0-0' }} so'm/dona)</small>
+                    </div>
+                    <!-- Review button per item -->
+                    <button
+                      *ngIf="order.status === 'DELIVERED'"
+                      [disabled]="reviewedProductIds.has(item.product.id)"
+                      (click)="!reviewedProductIds.has(item.product.id) && toggleReviewForm(order.id, item.product.id)"
+                      class="btn-review-toggle"
+                      [class.active]="isFormOpen(order.id, item.product.id)"
+                      [class.reviewed]="reviewedProductIds.has(item.product.id)"
+                    >
+                      <ng-container *ngIf="reviewedProductIds.has(item.product.id)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Sharh qoldirildi
+                      </ng-container>
+                      <ng-container *ngIf="!reviewedProductIds.has(item.product.id)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        {{ isFormOpen(order.id, item.product.id) ? 'Yopish' : 'Sharh qoldirish' }}
+                      </ng-container>
+                    </button>
+                  </div>
                 </div>
-                <div class="item-name-qty">
-                  <span class="name">{{ item.product.name }}</span>
-                  <span class="qty">Soni: {{ item.quantity }} ta</span>
-                </div>
-                <div class="item-subtotal">
-                  {{ item.price * item.quantity | number:'1.0-0' }} so'm
-                  <small class="unit-price">({{ item.price | number:'1.0-0' }} so'm/dona)</small>
+
+                <!-- Inline review form — slides open per item -->
+                <div
+                  *ngIf="order.status === 'DELIVERED' && isFormOpen(order.id, item.product.id)"
+                  class="inline-review-panel"
+                >
+                  <!-- Success state -->
+                  <div *ngIf="getReviewState(order.id, item.product.id) === 'success'" class="review-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Sharhingiz muvaffaqiyatli yuborildi!
+                  </div>
+
+                  <!-- Error state -->
+                  <div *ngIf="getReviewState(order.id, item.product.id) === 'error'" class="review-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    {{ getReviewError(order.id, item.product.id) }}
+                  </div>
+
+                  <!-- Form state -->
+                  <ng-container *ngIf="getReviewState(order.id, item.product.id) !== 'success'">
+                    <p class="review-panel-title">{{ item.product.name }} uchun sharh</p>
+
+                    <!-- Star rating -->
+                    <div class="star-row">
+                      <span class="star-label">Baho:</span>
+                      <span
+                        *ngFor="let s of stars"
+                        class="star-btn"
+                        (click)="setRating(order.id, item.product.id, s)"
+                        [class.lit]="getRating(order.id, item.product.id) >= s"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+                          [attr.fill]="getRating(order.id, item.product.id) >= s ? '#fbbf24' : 'none'"
+                          [attr.stroke]="getRating(order.id, item.product.id) >= s ? '#fbbf24' : 'rgba(255,255,255,0.3)'"
+                          stroke-width="1.5">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                      </span>
+                    </div>
+
+                    <!-- Textarea -->
+                    <textarea
+                      [(ngModel)]="getReviewDraft(order.id, item.product.id).comment"
+                      placeholder="Fikr-mulohazalaringizni yozing..."
+                      class="review-textarea"
+                    ></textarea>
+
+                    <!-- Submit -->
+                    <div class="review-actions">
+                      <button
+                        class="btn-cancel"
+                        (click)="toggleReviewForm(order.id, item.product.id)"
+                      >Bekor qilish</button>
+                      <button
+                        class="btn-submit-review"
+                        [disabled]="isSubmitting(order.id, item.product.id) || !getReviewDraft(order.id, item.product.id).comment.trim()"
+                        (click)="submitReview(order.id, item.product.id)"
+                      >
+                        <span *ngIf="!isSubmitting(order.id, item.product.id)">Yuborish</span>
+                        <span *ngIf="isSubmitting(order.id, item.product.id)">Yuborilmoqda...</span>
+                      </button>
+                    </div>
+                  </ng-container>
                 </div>
               </div>
             </div>
@@ -171,8 +259,16 @@ import { OrderService } from '../../services/order.service';
     .items-list {
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 0.75rem;
       margin-bottom: 1.5rem;
+    }
+
+    .item-wrapper {
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .detail-item {
@@ -181,8 +277,6 @@ import { OrderService } from '../../services/order.service';
       gap: 1rem;
       padding: 0.65rem 1rem;
       background: rgba(255, 255, 255, 0.02);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     .item-img-mini {
@@ -219,6 +313,14 @@ import { OrderService } from '../../services/order.service';
       color: var(--text-secondary);
     }
 
+    .item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
     .item-subtotal {
       text-align: right;
       font-size: 1.05rem;
@@ -232,6 +334,184 @@ import { OrderService } from '../../services/order.service';
       font-size: 0.7rem;
       color: var(--text-secondary);
       font-weight: 400;
+    }
+
+    /* Inline review toggle button */
+    .btn-review-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      background: rgba(0, 242, 254, 0.06);
+      color: var(--primary-color);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .btn-review-toggle:hover {
+      background: rgba(0, 242, 254, 0.14);
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .btn-review-toggle.active {
+      background: rgba(0, 242, 254, 0.12);
+      border-color: var(--primary-color);
+    }
+
+    .btn-review-toggle.reviewed {
+      background: rgba(52, 211, 153, 0.08) !important;
+      border-color: rgba(52, 211, 153, 0.3) !important;
+      color: #34d399 !important;
+      cursor: default !important;
+      pointer-events: none;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Inline review panel */
+    .inline-review-panel {
+      padding: 1.25rem 1.25rem 1rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .review-panel-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 1rem;
+    }
+
+    /* Stars */
+    .star-row {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .star-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-right: 0.25rem;
+    }
+
+    .star-btn {
+      cursor: pointer;
+      transition: transform 0.18s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .star-btn:hover,
+    .star-btn.lit {
+      transform: scale(1.2);
+    }
+
+    /* Textarea */
+    .review-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+      margin-bottom: 0.85rem;
+    }
+
+    .review-textarea:focus {
+      border-color: var(--primary-color);
+    }
+
+    /* Actions row */
+    .review-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .btn-cancel {
+      padding: 0.45rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .btn-submit-review {
+      padding: 0.45rem 1.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      background: var(--primary-gradient);
+      color: #0b0e14;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-heading);
+    }
+
+    .btn-submit-review:hover:not(:disabled) {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit-review:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Success / Error states */
+    .review-success {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #34d399;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.5rem 0;
+    }
+
+    .review-error {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #f87171;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      margin-bottom: 0.75rem;
     }
 
     .order-footer {
@@ -284,8 +564,23 @@ import { OrderService } from '../../services/order.service';
 export class OrdersComponent implements OnInit {
   orders: any[] = [];
   isLoading = true;
+  stars = [1, 2, 3, 4, 5];
+  reviewedProductIds: Set<number> = new Set<number>();
 
-  constructor(private orderService: OrderService) {}
+  // Tracks which (orderId-productId) forms are open
+  private openForms = new Set<string>();
+
+  // Per-item review draft: { comment, rating }
+  private drafts: Record<string, { comment: string; rating: number }> = {};
+
+  // Per-item submission state: 'idle' | 'submitting' | 'success' | 'error'
+  private states: Record<string, string> = {};
+  private errors: Record<string, string> = {};
+
+  constructor(
+    private orderService: OrderService,
+    private reviewService: ReviewService
+  ) {}
 
   ngOnInit(): void {
     this.loadOrders();
@@ -300,6 +595,86 @@ export class OrdersComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
+      }
+    });
+
+    this.reviewService.getReviewedProductIds().subscribe({
+      next: (ids) => {
+        this.reviewedProductIds = new Set(ids);
+      },
+      error: () => {}
+    });
+  }
+
+  private key(orderId: number, productId: number): string {
+    return `${orderId}-${productId}`;
+  }
+
+  isFormOpen(orderId: number, productId: number): boolean {
+    return this.openForms.has(this.key(orderId, productId));
+  }
+
+  toggleReviewForm(orderId: number, productId: number): void {
+    const k = this.key(orderId, productId);
+    if (this.openForms.has(k)) {
+      this.openForms.delete(k);
+    } else {
+      this.openForms.add(k);
+      // initialise draft if needed
+      if (!this.drafts[k]) {
+        this.drafts[k] = { comment: '', rating: 5 };
+      }
+      this.states[k] = 'idle';
+    }
+  }
+
+  getReviewDraft(orderId: number, productId: number): { comment: string; rating: number } {
+    const k = this.key(orderId, productId);
+    if (!this.drafts[k]) {
+      this.drafts[k] = { comment: '', rating: 5 };
+    }
+    return this.drafts[k];
+  }
+
+  getRating(orderId: number, productId: number): number {
+    return this.getReviewDraft(orderId, productId).rating;
+  }
+
+  setRating(orderId: number, productId: number, value: number): void {
+    this.getReviewDraft(orderId, productId).rating = value;
+  }
+
+  getReviewState(orderId: number, productId: number): string {
+    return this.states[this.key(orderId, productId)] ?? 'idle';
+  }
+
+  getReviewError(orderId: number, productId: number): string {
+    return this.errors[this.key(orderId, productId)] ?? '';
+  }
+
+  isSubmitting(orderId: number, productId: number): boolean {
+    return this.states[this.key(orderId, productId)] === 'submitting';
+  }
+
+  submitReview(orderId: number, productId: number): void {
+    const k = this.key(orderId, productId);
+    const draft = this.drafts[k];
+    if (!draft || !draft.comment.trim()) return;
+
+    this.states[k] = 'submitting';
+
+    this.reviewService.addReview(productId, draft.comment, draft.rating).subscribe({
+      next: () => {
+        this.states[k] = 'success';
+        this.reviewedProductIds.add(productId);
+        // auto-close form after 2s
+        setTimeout(() => {
+          this.openForms.delete(k);
+        }, 2000);
+      },
+      error: (err) => {
+        this.states[k] = 'error';
+        this.errors[k] = err.error?.message || 'Xatolik yuz berdi. Qayta urinib ko\'ring.';
       }
     });
   }

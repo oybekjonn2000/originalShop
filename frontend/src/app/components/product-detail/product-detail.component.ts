@@ -6,6 +6,7 @@ import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -128,6 +129,105 @@ import { WishlistService } from '../../services/wishlist.service';
       <div class="full-description-section glass-panel fade-in-el" *ngIf="product.fullDescription">
         <h2 class="description-section-title">Mahsulotning umumiy tavsifi</h2>
         <div class="full-description-content" [innerHTML]="product.fullDescription" style="white-space: pre-wrap;"></div>
+      </div>
+
+      <!-- Reviews Section (Sharhlar) -->
+      <div class="reviews-section glass-panel fade-in-el" style="margin-top: 3rem; padding: 3rem; border-radius: var(--border-radius-lg); border: 1px solid var(--glass-border); background: linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.02) 100%);">
+        <h2 class="section-title" style="border-left: 4px solid var(--primary-color);">Mijozlar sharhlari ({{ reviews.length }})</h2>
+
+        <!-- Leave a review form (visible to authorized users who bought the product) -->
+        <div *ngIf="canUserReview" class="add-review-box" style="margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--glass-border);">
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Mahsulot haqida sharh qoldiring</h3>
+          
+          <!-- Rating Stars Selector -->
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; align-items: center;">
+            <span style="color: var(--text-secondary); font-size: 0.95rem; margin-right: 0.5rem;">Baholang:</span>
+            <span 
+              *ngFor="let star of stars" 
+              (click)="rating = star"
+              style="cursor: pointer; font-size: 1.8rem; transition: transform 0.2s; display: inline-block;"
+              [style.transform]="rating >= star ? 'scale(1.15)' : 'scale(1)'"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="28" 
+                height="28" 
+                viewBox="0 0 24 24" 
+                [attr.fill]="rating >= star ? '#fbbf24' : 'none'" 
+                [attr.stroke]="rating >= star ? '#fbbf24' : 'var(--text-secondary)'" 
+                stroke-width="1.5"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <textarea 
+              [(ngModel)]="newReviewComment" 
+              placeholder="Mahsulot haqidagi fikr-mulohazalaringizni yozing..." 
+              class="glass-input" 
+              style="width: 100%; min-height: 100px; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); font-size: 0.95rem; resize: vertical;"
+            ></textarea>
+            <button 
+              (click)="submitReview()" 
+              [disabled]="isSubmittingReview || !newReviewComment.trim()" 
+              class="btn-primary" 
+              style="align-self: flex-start; padding: 0.75rem 2rem;"
+            >
+              <span *ngIf="!isSubmittingReview">Sharhni yuborish</span>
+              <span *ngIf="isSubmittingReview">Yuborilmoqda...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reviews List -->
+        <div *ngIf="reviews.length > 0; else noReviews" class="reviews-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div *ngFor="let r of reviews" class="review-card" style="padding: 1.5rem; border-radius: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.9rem;">
+                  {{ (r.user.firstName ? r.user.firstName[0] : r.user.username[0]) | uppercase }}
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                    {{ r.user.firstName }} {{ r.user.lastName }}
+                  </h4>
+                  <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                      {{ '@' + r.user.username }}
+                    </small>
+                    <span style="color: rgba(255,255,255,0.15)">|</span>
+                    <!-- User review rating stars -->
+                    <div style="display: flex; align-items: center; gap: 0.1rem;">
+                      <span *ngFor="let star of stars">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="12" 
+                          height="12" 
+                          viewBox="0 0 24 24" 
+                          [attr.fill]="r.rating >= star ? '#fbbf24' : 'none'" 
+                          [attr.stroke]="r.rating >= star ? '#fbbf24' : 'rgba(255,255,255,0.2)'" 
+                          stroke-width="2.5"
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ r.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+            </div>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap;">{{ r.comment }}</p>
+          </div>
+        </div>
+
+        <ng-template #noReviews>
+          <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+            <p style="margin: 0; font-size: 1rem;">Ushbu mahsulotga hali sharh yozilmagan. Birinchi sharh qoldiruvchi bo'ling!</p>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Shunga o'xshash mahsulotlar bo'limi -->
@@ -853,6 +953,12 @@ export class ProductDetailComponent implements OnInit {
   recentlyViewedProducts: any[] = [];
   activeImageIndex = 0;
   wishlistProductIds = new Set<number>();
+  reviews: any[] = [];
+  canUserReview = false;
+  newReviewComment = '';
+  isSubmittingReview = false;
+  rating = 5;
+  stars = [1, 2, 3, 4, 5];
 
   get isAdmin(): boolean {
     return this.authService.isAdmin();
@@ -870,8 +976,9 @@ export class ProductDetailComponent implements OnInit {
     private productService: ProductService,
     private cartService: CartService,
     private authService: AuthService,
-    private wishlistService: WishlistService
-  ) {}
+    private wishlistService: WishlistService,
+    private reviewService: ReviewService
+  ) { }
 
   ngOnInit(): void {
     this.wishlistService.wishlistProductIds$.subscribe(ids => {
@@ -971,10 +1078,57 @@ export class ProductDetailComponent implements OnInit {
         this.loadSimilarProducts(prod);
         this.addToRecentlyViewed(prod);
         this.loadRecentlyViewedProducts(prod.id);
+        this.loadReviews(prod.id);
+        this.checkIfCanReview(prod.id);
       },
       error: () => {
         this.router.navigate(['/']);
         this.isLoading = false;
+      }
+    });
+  }
+
+  loadReviews(productId: number): void {
+    this.reviewService.getReviews(productId).subscribe({
+      next: (data) => {
+        this.reviews = data;
+      },
+      error: (err) => {
+        console.error('Reviews load error', err);
+      }
+    });
+  }
+
+  checkIfCanReview(productId: number): void {
+    if (this.authService.isLoggedIn()) {
+      this.reviewService.canReview(productId).subscribe({
+        next: (res) => {
+          this.canUserReview = res.canReview;
+        },
+        error: () => {
+          this.canUserReview = false;
+        }
+      });
+    } else {
+      this.canUserReview = false;
+    }
+  }
+
+  submitReview(): void {
+    if (!this.newReviewComment.trim()) return;
+    this.isSubmittingReview = true;
+    this.reviewService.addReview(this.product.id, this.newReviewComment, this.rating).subscribe({
+      next: () => {
+        this.isSubmittingReview = false;
+        this.showToast('Sharhingiz muvaffaqiyatli qo\'shildi!', 'snack-success');
+        this.newReviewComment = '';
+        this.rating = 5;
+        this.canUserReview = false;
+        this.loadReviews(this.product.id);
+      },
+      error: (err) => {
+        this.isSubmittingReview = false;
+        this.showToast(err.error?.message || 'Xatolik yuz berdi!', 'snack-error');
       }
     });
   }
@@ -1011,10 +1165,10 @@ export class ProductDetailComponent implements OnInit {
       const key = this.getRecentlyViewedStorageKey();
       const viewedStr = localStorage.getItem(key);
       let viewed: any[] = viewedStr ? JSON.parse(viewedStr) : [];
-      
+
       // Remove current product if already in list to move it to the top
       viewed = viewed.filter(p => p.id !== currentProduct.id);
-      
+
       // Add current product to the beginning
       viewed.unshift({
         id: currentProduct.id,
@@ -1025,12 +1179,12 @@ export class ProductDetailComponent implements OnInit {
         category: currentProduct.category,
         stockQuantity: currentProduct.stockQuantity
       });
-      
+
       // Limit to 10 items
       if (viewed.length > 10) {
         viewed = viewed.slice(0, 10);
       }
-      
+
       localStorage.setItem(key, JSON.stringify(viewed));
     } catch (e) {
       console.error('Error saving to recently viewed', e);

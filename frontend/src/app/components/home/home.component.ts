@@ -18,6 +18,10 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     <div class="home-container fade-in-el">
       <!-- Brands Reels Slider -->
       <section class="brands-reels-section" *ngIf="brands.length > 0">
+        <div class="brands-section-header">
+          <h2>⭐ Mashhur Brendlar</h2>
+          <p class="brands-section-subtitle">Eng ishonchli va yetakchi ishlab chiqaruvchilar mahsulotlari</p>
+        </div>
         <div class="brands-marquee-wrapper">
           <div class="brands-marquee-track">
             <div class="brands-group">
@@ -404,16 +408,38 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       padding: 0.5rem 0;
     }
 
+    .brands-section-header {
+      margin-bottom: 1.25rem;
+      padding-left: 0.25rem;
+    }
+
+    .brands-section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brands-section-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
     .brands-marquee-wrapper {
       width: 100%;
       overflow: hidden;
       display: flex;
+      padding: 8px 0;
     }
 
     .brands-marquee-track {
       display: flex;
       width: max-content;
-      animation: marqueeScroll 25s linear infinite;
+      animation: marqueeScroll 65s linear infinite;
     }
 
     .brands-marquee-track:hover {
@@ -612,13 +638,18 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
 
     .hero-banner {
       position: relative;
-      padding: 4rem 3rem;
+      padding: 5rem 4rem;
       border-radius: var(--border-radius-lg);
       margin-bottom: 2.5rem;
       overflow: hidden;
       display: flex;
       align-items: center;
-      background: linear-gradient(135deg, rgba(23, 29, 43, 0.6) 0%, rgba(10, 13, 20, 0.6) 100%);
+      background: linear-gradient(135deg, rgba(11, 14, 20, 0.9) 0%, rgba(11, 14, 20, 0.6) 100%),
+                  url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 
     /* ── Light theme hero overrides ── */
@@ -671,16 +702,18 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     .hero-text h1 {
       font-size: 3rem;
       line-height: 1.2;
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
       font-weight: 800;
-      background: linear-gradient(to right, #ffffff, #d2d6dc);
+      background: linear-gradient(135deg, #ffffff 40%, var(--primary-color) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
     .hero-text p {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.75);
       font-size: 1.15rem;
+      line-height: 1.6;
     }
 
     .hero-glow-effect {
@@ -1802,7 +1835,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   startAutoSlide(): void {
     this.slideInterval = setInterval(() => {
       this.nextSlide();
-    }, 5000); // 5 soniyada bitta o'zgaradi
+    }, 5000); // 15 soniyada bitta o'zgaradi
   }
 
   nextSlide(): void {

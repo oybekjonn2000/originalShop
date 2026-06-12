@@ -620,9 +620,7 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   logout(): void {
-    if (confirm("Rostdan ham admin paneldan chiqmoqchimisiz?")) {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

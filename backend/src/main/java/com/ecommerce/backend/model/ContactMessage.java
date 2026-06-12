@@ -5,7 +5,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 @Table(name = "contact_messages")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ContactMessage {
 
     @Id

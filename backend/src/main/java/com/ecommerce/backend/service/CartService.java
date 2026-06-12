@@ -44,11 +44,10 @@ public class CartService {
                     return cartItemRepository.save(existingItem);
                 })
                 .orElseGet(() -> {
-                    CartItem newItem = CartItem.builder()
-                            .user(user)
-                            .product(product)
-                            .quantity(quantity)
-                            .build();
+                    CartItem newItem = new CartItem();
+                    newItem.setUser(user);
+                    newItem.setProduct(product);
+                    newItem.setQuantity(quantity);
                     return cartItemRepository.save(newItem);
                 });
     }

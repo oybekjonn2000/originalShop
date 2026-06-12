@@ -34,12 +34,11 @@ public class CategoryBannerService {
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
 
-        CategoryBanner banner = CategoryBanner.builder()
-                .category(category)
-                .imageUrl(dto.getImageUrl())
-                .imageUrls(dto.getImageUrls() != null ? dto.getImageUrls() : new java.util.ArrayList<>())
-                .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
-                .build();
+        CategoryBanner banner = new CategoryBanner();
+        banner.setCategory(category);
+        banner.setImageUrl(dto.getImageUrl());
+        banner.setImageUrls(dto.getImageUrls() != null ? dto.getImageUrls() : new java.util.ArrayList<>());
+        banner.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
 
         CategoryBanner saved = categoryBannerRepository.save(banner);
         return mapToDTO(saved);

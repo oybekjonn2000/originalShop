@@ -78,16 +78,15 @@ public class AuthController {
         }
 
         // Create new user's account
-        User user = User.builder()
-                .username(signUpRequest.getUsername())
-                .email(signUpRequest.getEmail())
-                .password(encoder.encode(signUpRequest.getPassword()))
-                .firstName(signUpRequest.getFirstName())
-                .lastName(signUpRequest.getLastName())
-                .address(signUpRequest.getAddress())
-                .phoneNumber(signUpRequest.getPhoneNumber())
-                .role(Role.ROLE_USER) // Default is customer
-                .build();
+        User user = new User();
+        user.setUsername(signUpRequest.getUsername());
+        user.setEmail(signUpRequest.getEmail());
+        user.setPassword(encoder.encode(signUpRequest.getPassword()));
+        user.setFirstName(signUpRequest.getFirstName());
+        user.setLastName(signUpRequest.getLastName());
+        user.setAddress(signUpRequest.getAddress());
+        user.setPhoneNumber(signUpRequest.getPhoneNumber());
+        user.setRole(Role.ROLE_USER);
 
         userRepository.save(user);
 

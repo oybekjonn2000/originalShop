@@ -32,10 +32,9 @@ public class WishlistService {
         // If already in wishlist, return existing
         return wishlistRepository.findByUserIdAndProductId(user.getId(), productId)
                 .orElseGet(() -> {
-                    WishlistItem newItem = WishlistItem.builder()
-                            .user(user)
-                            .product(product)
-                            .build();
+                    WishlistItem newItem = new WishlistItem();
+                    newItem.setUser(user);
+                    newItem.setProduct(product);
                     return wishlistRepository.save(newItem);
                 });
     }

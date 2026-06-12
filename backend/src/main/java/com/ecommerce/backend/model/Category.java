@@ -2,8 +2,6 @@ package com.ecommerce.backend.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,8 +10,6 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "categories")
 public class Category {
@@ -34,8 +30,7 @@ public class Category {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "category_attributes_templates", joinColumns = @JoinColumn(name = "category_id"))
     @Column(name = "attribute_name")
-    @Builder.Default
-    private java.util.List<String> attributesTemplate = new java.util.ArrayList<>();
+        private java.util.List<String> attributesTemplate = new java.util.ArrayList<>();
 
     @CreationTimestamp
     @Column(updatable = false)

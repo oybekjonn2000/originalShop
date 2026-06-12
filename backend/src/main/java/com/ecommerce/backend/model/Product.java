@@ -3,8 +3,6 @@ package com.ecommerce.backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,8 +17,6 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "products")
 public class Product {
@@ -53,22 +49,18 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String fullDescription;
 
-    @Builder.Default
-    private Boolean isActive = true;
+        private Boolean isActive = true;
 
-    @Builder.Default
-    private Double discount = 0.0;
+        private Double discount = 0.0;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
-    @Builder.Default
-    private List<String> imageUrls = new ArrayList<>();
+        private List<String> imageUrls = new ArrayList<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    @Builder.Default
-    private Map<String, String> characteristics = new HashMap<>();
+        private Map<String, String> characteristics = new HashMap<>();
 
     @CreationTimestamp
     @Column(updatable = false)

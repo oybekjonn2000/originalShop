@@ -46,12 +46,11 @@ public class ReviewService {
             throw new RuntimeException("Siz ushbu mahsulotga allaqachon sharh qoldirgansiz!");
         }
 
-        Review review = Review.builder()
-                .product(product)
-                .user(user)
-                .comment(comment)
-                .rating(rating)
-                .build();
+        Review review = new Review();
+        review.setProduct(product);
+        review.setUser(user);
+        review.setComment(comment);
+        review.setRating(rating);
 
         return reviewRepository.save(review);
     }

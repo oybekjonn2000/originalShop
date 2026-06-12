@@ -2,8 +2,6 @@ package com.ecommerce.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,8 +11,6 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -37,6 +33,5 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("order")
-    @Builder.Default
-    private List<OrderItem> orderItems = new ArrayList<>();
+        private List<OrderItem> orderItems = new ArrayList<>();
 }

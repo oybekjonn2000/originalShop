@@ -13,8 +13,6 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "subcategories")
 public class Subcategory {
@@ -33,8 +31,7 @@ public class Subcategory {
     private Category category;
 
     @OneToMany(mappedBy = "subcategory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<ChildCategory> childCategories = new ArrayList<>();
+        private List<ChildCategory> childCategories = new ArrayList<>();
 
     @CreationTimestamp
     @Column(updatable = false)

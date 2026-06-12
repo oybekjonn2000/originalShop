@@ -73,6 +73,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers("/api/categories/**", "/api/categories").permitAll()
                         .requestMatchers("/api/subcategories/**", "/api/subcategories").permitAll()
+                        .requestMatchers("/api/child-categories/**", "/api/child-categories").permitAll()
                         .requestMatchers("/api/brands/**", "/api/brands").permitAll()
                         .requestMatchers("/api/category-banners/**", "/api/category-banners").permitAll()
                         .requestMatchers("/api/messages").permitAll()

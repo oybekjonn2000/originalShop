@@ -32,12 +32,11 @@ public class OrderService {
             throw new RuntimeException("Savat bo'sh, buyurtma berib bo'lmaydi!");
         }
 
-        Order order = Order.builder()
-                .user(user)
-                .orderDate(LocalDateTime.now())
-                .status(OrderStatus.PENDING)
-                .shippingAddress(shippingAddress)
-                .build();
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderDate(LocalDateTime.now());
+        order.setStatus(OrderStatus.PENDING);
+        order.setShippingAddress(shippingAddress);
 
         double totalAmount = 0.0;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -53,12 +52,11 @@ public class OrderService {
             product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
             productRepository.save(product);
 
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .product(product)
-                    .quantity(cartItem.getQuantity())
-                    .price(product.getPrice())
-                    .build();
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(product.getPrice());
 
             orderItems.add(orderItem);
             totalAmount += product.getPrice() * cartItem.getQuantity();

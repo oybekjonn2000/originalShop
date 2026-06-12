@@ -64,7 +64,7 @@ import { AuthService } from '../../../services/auth.service';
       </div>
 
       <!-- Charts Section -->
-      <div class="charts-section" style="display: grid; grid-template-columns: 2fr 1.1fr; gap: 2rem; margin-bottom: 3rem;">
+      <div class="charts-section">
         <!-- Sales Area Chart -->
         <div class="chart-card glass-panel" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -136,7 +136,7 @@ import { AuthService } from '../../../services/auth.service';
             </div>
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; width: 100%; margin-top: 0.5rem;">
+          <div class="donut-legend-grid">
             <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
               <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
               <span style="color: var(--text-secondary);">Yetkazilgan: {{ deliveredPct }}% ({{ deliveredCount }})</span>
@@ -375,6 +375,57 @@ import { AuthService } from '../../../services/auth.service';
       text-align: center;
       color: var(--text-secondary) !important;
       padding: 2rem !important;
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: 2fr 1.1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .donut-legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 1024px) {
+      .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+      }
+      .page-header h1 {
+        font-size: 2rem;
+      }
+      .charts-section {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .stat-card {
+        padding: 1.25rem;
+        gap: 1rem;
+      }
+      .stat-value {
+        font-size: 1.6rem;
+      }
+      .donut-legend-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
     }
   `]
 })

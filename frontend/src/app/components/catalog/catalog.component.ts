@@ -23,6 +23,16 @@ import { WishlistService } from '../../services/wishlist.service';
         <!-- Sidebar Filters -->
         <aside class="filters-sidebar glass-panel">
           <div class="filter-section">
+            <h3>Saralash (Sort)</h3>
+            <select [(ngModel)]="sortBy" (change)="applyFilters()" class="glass-input w-full">
+              <option value="newest">Yangi qo'shilganlar</option>
+              <option value="priceAsc">Arzonlari oldin</option>
+              <option value="priceDesc">Qimmatlari oldin</option>
+              <option value="nameAsc">Alifbo bo'yicha (A-Z)</option>
+            </select>
+          </div>
+
+          <div class="filter-section">
             <h3>Qidiruv</h3>
             <div class="search-box">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -117,16 +127,6 @@ import { WishlistService } from '../../services/wishlist.service';
                 {{ brand.name }}
               </label>
             </div>
-          </div>
-
-          <div class="filter-section">
-            <h3>Saralash (Sort)</h3>
-            <select [(ngModel)]="sortBy" (change)="applyFilters()" class="glass-input w-full">
-              <option value="newest">Yangi qo'shilganlar</option>
-              <option value="priceAsc">Arzonlari oldin</option>
-              <option value="priceDesc">Qimmatlari oldin</option>
-              <option value="nameAsc">Alifbo bo'yicha (A-Z)</option>
-            </select>
           </div>
 
           <button class="btn-secondary w-full reset-filters-btn" (click)="resetFilters()">Filtrlarni tozalash</button>
@@ -356,11 +356,16 @@ import { WishlistService } from '../../services/wishlist.service';
             </div>
           </div>
 
+          <!-- Yana (Load More) Button -->
+          <div class="show-more-container" *ngIf="!isLoading && filteredProducts.length > 0 && (currentPage + visiblePagesCount - 1 < totalPages)">
+            <button class="btn-show-more" (click)="showMore()">Yana</button>
+          </div>
+
           <!-- Pagination -->
           <div class="mat-paginator" *ngIf="!isLoading && filteredProducts.length > pageSize">
             <div class="mat-paginator-container">
               <div class="mat-paginator-range-label">
-                {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredProducts.length) }} / {{ filteredProducts.length }}
+                {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min((currentPage - 1 + visiblePagesCount) * pageSize, filteredProducts.length) }} / {{ filteredProducts.length }}
               </div>
               <div class="mat-paginator-navigation">
                 <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi">&#171;</button>
@@ -376,7 +381,7 @@ import { WishlistService } from '../../services/wishlist.service';
                 <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
                   <option [value]="12">12</option>
                   <option [value]="24">24</option>
-                  <option [value]="48">48</option>
+                  <option [value]="36">36</option>
                 </select>
               </div>
             </div>
@@ -472,11 +477,22 @@ import { WishlistService } from '../../services/wishlist.service';
 
     .category-list {
       list-style: none;
-      padding: 0;
+      padding: 0 0.5rem 0 0;
       margin: 0;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .category-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .category-list::-webkit-scrollbar-thumb {
+      background: var(--glass-border);
+      border-radius: 4px;
     }
 
     .category-list > li {
@@ -1278,6 +1294,31 @@ import { WishlistService } from '../../services/wishlist.service';
       font-weight: 800;
       color: var(--danger-color);
     }
+    .show-more-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .btn-show-more {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.75rem 2.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      backdrop-filter: blur(10px);
+    }
+    .btn-show-more:hover {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: #04080f;
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: translateY(-2px);
+    }
   `]
 })
 export class CatalogComponent implements OnInit {
@@ -1309,13 +1350,20 @@ export class CatalogComponent implements OnInit {
   // Pagination
   currentPage = 1;
   pageSize = 12;
+  visiblePagesCount = 1;
   Math = Math;
   get totalPages(): number {
     return Math.ceil(this.filteredProducts.length / this.pageSize);
   }
   get pagedProducts(): any[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredProducts.slice(start, start + this.pageSize);
+    const end = start + (this.pageSize * this.visiblePagesCount);
+    return this.filteredProducts.slice(start, end);
+  }
+  showMore(): void {
+    if (this.currentPage + this.visiblePagesCount - 1 < this.totalPages) {
+      this.visiblePagesCount++;
+    }
   }
   pageNumbers(): number[] {
     const pages: number[] = [];
@@ -1333,10 +1381,12 @@ export class CatalogComponent implements OnInit {
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
+    this.visiblePagesCount = 1;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   onPageSizeChange(): void {
     this.currentPage = 1;
+    this.visiblePagesCount = 1;
   }
 
   // Toast
@@ -1550,6 +1600,7 @@ export class CatalogComponent implements OnInit {
 
     this.filteredProducts = result;
     this.currentPage = 1;
+    this.visiblePagesCount = 1;
   }
 
   resetFilters(): void {

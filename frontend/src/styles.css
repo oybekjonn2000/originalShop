@@ -384,3 +384,288 @@ select option {
 [data-theme="dark"] .badge-shipped    { color: #a78bfa; }
 [data-theme="dark"] .badge-delivered  { color: #34d399; }
 [data-theme="dark"] .badge-cancelled  { color: #f87171; }
+
+/* ============================================
+   RESPONSIVE UTILITIES & HELPER CLASSES
+   ============================================ */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  body {
+    font-size: 0.85rem !important;
+  }
+
+  h1 {
+    font-size: 1.4rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  h2 {
+    font-size: 1.15rem !important;
+  }
+
+  p, .subtitle {
+    font-size: 0.78rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .glass-panel {
+    border-radius: 12px !important;
+  }
+
+  /* Top-Aligned Modals for Mobile */
+  .modal-overlay {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 30px 10px 10px !important;
+    overflow-y: auto !important; /* Allow overlay scroll if card goes beyond */
+  }
+
+  .modal-card {
+    width: 95% !important;
+    max-width: 500px !important;
+    border-radius: 16px !important;
+    max-height: calc(100vh - 50px) !important;
+    padding: 1.25rem 1rem !important;
+    margin: 0 auto !important;
+    animation: fadeInModal 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .modal-header {
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.65rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .modal-header h2 {
+    font-size: 1.15rem !important;
+  }
+
+  @keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Compact Native inputs */
+  .glass-input {
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+  }
+
+  .glass-label {
+    font-size: 0.72rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .btn-primary, .btn-secondary, .btn-danger {
+    padding: 0.6rem 1rem !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* Table-to-Card transformations */
+  /* 1. Products Table Card Transformation */
+  .admin-products-container .glass-table-container {
+    border: none !important;
+    background: transparent !important;
+    overflow-x: visible !important;
+  }
+
+  .admin-products-container .glass-table,
+  .admin-products-container .glass-table tbody,
+  .admin-products-container .glass-table tr,
+  .admin-products-container .glass-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .admin-products-container .glass-table thead {
+    display: none !important;
+  }
+
+  .admin-products-container .glass-table tr {
+    display: grid !important;
+    grid-template-columns: 52px 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 0.35rem 0.75rem !important;
+    padding: 0.75rem !important;
+    border-radius: 12px !important;
+    background: var(--panel-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    margin-bottom: 0.75rem !important;
+    align-items: center !important;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Image cell */
+  .admin-products-container .glass-table tr td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .admin-products-container .glass-table tr td:nth-child(1) img {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Name cell */
+  .admin-products-container .glass-table tr td:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* Price cell */
+  .admin-products-container .glass-table tr td:nth-child(5) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.8rem !important;
+    text-align: left !important;
+  }
+
+  /* Stock cell */
+  .admin-products-container .glass-table tr td:nth-child(7) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.75rem !important;
+    margin-left: 6.5rem !important; /* Push it next to price */
+    align-self: center !important;
+    text-align: left !important;
+  }
+
+  /* Actions cell */
+  .admin-products-container .glass-table tr td:nth-child(10) {
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+  }
+
+  /* 2. Orders Table Card Transformation */
+  .admin-orders-container .glass-table-container {
+    border: none !important;
+    background: transparent !important;
+    overflow-x: visible !important;
+  }
+
+  .admin-orders-container .glass-table,
+  .admin-orders-container .glass-table tbody,
+  .admin-orders-container .glass-table tr,
+  .admin-orders-container .glass-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .admin-orders-container .glass-table thead {
+    display: none !important;
+  }
+
+  .admin-orders-container .glass-table tr {
+    display: grid !important;
+    grid-template-columns: 32px 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 0.35rem 0.75rem !important;
+    padding: 0.75rem !important;
+    border-radius: 12px !important;
+    background: var(--panel-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    margin-bottom: 0.75rem !important;
+    align-items: center !important;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Order ID cell (Row 1, Col 1 - small label) */
+  .admin-orders-container .glass-table tr td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* User cell (Row 1, Col 2) */
+  .admin-orders-container .glass-table tr td:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  /* Amount cell (Row 2, Col 2) */
+  .admin-orders-container .glass-table tr td:nth-child(5) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 0.8rem !important;
+    text-align: left !important;
+  }
+
+  /* Status badge cell (Row 2, Col 2 next to amount) */
+  .admin-orders-container .glass-table tr td:nth-child(6) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    margin-left: 6.5rem !important; /* Push next to amount */
+    align-self: center !important;
+    font-size: 0.7rem !important;
+    text-align: left !important;
+  }
+
+  /* Actions cell (Col 3, spans 2 rows) */
+  .admin-orders-container .glass-table tr td:nth-child(7) {
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+    padding: 0 !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+  }
+
+  .admin-orders-container .glass-table tr td:nth-child(7) .status-select {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+

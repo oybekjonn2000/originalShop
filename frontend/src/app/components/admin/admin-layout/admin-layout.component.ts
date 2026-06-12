@@ -9,7 +9,7 @@ import { ThemeService } from '../../../services/theme.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="admin-wrapper" [class.collapsed]="isSidebarCollapsed">
+    <div class="admin-wrapper" [class.collapsed]="isSidebarCollapsed" [class.mobile-open]="isMobileSidebarOpen">
       <!-- Sidebar -->
       <aside class="admin-sidebar glass-panel">
         <div class="sidebar-header">
@@ -17,71 +17,77 @@ import { ThemeService } from '../../../services/theme.service';
             <span class="logo-nex">Nex</span><span class="logo-shop">Shop</span>
             <span class="badge-admin">Admin</span>
           </div>
+          <button class="btn-close-sidebar-mobile" (click)="closeMobileSidebar()" title="Menyuni yopish">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
           <button class="btn-toggle-sidebar" (click)="toggleSidebar()" title="Menyuni kichraytirish">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
         </div>
 
         <nav class="sidebar-nav">
-          <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             <span class="nav-text">Dashboard</span>
           </a>
-          <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/products" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
             <span class="nav-text">Mahsulotlar</span>
           </a>
-          <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
             <span class="nav-text">Kategoriyalar</span>
           </a>
-          <a routerLink="/admin/subcategories" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/subcategories" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             <span class="nav-text">Subkategoriyalar</span>
           </a>
-          <a routerLink="/admin/child-categories" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/child-categories" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8M12 10H8.5c-1.5 0-3 1.5-3 3v9M12 10h3.5c1.5 0 3 1.5 3 3v9"/></svg>
             <span class="nav-text">Child Kategoriyalar</span>
           </a>
-          <a routerLink="/admin/brands" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/brands" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 0 1-8 0"></path><line x1="12" y1="8" x2="12" y2="16"></line></svg>
             <span class="nav-text">Brandlar</span>
           </a>
-          <a routerLink="/admin/orders" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/orders" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7z"></path><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path></svg>
             <span class="nav-text">Buyurtmalar</span>
           </a>
-          <a routerLink="/admin/banner-control" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/banner-control" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span class="nav-text">Bannerlar</span>
           </a>
-          <a routerLink="/admin/messages" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/messages" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             <span class="nav-text">Xabarlar</span>
           </a>
-          <a routerLink="/admin/reviews" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/reviews" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             <span class="nav-text">Sharhlar</span>
           </a>
-          <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <span class="nav-text">Foydalanuvchilar</span>
           </a>
 
           <div class="sidebar-divider"></div>
 
-          <a routerLink="/" class="nav-item shop-link">
+          <a routerLink="/" class="nav-item shop-link" (click)="closeMobileSidebar()">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             <span class="nav-text">Magazinga qaytish</span>
           </a>
         </nav>
       </aside>
 
+      <!-- Sidebar Mobile Overlay Backdrop -->
+      <div class="sidebar-mobile-overlay" (click)="closeMobileSidebar()"></div>
+
       <!-- Main Content -->
       <div class="admin-main">
         <header class="admin-top-bar glass-panel">
           <div class="bar-left">
-            <button class="btn-toggle-sidebar-mobile" (click)="toggleSidebar()" title="Menyuni ko'rsatish">
+            <button class="btn-toggle-sidebar-mobile" (click)="toggleMobileSidebar()" title="Menyuni ko'rsatish">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
             <span class="bar-title">NexShop Admin Boshqaruvi</span>
@@ -130,7 +136,7 @@ import { ThemeService } from '../../../services/theme.service';
       left: 0;
       display: flex;
       flex-direction: column;
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(20px);
       border-right: 1px solid rgba(0, 0, 0, 0.06);
       z-index: 100;
@@ -139,7 +145,7 @@ import { ThemeService } from '../../../services/theme.service';
     }
 
     :host-context([data-theme="dark"]) .admin-sidebar {
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.98);
       border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -201,6 +207,33 @@ import { ThemeService } from '../../../services/theme.service';
     }
 
     :host-context([data-theme="dark"]) .btn-toggle-sidebar:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f1f5f9;
+    }
+
+    .btn-close-sidebar-mobile {
+      display: none;
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-close-sidebar-mobile:hover {
+      background: rgba(0, 0, 0, 0.04);
+      color: #1e293b;
+    }
+
+    :host-context([data-theme="dark"]) .btn-close-sidebar-mobile {
+      color: #94a3b8;
+    }
+
+    :host-context([data-theme="dark"]) .btn-close-sidebar-mobile:hover {
       background: rgba(255, 255, 255, 0.05);
       color: #f1f5f9;
     }
@@ -272,6 +305,22 @@ import { ThemeService } from '../../../services/theme.service';
     .shop-link:hover {
       background: rgba(59, 130, 246, 0.05);
       color: #2563eb;
+    }
+
+    /* Sidebar Mobile Backdrop Overlay */
+    .sidebar-mobile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .admin-wrapper.mobile-open .sidebar-mobile-overlay {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     /* Main Area Styles */
@@ -443,12 +492,37 @@ import { ThemeService } from '../../../services/theme.service';
     /* Responsive */
     @media (max-width: 1024px) {
       .admin-sidebar {
+        width: 280px;
         transform: translateX(-100%);
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.98);
+      }
+
+      :host-context([data-theme="dark"]) .admin-sidebar {
+        background: rgba(15, 23, 42, 0.98);
+      }
+
+      .admin-wrapper.mobile-open .admin-sidebar {
+        transform: translateX(0);
       }
 
       .admin-main {
         margin-left: 0 !important;
         padding: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .admin-main {
+          padding: 0.75rem 0.5rem;
+        }
+        .admin-top-bar {
+          position: sticky;
+          top: 0.5rem;
+          z-index: 99;
+          border-radius: 12px;
+          margin-bottom: 1rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
       }
 
       .btn-toggle-sidebar-mobile {
@@ -459,9 +533,17 @@ import { ThemeService } from '../../../services/theme.service';
         display: none;
       }
 
+      .btn-close-sidebar-mobile {
+        display: flex;
+      }
+
       .admin-wrapper.collapsed .admin-sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+      }
+
+      .admin-wrapper.collapsed.mobile-open .admin-sidebar {
         transform: translateX(0);
-        width: 260px;
       }
 
       .admin-wrapper.collapsed .admin-sidebar .nav-text {
@@ -481,11 +563,29 @@ import { ThemeService } from '../../../services/theme.service';
         justify-content: flex-start;
         padding: 0.75rem 1rem;
       }
+
+      .admin-wrapper.collapsed .admin-sidebar .badge-admin {
+        display: inline;
+      }
+
+      .bar-title {
+        font-size: 0.95rem;
+      }
+
+      .profile-name {
+        display: none;
+      }
+
+      .admin-profile {
+        padding-left: 0.5rem;
+        border-left: none;
+      }
     }
   `]
 })
 export class AdminLayoutComponent implements OnInit {
   isSidebarCollapsed = false;
+  isMobileSidebarOpen = false;
   isDarkMode = false;
   adminName = '';
 
@@ -505,6 +605,14 @@ export class AdminLayoutComponent implements OnInit {
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  toggleMobileSidebar(): void {
+    this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
+  }
+
+  closeMobileSidebar(): void {
+    this.isMobileSidebarOpen = false;
   }
 
   toggleTheme(): void {

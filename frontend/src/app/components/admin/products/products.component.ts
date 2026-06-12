@@ -59,11 +59,11 @@ import { BrandService } from '../../../services/brand.service';
                 Mahsulot nomi
                 <span class="sort-icon" *ngIf="sortBy.startsWith('name')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
-              <th (click)="toggleSort('category')" class="sortable-header">
+              <th (click)="toggleSort('category')" class="sortable-header hide-tablet">
                 Kategoriya
                 <span class="sort-icon" *ngIf="sortBy.startsWith('category')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
-              <th (click)="toggleSort('brand')" class="sortable-header">
+              <th (click)="toggleSort('brand')" class="sortable-header hide-tablet">
                 Brand
                 <span class="sort-icon" *ngIf="sortBy.startsWith('brand')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
@@ -71,7 +71,7 @@ import { BrandService } from '../../../services/brand.service';
                 Narxi
                 <span class="sort-icon" *ngIf="sortBy.startsWith('price')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
-              <th (click)="toggleSort('discount')" class="sortable-header">
+              <th (click)="toggleSort('discount')" class="sortable-header hide-mobile">
                 Chegirma
                 <span class="sort-icon" *ngIf="sortBy.startsWith('discount')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
@@ -79,11 +79,11 @@ import { BrandService } from '../../../services/brand.service';
                 Omborda
                 <span class="sort-icon" *ngIf="sortBy.startsWith('stock')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
-              <th (click)="toggleSort('status')" class="sortable-header">
+              <th (click)="toggleSort('status')" class="sortable-header hide-mobile">
                 Status
                 <span class="sort-icon" *ngIf="sortBy.startsWith('status')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
               </th>
-              <th>Vaqt</th>
+              <th class="hide-tablet">Vaqt</th>
               <th>Amallar</th>
             </tr>
           </thead>
@@ -95,7 +95,7 @@ import { BrandService } from '../../../services/brand.service';
               <td>
                 <span class="product-name">{{ product.name }}</span>
               </td>
-              <td>
+              <td class="hide-tablet">
                 <div style="display:flex;flex-direction:column;gap:2px;">
                   <span style="font-size:0.75rem;color:var(--text-secondary);">
                     {{ product.childCategory?.subcategory?.category?.name || product.subcategory?.category?.name || '—' }}
@@ -106,9 +106,9 @@ import { BrandService } from '../../../services/brand.service';
                   <span>{{ product.childCategory?.name || '—' }}</span>
                 </div>
               </td>
-              <td>{{ product.brand?.name || '—' }}</td>
+              <td class="hide-tablet">{{ product.brand?.name || '—' }}</td>
               <td><strong>{{ product.price | number:'1.0-0' }} so'm</strong></td>
-              <td>
+              <td class="hide-mobile">
                 <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
                 <span *ngIf="!product.discount">—</span>
               </td>
@@ -117,12 +117,12 @@ import { BrandService } from '../../../services/brand.service';
                   {{ product.stockQuantity }} ta
                 </span>
               </td>
-              <td>
+              <td class="hide-mobile">
                 <span class="badge" [class]="product.isActive ? 'badge-delivered' : 'badge-cancelled'">
                   {{ product.isActive ? 'Faol' : 'Nofaol' }}
                 </span>
               </td>
-              <td class="time-col">
+              <td class="time-col hide-tablet">
                 <div class="time-container" *ngIf="product.createdAt">
                   <div class="time-row" title="Yaratilgan vaqt">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -664,10 +664,53 @@ import { BrandService } from '../../../services/brand.service';
       transform: translateY(-2px);
     }
 
-    @media (max-width: 640px) {
-      .filter-bar { flex-direction: column; }
-      .filter-select { width: 100%; }
-      .form-row { flex-direction: column; }
+    @media (max-width: 992px) {
+      .modal-form-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .modal-actions-full {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.85rem;
+      }
+      .filter-select {
+        width: 100%;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      .page-header h1 {
+        font-size: 1.4rem;
+      }
+      .modal-form-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .form-left-col, .form-right-col {
+        gap: 0.85rem;
+      }
+      .form-group {
+        margin-bottom: 0.25rem;
+      }
+      .multi-image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 0.5rem;
+      }
     }
 
     /* Multi-Image Upload Grid */

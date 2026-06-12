@@ -77,8 +77,8 @@ import { OrderService } from '../../../services/order.service';
             <tr>
               <th>Buyurtma ID</th>
               <th>Foydalanuvchi</th>
-              <th>Sana</th>
-              <th>Manzil</th>
+              <th class="hide-mobile">Sana</th>
+              <th class="hide-tablet">Manzil</th>
               <th>Jami</th>
               <th>Status</th>
               <th>Amallar</th>
@@ -93,8 +93,8 @@ import { OrderService } from '../../../services/order.service';
                   <span>{{ order.user?.username || '—' }}</span>
                 </div>
               </td>
-              <td class="date-cell">{{ order.orderDate | date:'dd.MM.yyyy' }}<br><small>{{ order.orderDate | date:'HH:mm' }}</small></td>
-              <td class="address-cell" [title]="order.shippingAddress">{{ truncate(order.shippingAddress, 30) }}</td>
+              <td class="date-cell hide-mobile">{{ order.orderDate | date:'dd.MM.yyyy' }}<br><small>{{ order.orderDate | date:'HH:mm' }}</small></td>
+              <td class="address-cell hide-tablet" [title]="order.shippingAddress">{{ truncate(order.shippingAddress, 30) }}</td>
               <td><strong class="amount">{{ order.totalAmount | number:'1.0-0' }} so'm</strong></td>
               <td>
                 <span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span>

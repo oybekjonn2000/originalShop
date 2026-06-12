@@ -126,75 +126,8 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
 
       <!-- Main Layout -->
       <div class="catalog-layout" #catalogAnchor>
-        <!-- Category Filter Sidebar -->
-        <aside class="sidebar glass-panel">
-          <h3>Kategoriyalar</h3>
-          <ul class="category-list">
-            <li 
-              [class.active]="selectedCategoryId === null && selectedSubcategoryId === null && selectedChildCategoryId === null"
-              (click)="selectCategory(null)"
-            >
-              Barcha mahsulotlar
-            </li>
-            <li *ngFor="let category of categories" class="category-accordion-item">
-              <div 
-                class="category-accordion-header"
-                [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
-                (click)="toggleAccordion(category.id)"
-              >
-                <span>{{ category.name }}</span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  [class.rotated]="openCategoryId === category.id"
-                  class="accordion-arrow"
-                ><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </div>
-              <ul class="subcategory-list" *ngIf="openCategoryId === category.id">
-                <li
-                  [class.active]="selectedCategoryId === category.id && selectedSubcategoryId === null && selectedChildCategoryId === null"
-                  (click)="selectCategoryOnly(category.id, category.name)"
-                >Barchasi</li>
-                <li 
-                  *ngFor="let sub of getSubsForCategory(category.id)"
-                  class="subcategory-accordion-item"
-                >
-                  <div 
-                    class="subcategory-accordion-header"
-                    [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
-                    (click)="toggleSubAccordion(sub.id)"
-                  >
-                    <span>{{ sub.name }}</span>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                      [class.rotated]="openSubcategoryId === sub.id"
-                      class="accordion-arrow"
-                    ><polyline points="6 9 12 15 18 9"></polyline></svg>
-                  </div>
-                  <ul class="childcategory-list" *ngIf="openSubcategoryId === sub.id">
-                    <li
-                      [class.active]="selectedSubcategoryId === sub.id && selectedChildCategoryId === null"
-                      (click)="selectSubcategoryOnly(sub)"
-                    >Barchasi</li>
-                    <li
-                      *ngFor="let child of sub.childCategories"
-                      [class.active]="selectedChildCategoryId === child.id"
-                      (click)="selectChildCategory(child)"
-                    >
-                      {{ child.name }}
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </aside>
-
         <!-- Product Grid Area -->
         <main class="products-area">
-          <div class="area-header">
-            <h2>{{ catalogTitle }}</h2>
-            <p *ngIf="products.length > 0" class="results-count">{{ products.length }} ta mahsulot topildi</p>
-          </div>
 
           <!-- Loading state -->
           <div *ngIf="isLoading" class="loading-container">
@@ -202,17 +135,80 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
             <p>Mahsulotlar yuklanmoqda...</p>
           </div>
 
-          <!-- Empty state -->
-          <div *ngIf="!isLoading && products.length === 0" class="empty-products glass-panel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            <h3>Hech qanday mahsulot topilmadi</h3>
-            <p>Boshqa kategoriya yoki qidiruv so'rovini sinab ko'ring.</p>
-            <button (click)="resetCatalog()" class="btn-primary">Katalogga qaytish</button>
-          </div>
+          <!-- DEFAULT STATE: 4 Categorized Sections -->
+          <ng-container *ngIf="!isLoading && !searchQuery && !selectedCategoryId && !selectedSubcategoryId && !selectedChildCategoryId">
+            <div *ngFor="let sec of categorySections" class="category-home-section">
+              <div class="area-header">
+                <h2>{{ sec.categoryName }}</h2>
+                <a [routerLink]="['/catalog']" [queryParams]="{ category: sec.categoryId }" class="btn-view-all">Barchasini ko'rish &rarr;</a>
+              </div>
+              
+              <div class="products-grid">
+                <ng-container *ngFor="let product of sec.products">
+                  <ng-container *ngTemplateOutlet="productCardTemplate; context: { product: product }"></ng-container>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
 
-          <!-- Grid -->
-          <div *ngIf="!isLoading && products.length > 0" class="products-grid">
-            <div *ngFor="let product of pagedProducts" class="product-card glass-card">
+          <!-- SEARCH/FILTER STATE: Single Paged Grid -->
+          <ng-container *ngIf="!isLoading && (searchQuery || selectedCategoryId || selectedSubcategoryId || selectedChildCategoryId)">
+            <div class="area-header">
+              <h2>{{ catalogTitle }}</h2>
+              <p *ngIf="products.length > 0" class="results-count">{{ products.length }} ta mahsulot topildi</p>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="products.length === 0" class="empty-products glass-panel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              <h3>Hech qanday mahsulot topilmadi</h3>
+              <p>Boshqa kategoriya yoki qidiruv so'rovini sinab ko'ring.</p>
+              <button (click)="resetCatalog()" class="btn-primary">Katalogga qaytish</button>
+            </div>
+
+            <!-- Grid -->
+            <div *ngIf="products.length > 0" class="products-grid">
+              <ng-container *ngFor="let product of pagedProducts">
+                <ng-container *ngTemplateOutlet="productCardTemplate; context: { product: product }"></ng-container>
+              </ng-container>
+            </div>
+
+            <!-- Yana (Load More) Button -->
+            <div class="show-more-container" *ngIf="products.length > 0 && (currentPage + visiblePagesCount - 1 < totalPages)">
+              <button class="btn-show-more" (click)="showMore()">Yana</button>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mat-paginator" *ngIf="products.length > pageSize">
+              <div class="mat-paginator-container">
+                <div class="mat-paginator-range-label">
+                  {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min((currentPage - 1 + visiblePagesCount) * pageSize, products.length) }} / {{ products.length }}
+                </div>
+                <div class="mat-paginator-navigation">
+                  <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi">&#171;</button>
+                  <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">&#8249;</button>
+                  <ng-container *ngFor="let p of pageNumbers()">
+                    <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+                  </ng-container>
+                  <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">&#8250;</button>
+                  <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi">&#187;</button>
+                </div>
+                <div class="mat-paginator-page-size">
+                  <span>Sahifada:</span>
+                  <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
+                    <option [value]="20">20</option>
+                    <option [value]="40">40</option>
+                    <option [value]="60">60</option>
+                    <option [value]="80">80</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Product Card ng-template -->
+          <ng-template #productCardTemplate let-product="product">
+            <div class="product-card glass-card">
               <div class="product-img-wrapper">
                 <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
                 
@@ -235,7 +231,6 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
               
               <div class="product-info">
                 <h3 [routerLink]="['/product', product.id]" class="product-name">{{ product.name }}</h3>
-             
                 
                 <div class="product-footer">
                   <div class="price-section">
@@ -305,33 +300,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Pagination -->
-          <div class="mat-paginator" *ngIf="!isLoading && products.length > pageSize">
-            <div class="mat-paginator-container">
-              <div class="mat-paginator-range-label">
-                {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, products.length) }} / {{ products.length }}
-              </div>
-              <div class="mat-paginator-navigation">
-                <button class="mat-icon-btn" (click)="goToPage(1)" [disabled]="currentPage === 1" title="Birinchi">&#171;</button>
-                <button class="mat-icon-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" title="Oldingi">&#8249;</button>
-                <ng-container *ngFor="let p of pageNumbers()">
-                  <button class="mat-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
-                </ng-container>
-                <button class="mat-icon-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" title="Keyingi">&#8250;</button>
-                <button class="mat-icon-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages" title="Oxirgi">&#187;</button>
-              </div>
-              <div class="mat-paginator-page-size">
-                <span>Sahifada:</span>
-                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="mat-page-select">
-                  <option [value]="12">12</option>
-                  <option [value]="24">24</option>
-                  <option [value]="48">48</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          </ng-template>
         </main>
       </div>
 
@@ -925,7 +894,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
 
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 1.75rem;
     }
 
@@ -1637,6 +1606,48 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       font-size: 0.85rem;
       cursor: pointer;
     }
+    .show-more-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .btn-show-more {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      padding: 0.75rem 2.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      backdrop-filter: blur(10px);
+    }
+    .btn-show-more:hover {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: #04080f;
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+    .category-home-section {
+      margin-bottom: 3.5rem;
+    }
+    .btn-view-all {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: var(--transition-smooth);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .btn-view-all:hover {
+      text-shadow: 0 0 8px var(--primary-glow);
+      transform: translateX(5px);
+    }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {
@@ -1649,6 +1660,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   products: any[] = [];
   discountedProducts: any[] = [];
   cartItems: any[] = [];
+  categorySections: { categoryName: string, categoryId: number | null, products: any[] }[] = [];
   selectedCategoryId: number | null = null;
   searchQuery: string = '';
   catalogTitle: string = 'Barcha mahsulotlar';
@@ -1657,14 +1669,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // Pagination
   currentPage = 1;
-  pageSize = 12;
+  pageSize = 20;
+  visiblePagesCount = 1;
   Math = Math;
   get totalPages(): number {
     return Math.ceil(this.products.length / this.pageSize);
   }
   get pagedProducts(): any[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.products.slice(start, start + this.pageSize);
+    const end = start + (this.pageSize * this.visiblePagesCount);
+    return this.products.slice(start, end);
+  }
+  showMore(): void {
+    if (this.currentPage + this.visiblePagesCount - 1 < this.totalPages) {
+      this.visiblePagesCount++;
+    }
   }
   pageNumbers(): number[] {
     const pages: number[] = [];
@@ -1682,12 +1701,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
+    this.visiblePagesCount = 1;
     if (this.catalogAnchor) {
       this.catalogAnchor.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
   onPageSizeChange(): void {
     this.currentPage = 1;
+    this.visiblePagesCount = 1;
   }
 
   // Toast
@@ -1814,11 +1835,61 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
       this.resolveCategoryHierarchy();
+      if (this.products.length > 0) {
+        this.buildCategorySections();
+      }
     });
     this.productService.getSubcategories().subscribe(subs => {
       this.subcategories = subs;
       this.resolveCategoryHierarchy();
     });
+  }
+
+  getCategoryKey(name: string): string | null {
+    if (!name) return null;
+    const lower = name.toLowerCase();
+    if (lower.includes('smartfon') || lower.includes('смартфон')) {
+      return 'Smartfonlar';
+    }
+    if (lower.includes('noutbuk') || lower.includes('ноутбук') || lower.includes('компьютер')) {
+      return 'Noutbuklar';
+    }
+    if (lower.includes('aksessuar') || lower.includes('аудио') || lower.includes('наушники') || lower.includes('аксессуар')) {
+      return 'Aksessuarlar';
+    }
+    if (lower.includes('tv') || lower.includes('тв') || lower.includes('проектор')) {
+      return 'TB va proyektorlar';
+    }
+    return null;
+  }
+
+  buildCategorySections(): void {
+    const sectionsMap = new Map<string, { categoryName: string, categoryId: number, products: any[] }>();
+    const keysOrder = ['Smartfonlar', 'Noutbuklar', 'Aksessuarlar', 'TB va proyektorlar'];
+    
+    this.categories.forEach(cat => {
+      const key = this.getCategoryKey(cat.name);
+      if (key) {
+        const catProducts = this.products.filter(p => {
+          const pCatId = p.category?.id || p.childCategory?.subcategory?.category?.id;
+          return pCatId === cat.id;
+        }).slice(0, 5);
+        
+        sectionsMap.set(key, {
+          categoryName: cat.name,
+          categoryId: cat.id,
+          products: catProducts
+        });
+      }
+    });
+    
+    const sections: any[] = [];
+    keysOrder.forEach(key => {
+      if (sectionsMap.has(key)) {
+        sections.push(sectionsMap.get(key));
+      }
+    });
+    this.categorySections = sections;
   }
 
   resolveCategoryHierarchy(): void {
@@ -1884,6 +1955,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
         this.currentPage = 1;
+        this.visiblePagesCount = 1;
+        this.buildCategorySections();
         this.isLoading = false;
       },
       error: () => this.isLoading = false
@@ -1899,6 +1972,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getProductsByCategory(categoryId).subscribe({
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
+        this.visiblePagesCount = 1;
         this.isLoading = false;
       },
       error: () => this.isLoading = false
@@ -1910,6 +1985,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getProductsBySubcategory(subcategoryId).subscribe({
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
+        this.visiblePagesCount = 1;
         this.isLoading = false;
       },
       error: () => this.isLoading = false
@@ -1921,6 +1998,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.getProductsByChildCategory(childCategoryId).subscribe({
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
+        this.visiblePagesCount = 1;
         this.isLoading = false;
       },
       error: () => this.isLoading = false
@@ -1933,6 +2012,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.productService.searchProducts(query).subscribe({
       next: (prods) => {
         this.products = prods.filter(p => p.isActive);
+        this.currentPage = 1;
+        this.visiblePagesCount = 1;
         this.isLoading = false;
       },
       error: () => this.isLoading = false

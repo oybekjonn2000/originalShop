@@ -572,7 +572,7 @@ import { OrderService } from '../../../services/order.service';
     /* Material Snackbar Toast */
     .mat-snackbar {
       position: fixed;
-      bottom: 2rem;
+      top: 50px;
       left: 50%;
       transform: translateX(-50%);
       min-width: 300px;
@@ -587,14 +587,14 @@ import { OrderService } from '../../../services/order.service';
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
       z-index: 99999;
-      animation: snackSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: snackSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .snack-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
     .snack-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.4);  color: #f87171; }
     .mat-snack-icon { display: flex; align-items: center; flex-shrink: 0; }
     .mat-snack-text { flex: 1; line-height: 1.4; }
-    @keyframes snackSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    @keyframes snackSlideDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 

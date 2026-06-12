@@ -341,6 +341,79 @@ import { ProductService } from '../../../services/product.service';
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important; border: none !important; }
     .btn-danger:hover { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important; box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important; transform: translateY(-2px); }
     @media (max-width: 640px) { .header-actions { flex-direction: column; align-items: stretch; } .categories-grid { grid-template-columns: 1fr; } }
+
+    /* ======= Pagination ======= */
+    .mat-paginator {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+      padding: 0.5rem 0;
+    }
+    .mat-paginator-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.6rem 1.25rem;
+      flex-wrap: wrap;
+    }
+    .mat-paginator-range-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 110px;
+    }
+    .mat-paginator-navigation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mat-icon-btn, .mat-page-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .mat-icon-btn:hover:not(:disabled), .mat-page-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      border-color: var(--glass-border);
+    }
+    .mat-icon-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .mat-page-btn.active {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+    }
+    .mat-paginator-page-size {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .mat-page-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   `]
 })
 export class ChildCategoriesComponent implements OnInit {

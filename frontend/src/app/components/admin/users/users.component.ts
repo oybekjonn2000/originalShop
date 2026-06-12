@@ -52,6 +52,29 @@ import { UserService, User } from '../../../services/user.service';
           </tbody>
         </table>
       </div>
+
+      <!-- Confirm Modal Overlay -->
+      <div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirm()">
+        <div class="modal-card glass-panel confirm-modal" (click)="$event.stopPropagation()">
+          <div class="confirm-header">
+            <div class="confirm-icon-wrap" [class.role-change]="confirmActionType === 'role'">
+              <svg *ngIf="confirmActionType === 'delete'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              
+              <svg *ngIf="confirmActionType === 'role'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </div>
+            <h2>{{ confirmTitle }}</h2>
+          </div>
+          <div class="confirm-body">
+            <p>{{ confirmMessage }}</p>
+          </div>
+          <div class="confirm-actions">
+            <button (click)="closeConfirm()" class="btn-secondary">Bekor qilish</button>
+            <button (click)="executeConfirm()" class="btn-primary" [class.btn-danger]="confirmActionType === 'delete'" [class.btn-primary-gradient]="confirmActionType === 'role'">
+              {{ confirmButtonText }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -97,10 +120,126 @@ import { UserService, User } from '../../../services/user.service';
       padding: 2rem !important;
       color: var(--text-secondary);
     }
+
+    /* Custom Confirmation Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 100px 1rem 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-card {
+      width: 90%;
+      max-width: 450px;
+      padding: 2.25rem 2.5rem;
+      border-radius: var(--border-radius-lg);
+      background: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: none !important;
+      animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    :host-context([data-theme="dark"]) .modal-card {
+      background: #0b0e14 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: none !important;
+    }
+
+    .confirm-modal {
+      text-align: center;
+    }
+
+    .confirm-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .confirm-header h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text-primary);
+    }
+
+    .confirm-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--danger-color);
+      margin: 0 auto;
+    }
+
+    .confirm-icon-wrap.role-change {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    .confirm-body p {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+      border: none !important;
+      color: white !important;
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
+      transform: translateY(-2px);
+    }
+
+    .btn-primary-gradient {
+      background: var(--primary-gradient) !important;
+      box-shadow: 0 4px 15px var(--primary-glow) !important;
+      border: none !important;
+      color: white !important;
+    }
+
+    .btn-primary-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--primary-glow) !important;
+      filter: brightness(1.08);
+    }
   `]
 })
 export class UsersComponent implements OnInit {
   users: User[] = [];
+
+  // Confirmation Modal State
+  showConfirmModal = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmButtonText = '';
+  confirmActionType: 'delete' | 'role' = 'delete';
+  targetUserId: number | null = null;
+  targetUserNewRole: string | null = null;
 
   constructor(private userService: UserService) {}
 
@@ -117,25 +256,59 @@ export class UsersComponent implements OnInit {
 
   toggleRole(user: User): void {
     const newRole = user.role === 'ROLE_ADMIN' ? 'ROLE_USER' : 'ROLE_ADMIN';
-    const action = newRole === 'ROLE_ADMIN' ? 'Admin qilishni' : 'Oddiy foydalanuvchi qilishni';
+    const actionText = newRole === 'ROLE_ADMIN' ? 'Admin qilish' : 'Oddiy foydalanuvchi qilish';
     
-    if (confirm(`Haqiqatan ham ushbu foydalanuvchini ${action} xohlaysizmi?`)) {
-      this.userService.changeUserRole(user.id, newRole).subscribe({
-        next: (updatedUser) => {
-          user.role = updatedUser.role;
-        },
-        error: (err) => console.error('Error changing role', err)
-      });
-    }
+    this.confirmActionType = 'role';
+    this.targetUserId = user.id;
+    this.targetUserNewRole = newRole;
+    this.confirmTitle = "Rolni o'zgartirish";
+    this.confirmMessage = `Haqiqatan ham ushbu foydalanuvchini ${actionText}ni xohlaysizmi?`;
+    this.confirmButtonText = "Tasdiqlash";
+    this.showConfirmModal = true;
   }
 
   deleteUser(id: number): void {
-    if (confirm("Rostdan ham bu foydalanuvchini tizimdan butunlay o'chirmoqchimisiz?")) {
-      this.userService.deleteUser(id).subscribe({
-        next: () => {
-          this.users = this.users.filter(u => u.id !== id);
+    this.confirmActionType = 'delete';
+    this.targetUserId = id;
+    this.confirmTitle = "O'chirishni tasdiqlang";
+    this.confirmMessage = "Rostdan ham bu foydalanuvchini tizimdan butunlay o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.";
+    this.confirmButtonText = "O'chirish";
+    this.showConfirmModal = true;
+  }
+
+  closeConfirm(): void {
+    this.showConfirmModal = false;
+    this.targetUserId = null;
+    this.targetUserNewRole = null;
+  }
+
+  executeConfirm(): void {
+    if (!this.targetUserId) return;
+
+    if (this.confirmActionType === 'role' && this.targetUserNewRole) {
+      this.userService.changeUserRole(this.targetUserId, this.targetUserNewRole).subscribe({
+        next: (updatedUser) => {
+          const user = this.users.find(u => u.id === this.targetUserId);
+          if (user) {
+            user.role = updatedUser.role;
+          }
+          this.closeConfirm();
         },
-        error: (err) => console.error('Error deleting user', err)
+        error: (err) => {
+          console.error('Error changing role', err);
+          this.closeConfirm();
+        }
+      });
+    } else if (this.confirmActionType === 'delete') {
+      this.userService.deleteUser(this.targetUserId).subscribe({
+        next: () => {
+          this.users = this.users.filter(u => u.id !== this.targetUserId);
+          this.closeConfirm();
+        },
+        error: (err) => {
+          console.error('Error deleting user', err);
+          this.closeConfirm();
+        }
       });
     }
   }

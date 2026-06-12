@@ -18,10 +18,20 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     <div class="home-container fade-in-el">
       <!-- Brands Reels Slider -->
       <section class="brands-reels-section" *ngIf="brands.length > 0">
-        <div class="brands-reels-container">
-          <div class="brand-item" *ngFor="let brand of brands" [routerLink]="['/catalog']" [queryParams]="{ brand: brand.id }">
-            <div class="brand-img-wrapper" [style.backgroundImage]="'url(' + (brand.imageUrl || 'assets/placeholder.png') + ')'"></div>
-            <span class="brand-name">{{ brand.name }}</span>
+        <div class="brands-marquee-wrapper">
+          <div class="brands-marquee-track">
+            <div class="brands-group">
+              <div class="brand-item" *ngFor="let brand of brands" [routerLink]="['/catalog']" [queryParams]="{ brand: brand.id }">
+                <div class="brand-img-wrapper" [style.backgroundImage]="'url(' + (brand.imageUrl || 'assets/placeholder.png') + ')'"></div>
+                <span class="brand-name">{{ brand.name }}</span>
+              </div>
+            </div>
+            <div class="brands-group">
+              <div class="brand-item" *ngFor="let brand of brands" [routerLink]="['/catalog']" [queryParams]="{ brand: brand.id }">
+                <div class="brand-img-wrapper" [style.backgroundImage]="'url(' + (brand.imageUrl || 'assets/placeholder.png') + ')'"></div>
+                <span class="brand-name">{{ brand.name }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -415,38 +425,45 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       position: relative;
     }
 
-    /* Brands Reels Styles */
+    /* Brands Reels Styles - Infinite scrolling marquee */
     .brands-reels-section {
-      margin-bottom: 1.5rem;
-      margin-top: 1rem;
+      margin-bottom: 2rem;
+      margin-top: 1.5rem;
       width: 100%;
+      overflow: hidden;
+      position: relative;
+      padding: 0.5rem 0;
     }
 
-    .brands-reels-container {
+    .brands-marquee-wrapper {
+      width: 100%;
+      overflow: hidden;
       display: flex;
-      gap: 1.5rem;
-      overflow-x: auto;
-      padding: 0.5rem 0.2rem 1rem 0.2rem;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
-      scroll-behavior: smooth;
     }
 
-    .brands-reels-container::-webkit-scrollbar {
-      height: 6px;
-    }
-    
-    .brands-reels-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    .brands-reels-container::-webkit-scrollbar-thumb {
-      background: rgba(168, 85, 247, 0.3);
-      border-radius: 10px;
+    .brands-marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marqueeScroll 25s linear infinite;
     }
 
-    .brands-reels-container::-webkit-scrollbar-thumb:hover {
-      background: rgba(168, 85, 247, 0.6);
+    .brands-marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    .brands-group {
+      display: flex;
+      gap: 2.25rem;
+      padding-right: 2.25rem;
+    }
+
+    @keyframes marqueeScroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
     }
 
     .brand-item {

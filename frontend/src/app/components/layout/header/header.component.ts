@@ -26,15 +26,15 @@ import { ProductService } from '../../../services/product.service';
         <a 
           href="javascript:void(0)"
           (click)="onCatalogClick($event)"
-          [class.active]="(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))"
+          [class.active]="(productService.isCatalogOpen$ | async)"
           class="nav-link catalog-header-btn" 
           title="Katalog"
         >
           <!-- Grid icon when closed -->
-          <svg *ngIf="!(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <svg *ngIf="!(productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           
           <!-- X icon when open -->
-          <svg *ngIf="router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg *ngIf="(productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           
           <span class="catalog-label">Katalog</span>
         </a>
@@ -195,14 +195,14 @@ import { ProductService } from '../../../services/product.service';
         <a 
           href="javascript:void(0)"
           (click)="onCatalogClick($event); closeMenu()"
-          [class.active]="(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))"
+          [class.active]="(productService.isCatalogOpen$ | async)"
           class="mobile-nav-link"
         >
           <!-- Grid icon when closed -->
-          <svg *ngIf="!(router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async))" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <svg *ngIf="!(productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           
           <!-- X icon when open -->
-          <svg *ngIf="router.url.split('?')[0] === '/' && (productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg *ngIf="(productService.isCatalogOpen$ | async)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           
           Katalog
         </a>
@@ -1008,14 +1008,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     this.showMegamenu = false;
-    if (this.router.url.split('?')[0] !== '/') {
-      this.router.navigate(['/']).then(() => {
-        this.productService.isCatalogOpen$.next(true);
-      });
-    } else {
-      const current = this.productService.isCatalogOpen$.value;
-      this.productService.isCatalogOpen$.next(!current);
-    }
+    const current = this.productService.isCatalogOpen$.value;
+    this.productService.isCatalogOpen$.next(!current);
   }
 
   toggleTheme(): void {

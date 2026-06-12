@@ -4,11 +4,12 @@ import { HeaderComponent } from './components/layout/header/header.component';
 import { FooterComponent } from './components/layout/footer/footer.component';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from './services/theme.service';
+import { CatalogPortalComponent } from './components/layout/catalog-portal/catalog-portal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, CommonModule],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, CommonModule, CatalogPortalComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

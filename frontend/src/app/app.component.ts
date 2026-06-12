@@ -42,4 +42,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.navSub) this.navSub.unsubscribe();
   }
+
+  get isAdminRoute(): boolean {
+    return this.router.url.startsWith('/admin');
+  }
 }

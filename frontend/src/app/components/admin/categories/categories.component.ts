@@ -63,6 +63,7 @@ import { ProductService } from '../../../services/product.service';
               <th>ID</th>
               <th>Kategoriya Nomi</th>
               <th>Tavsif</th>
+              <th>Shablon Atributlari</th>
               <th>Vaqt</th>
               <th>Amallar</th>
             </tr>
@@ -82,6 +83,14 @@ import { ProductService } from '../../../services/product.service';
               <td>
                 <span *ngIf="category.description; else noDesc">{{ category.description }}</span>
                 <ng-template #noDesc><span class="no-desc">Tavsif kiritilmagan</span></ng-template>
+              </td>
+              <td>
+                <div class="mini-tags" style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                  <span class="mini-tag" *ngFor="let attr of category.attributesTemplate" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 0.15rem 0.4rem; font-size: 0.75rem; border-radius: 4px;">
+                    {{ attr }}
+                  </span>
+                  <span *ngIf="!category.attributesTemplate || category.attributesTemplate.length === 0" style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">Mavjud emas</span>
+                </div>
               </td>
               <td class="time-col">
                 <div class="time-container" *ngIf="category.createdAt">
@@ -105,7 +114,7 @@ import { ProductService } from '../../../services/product.service';
               </td>
             </tr>
             <tr *ngIf="filteredCategories.length === 0">
-              <td colspan="5" class="empty-row">Kategoriyalar topilmadi</td>
+              <td colspan="6" class="empty-row">Kategoriyalar topilmadi</td>
             </tr>
           </tbody>
         </table>
@@ -176,6 +185,40 @@ import { ProductService } from '../../../services/product.service';
                 rows="3"
                 placeholder="Kategoriya haqida qisqacha ma'lumot..."
               ></textarea>
+            </div>
+
+            <!-- Spec Attributes Template -->
+            <div class="form-group">
+              <label class="glass-label">Xarakteristikalar Shablon Atributlari</label>
+              <div class="input-with-btn" style="display: flex; gap: 0.5rem;">
+                <input
+                  type="text"
+                  [(ngModel)]="newAttributeName"
+                  name="newAttr"
+                  class="glass-input"
+                  style="flex: 1;"
+                  placeholder="Masalan: Ekran o'lchami, RAM, SSD..."
+                  (keydown.enter)="$event.preventDefault(); addAttributeTemplate()"
+                />
+                <button type="button" class="btn-secondary" style="white-space: nowrap; padding: 0.6rem 1rem;" (click)="addAttributeTemplate()">Qo'shish</button>
+              </div>
+              <div class="attribute-tags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.5rem; background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 8px; align-items: center; margin-top: 0.5rem;">
+                <span 
+                  class="tag" 
+                  *ngFor="let attr of tempAttributes; let i = index" 
+                  draggable="true"
+                  (dragstart)="onDragStart(i, $event)"
+                  (dragover)="onDragOver(i, $event)"
+                  (drop)="onDrop(i, $event)"
+                  (dragend)="onDragEnd()"
+                  [style.opacity]="draggedIndex === i ? '0.4' : '1'"
+                  style="background: rgba(168, 85, 247, 0.12); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: grab;"
+                >
+                  {{ attr }}
+                  <span class="remove-tag" draggable="false" style="cursor: pointer; font-weight: bold; color: #ef4444; font-size: 1rem;" (click)="removeAttributeTemplate(i); $event.stopPropagation()">&times;</span>
+                </span>
+                <p class="empty-tags-text" *ngIf="tempAttributes.length === 0" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">Hozircha atribut shablonlari qo'shilmadi</p>
+              </div>
             </div>
 
             <!-- Image Upload -->
@@ -821,10 +864,15 @@ export class CategoriesComponent implements OnInit {
   toastType: 'snack-success' | 'snack-error' = 'snack-success';
   private toastTimer: any;
 
+  newAttributeName = '';
+  tempAttributes: string[] = [];
+  draggedIndex: number | null = null;
+
   form = {
     name: '',
     description: '',
-    imageUrl: ''
+    imageUrl: '',
+    attributesTemplate: [] as string[]
   };
 
   // Pagination
@@ -896,7 +944,9 @@ export class CategoriesComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', imageUrl: '' };
+    this.form = { name: '', description: '', imageUrl: '', attributesTemplate: [] };
+    this.tempAttributes = [];
+    this.newAttributeName = '';
     this.imagePreviewUrl = null;
     this.isUploading = false;
     this.errorMsg = '';
@@ -906,7 +956,14 @@ export class CategoriesComponent implements OnInit {
   openEditModal(category: any): void {
     this.isEditMode = true;
     this.editingId = category.id;
-    this.form = { name: category.name, description: category.description || '', imageUrl: category.imageUrl || '' };
+    this.form = { 
+      name: category.name, 
+      description: category.description || '', 
+      imageUrl: category.imageUrl || '',
+      attributesTemplate: category.attributesTemplate ? [...category.attributesTemplate] : []
+    };
+    this.tempAttributes = [...this.form.attributesTemplate];
+    this.newAttributeName = '';
     this.imagePreviewUrl = category.imageUrl || null;
     this.isUploading = false;
     this.errorMsg = '';
@@ -963,6 +1020,44 @@ export class CategoriesComponent implements OnInit {
     });
   }
 
+  addAttributeTemplate(): void {
+    const val = this.newAttributeName.trim();
+    if (val && !this.tempAttributes.includes(val)) {
+      this.tempAttributes.push(val);
+      this.newAttributeName = '';
+    }
+  }
+
+  removeAttributeTemplate(index: number): void {
+    this.tempAttributes.splice(index, 1);
+  }
+
+  onDragStart(index: number, event: DragEvent): void {
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  onDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onDrop(index: number, event: DragEvent): void {
+    event.preventDefault();
+    if (this.draggedIndex !== null && this.draggedIndex !== index) {
+      const movedItem = this.tempAttributes[this.draggedIndex];
+      this.tempAttributes.splice(this.draggedIndex, 1);
+      this.tempAttributes.splice(index, 0, movedItem);
+    }
+    this.draggedIndex = null;
+  }
+
+  onDragEnd(): void {
+    this.draggedIndex = null;
+  }
+
   saveCategory(): void {
     if (!this.form.name.trim()) {
       this.errorMsg = 'Kategoriya nomi bo\'sh bo\'lishi mumkin emas!';
@@ -975,7 +1070,8 @@ export class CategoriesComponent implements OnInit {
     const payload = { 
       name: this.form.name.trim(), 
       description: this.form.description.trim(),
-      imageUrl: this.form.imageUrl.trim()
+      imageUrl: this.form.imageUrl.trim(),
+      attributesTemplate: [...this.tempAttributes]
     };
 
     const request$ = this.isEditMode && this.editingId

@@ -32,6 +32,7 @@ public class CategoryService {
         category.setName(categoryDetails.getName());
         category.setDescription(categoryDetails.getDescription());
         category.setImageUrl(categoryDetails.getImageUrl());
+        category.setAttributesTemplate(categoryDetails.getAttributesTemplate());
         return categoryRepository.save(category);
     }
 

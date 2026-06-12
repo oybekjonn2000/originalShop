@@ -31,6 +31,12 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private java.util.List<Subcategory> subcategories = new java.util.ArrayList<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "category_attributes_templates", joinColumns = @JoinColumn(name = "category_id"))
+    @Column(name = "attribute_name")
+    @Builder.Default
+    private java.util.List<String> attributesTemplate = new java.util.ArrayList<>();
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -90,6 +90,7 @@ public class ProductService {
         product.setIsActive(productDetails.getIsActive());
         product.setDiscount(productDetails.getDiscount());
         product.setFullDescription(productDetails.getFullDescription());
+        product.setCharacteristics(productDetails.getCharacteristics());
 
         if (productDetails.getChildCategory() != null && productDetails.getChildCategory().getId() != null) {
             ChildCategory childCategory = childCategoryRepository.findById(productDetails.getChildCategory().getId())

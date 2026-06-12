@@ -58,58 +58,54 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    loadComponent: () => import('./components/admin/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/products',
-    loadComponent: () => import('./components/admin/products/products.component').then(m => m.ProductsComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/categories',
-    loadComponent: () => import('./components/admin/categories/categories.component').then(m => m.CategoriesComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/subcategories',
-    loadComponent: () => import('./components/admin/subcategories/subcategories.component').then(m => m.SubcategoriesComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/child-categories',
-    loadComponent: () => import('./components/admin/child-categories/child-categories.component').then(m => m.ChildCategoriesComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/brands',
-    loadComponent: () => import('./components/admin/brands/brands.component').then(m => m.BrandsComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/orders',
-    loadComponent: () => import('./components/admin/orders/orders.component').then(m => m.OrdersComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/messages',
-    loadComponent: () => import('./components/admin/messages/messages.component').then(m => m.MessagesComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/users',
-    loadComponent: () => import('./components/admin/users/users.component').then(m => m.UsersComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/reviews',
-    loadComponent: () => import('./components/admin/reviews/reviews.component').then(m => m.ReviewsComponent),
-    canActivate: [authGuard, adminGuard]
-  },
-  {
-    path: 'admin/banner-control',
-    loadComponent: () => import('./components/admin/banner-control/banner-control.component').then(m => m.BannerControlComponent),
-    canActivate: [authGuard, adminGuard]
+    loadComponent: () => import('./components/admin/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
+    canActivate: [authGuard, adminGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./components/admin/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./components/admin/products/products.component').then(m => m.ProductsComponent)
+      },
+      {
+        path: 'categories',
+        loadComponent: () => import('./components/admin/categories/categories.component').then(m => m.CategoriesComponent)
+      },
+      {
+        path: 'subcategories',
+        loadComponent: () => import('./components/admin/subcategories/subcategories.component').then(m => m.SubcategoriesComponent)
+      },
+      {
+        path: 'child-categories',
+        loadComponent: () => import('./components/admin/child-categories/child-categories.component').then(m => m.ChildCategoriesComponent)
+      },
+      {
+        path: 'brands',
+        loadComponent: () => import('./components/admin/brands/brands.component').then(m => m.BrandsComponent)
+      },
+      {
+        path: 'orders',
+        loadComponent: () => import('./components/admin/orders/orders.component').then(m => m.OrdersComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./components/admin/messages/messages.component').then(m => m.MessagesComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./components/admin/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'reviews',
+        loadComponent: () => import('./components/admin/reviews/reviews.component').then(m => m.ReviewsComponent)
+      },
+      {
+        path: 'banner-control',
+        loadComponent: () => import('./components/admin/banner-control/banner-control.component').then(m => m.BannerControlComponent)
+      }
+    ]
   },
   {
     path: 'wishlist',

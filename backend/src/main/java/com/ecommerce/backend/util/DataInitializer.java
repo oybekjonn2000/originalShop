@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Component
 @Slf4j
@@ -32,6 +34,8 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+
 
     @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
@@ -74,16 +78,19 @@ public class DataInitializer implements CommandLineRunner {
             Category smartfonlar = Category.builder()
                     .name("Smartfonlar")
                     .description("Eng so'nggi rusumdagi telefonlar va smartfonlar")
+                    .attributesTemplate(Arrays.asList("Ekran o'lchami", "Operativ xotira (RAM)", "Ichki xotira", "Kamera", "Batareya hajmi"))
                     .build();
 
             Category noutbuklar = Category.builder()
                     .name("Noutbuklar")
                     .description("O'qish, ish va o'yinlar uchun kuchli noutbuklar")
+                    .attributesTemplate(Arrays.asList("Ekran", "Protsessor", "RAM", "SSD/HDD hajmi", "Videokarta"))
                     .build();
 
             Category aksessuarlar = Category.builder()
                     .name("Aksessuarlar")
                     .description("Quloqchinlar, sichqonchalar va boshqa qo'shimcha qurilmalar")
+                    .attributesTemplate(Arrays.asList("Ulanish turi", "Kabel uzunligi", "Rang"))
                     .build();
 
             categoryRepository.saveAll(Arrays.asList(smartfonlar, noutbuklar, aksessuarlar));
@@ -175,6 +182,13 @@ public class DataInitializer implements CommandLineRunner {
                     .filter(c -> c.getName().equals("Logitech sichqonchalar")).findFirst().orElse(null);
 
             if (appleSmart != null) {
+                Map<String, String> iphoneSpecs = new HashMap<>();
+                iphoneSpecs.put("Ekran o'lchami", "6.7 inchi Super Retina XDR OLED");
+                iphoneSpecs.put("Operativ xotira (RAM)", "8 GB");
+                iphoneSpecs.put("Ichki xotira", "256 GB");
+                iphoneSpecs.put("Kamera", "48 MP + 12 MP + 12 MP");
+                iphoneSpecs.put("Batareya hajmi", "4441 mA/soat");
+
                 productRepository.save(Product.builder()
                         .name("iPhone 15 Pro Max")
                         .description("Titan korpus, A17 Pro super chip, 5x optik yaqinlashtiruvchi kamera va o'ta tiniq displey. 256GB xotira bilan jihozlangan premium smartfon.")
@@ -183,10 +197,18 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(15)
                         .childCategory(appleSmart)
                         .isActive(true)
+                        .characteristics(iphoneSpecs)
                         .build());
             }
 
             if (samsungSmart != null) {
+                Map<String, String> samsungSpecs = new HashMap<>();
+                samsungSpecs.put("Ekran o'lchami", "6.8 inchi Dynamic AMOLED 2X");
+                samsungSpecs.put("Operativ xotira (RAM)", "12 GB");
+                samsungSpecs.put("Ichki xotira", "512 GB");
+                samsungSpecs.put("Kamera", "200 MP + 50 MP + 12 MP + 10 MP");
+                samsungSpecs.put("Batareya hajmi", "5000 mA/soat");
+
                 productRepository.save(Product.builder()
                         .name("Samsung Galaxy S24 Ultra")
                         .description("Galaxy AI intellektual yordamchisi, 200MP ultra-kamera, o'rnatilgan S-Pen stilus va titanium korpusga ega eng so'nggi flagman.")
@@ -195,10 +217,18 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(12)
                         .childCategory(samsungSmart)
                         .isActive(true)
+                        .characteristics(samsungSpecs)
                         .build());
             }
 
             if (macbookPro != null) {
+                Map<String, String> macSpecs = new HashMap<>();
+                macSpecs.put("Ekran", "16.2 inchi Liquid Retina XDR");
+                macSpecs.put("Protsessor", "Apple M3 Max (16-core CPU)");
+                macSpecs.put("RAM", "36 GB");
+                macSpecs.put("SSD/HDD hajmi", "1 TB SSD");
+                macSpecs.put("Videokarta", "Apple 40-core GPU");
+
                 productRepository.save(Product.builder()
                         .name("MacBook Pro 16 M3 Max")
                         .description("Apple M3 Max super chipi, 36GB birlashgan xotira, 1TB tezkor SSD. Grafika ustasi va dasturchilar uchun eng mukammal ish quroli.")
@@ -207,10 +237,18 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(8)
                         .childCategory(macbookPro)
                         .isActive(true)
+                        .characteristics(macSpecs)
                         .build());
             }
 
             if (asusRog != null) {
+                Map<String, String> asusSpecs = new HashMap<>();
+                asusSpecs.put("Ekran", "14 inchi ROG Nebula Display QHD+ OLED 120Hz");
+                asusSpecs.put("Protsessor", "AMD Ryzen 9 8945HS");
+                asusSpecs.put("RAM", "32 GB LPDDR5X");
+                asusSpecs.put("SSD/HDD hajmi", "1 TB PCIe 4.0 NVMe M.2");
+                asusSpecs.put("Videokarta", "NVIDIA GeForce RTX 4070");
+
                 productRepository.save(Product.builder()
                         .name("ASUS ROG Zephyrus G14")
                         .description("AMD Ryzen 9, RTX 4070 grafika, 120Hz OLED o'yin displeyi. Yengil, ammo o'ta baquvvat o'yin noutbuki.")
@@ -219,10 +257,16 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(5)
                         .childCategory(asusRog)
                         .isActive(true)
+                        .characteristics(asusSpecs)
                         .build());
             }
 
             if (airpods != null) {
+                Map<String, String> airpodsSpecs = new HashMap<>();
+                airpodsSpecs.put("Ulanish turi", "Simsiz (Bluetooth 5.3)");
+                airpodsSpecs.put("Kabel uzunligi", "Simsiz zaryadlash keysi (USB-C)");
+                airpodsSpecs.put("Rang", "Oq (White)");
+
                 productRepository.save(Product.builder()
                         .name("Apple AirPods Pro 2")
                         .description("Active Noise Cancellation shovqinni kamaytirish tizimi, Adaptive Audio rejami, 6 soatgacha uzluksiz ishlaydigan quloqchin.")
@@ -231,10 +275,16 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(30)
                         .childCategory(airpods)
                         .isActive(true)
+                        .characteristics(airpodsSpecs)
                         .build());
             }
 
             if (logitechMouse != null) {
+                Map<String, String> mouseSpecs = new HashMap<>();
+                mouseSpecs.put("Ulanish turi", "Simsiz (Logi Bolt yoki Bluetooth)");
+                mouseSpecs.put("Kabel uzunligi", "Zaryadlash uchun USB-C kabeli");
+                mouseSpecs.put("Rang", "Grafit qora (Graphite)");
+
                 productRepository.save(Product.builder()
                         .name("Logitech MX Master 3S")
                         .description("Ergonomik dizayn, 8K DPI datchik, har qanday yuzada ishlay oladigan va deyarli ovozsiz kliklanadigan professional simsiz sichqoncha.")
@@ -243,6 +293,7 @@ public class DataInitializer implements CommandLineRunner {
                         .stockQuantity(25)
                         .childCategory(logitechMouse)
                         .isActive(true)
+                        .characteristics(mouseSpecs)
                         .build());
             }
 
@@ -271,6 +322,8 @@ public class DataInitializer implements CommandLineRunner {
             log.warn("Mahsulotlarni migratsiya qilishda xatolik (Bu xatolikka e'tibor bermasa ham bo'ladi): {}", e.getMessage());
         }
         
+
+
         log.info("Dastlabki ma'lumotlar to'liq tekshirildi.");
     }
 }

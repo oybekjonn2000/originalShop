@@ -131,6 +131,29 @@ import { ReviewService } from '../../services/review.service';
         <div class="full-description-content" [innerHTML]="product.fullDescription" style="white-space: pre-wrap;"></div>
       </div>
 
+      <!-- Specifications Section -->
+      <div class="specifications-section glass-panel fade-in-el" *ngIf="product.characteristics && hasCharacteristics(product.characteristics)" style="margin-top: 2rem; padding: 2.5rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.02) 100%); border: 1px solid var(--glass-border); border-radius: var(--border-radius-lg);">
+        <h2 class="description-section-title" style="border-left: 4px solid var(--primary-color); padding-left: 1rem; font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem;">Xususiyatlari (Xarakteristikalari)</h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+            <tbody>
+              <tr *ngFor="let entry of (showAllCharacteristics ? getCharacteristicsList(product.characteristics) : getCharacteristicsList(product.characteristics).slice(0, 6))" style="border-bottom: 1px solid var(--glass-border);">
+                <td style="padding: 1rem; font-weight: 600; color: var(--text-secondary); width: 35%;">{{ entry.key }}</td>
+                <td style="padding: 1rem; color: var(--text-primary);">{{ entry.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="getCharacteristicsList(product.characteristics).length > 6" style="text-align: center; margin-top: 1.5rem;">
+          <button (click)="toggleCharacteristics()" class="btn-show-more">
+            <span>{{ showAllCharacteristics ? "Kamroq" : "Ko'proq" }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" [style.transform]="showAllCharacteristics ? 'rotate(180deg)' : 'rotate(0deg)'" style="transition: transform 0.3s ease;">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Reviews Section (Sharhlar) -->
       <div class="reviews-section glass-panel fade-in-el" style="margin-top: 3rem; padding: 3rem; border-radius: var(--border-radius-lg); border: 1px solid var(--glass-border); background: linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.02) 100%);">
         <h2 class="section-title" style="border-left: 4px solid var(--primary-color);">Mijozlar sharhlari ({{ reviews.length }})</h2>
@@ -989,6 +1012,28 @@ import { ReviewService } from '../../services/review.service';
       from { opacity: 0; transform: translateX(-50%) translateY(20px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
+
+    .btn-show-more {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: var(--primary-color);
+      padding: 0.6rem 2rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-show-more:hover {
+      background: rgba(0, 242, 254, 0.08);
+      border-color: rgba(0, 242, 254, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 242, 254, 0.15);
+    }
   `]
 })
 export class ProductDetailComponent implements OnInit {
@@ -1007,6 +1052,7 @@ export class ProductDetailComponent implements OnInit {
   isSubmittingReview = false;
   rating = 5;
   stars = [1, 2, 3, 4, 5];
+  showAllCharacteristics = false;
 
   // Admin reply states
   replyingToReviewId: number | null = null;
@@ -1123,6 +1169,7 @@ export class ProductDetailComponent implements OnInit {
     this.isLoading = true;
     this.activeImageIndex = 0;
     this.addedToCart = false;
+    this.showAllCharacteristics = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.productService.getProductById(id).subscribe({
       next: (prod) => {
@@ -1380,5 +1427,45 @@ export class ProductDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  hasCharacteristics(charObj: any): boolean {
+    if (!charObj) return false;
+    return Object.keys(charObj).length > 0;
+  }
+
+  getCharacteristicsList(charObj: any): { key: string, value: string }[] {
+    if (!charObj) return [];
+    const list = Object.keys(charObj).map(k => ({ key: k, value: charObj[k] }));
+    const template = this.product?.childCategory?.subcategory?.category?.attributesTemplate 
+      || this.product?.subcategory?.category?.attributesTemplate 
+      || this.product?.category?.attributesTemplate 
+      || [];
+      
+    if (template && template.length > 0) {
+      const sortedList: { key: string, value: string }[] = [];
+      const usedKeys = new Set<string>();
+      
+      template.forEach((tName: string) => {
+        const found = list.find(item => item.key.toLowerCase() === tName.toLowerCase());
+        if (found) {
+          sortedList.push(found);
+          usedKeys.add(found.key);
+        }
+      });
+      
+      list.forEach(item => {
+        if (!usedKeys.has(item.key)) {
+          sortedList.push(item);
+        }
+      });
+      
+      return sortedList;
+    }
+    return list;
+  }
+
+  toggleCharacteristics(): void {
+    this.showAllCharacteristics = !this.showAllCharacteristics;
   }
 }

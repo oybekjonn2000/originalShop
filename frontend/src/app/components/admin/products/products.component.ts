@@ -254,6 +254,25 @@ import { BrandService } from '../../../services/brand.service';
                   <span>Mahsulot faol (katalogda ko'rinsin)</span>
                 </label>
               </div>
+
+              <!-- DYNAMIC ATTRIBUTES AREA -->
+              <div *ngIf="selectedAttributes.length > 0" class="dynamic-section" style="margin-top: 1rem; padding: 1rem; border: 1px dashed rgba(168, 85, 247, 0.3); border-radius: 12px; background: rgba(168, 85, 247, 0.02);">
+                <h4 style="margin-top: 0; margin-bottom: 0.75rem; color: #a855f7; font-weight: 700; font-size: 0.9rem;">Kategoriya Xarakteristikalari</h4>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.85rem;">
+                  <div class="form-group" *ngFor="let attr of selectedAttributes">
+                    <label class="glass-label" [for]="'dyn_' + attr">{{ attr }} *</label>
+                    <input 
+                      [id]="'dyn_' + attr"
+                      type="text" 
+                      [(ngModel)]="form.characteristics[attr]"
+                      [name]="'dyn_' + attr"
+                      class="glass-input" 
+                      [placeholder]="attr + ' qiymati...'"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Right Column: textareas & images -->
@@ -1017,6 +1036,7 @@ export class ProductsComponent implements OnInit {
   private toastTimer: any;
 
   allImageUrls: string[] = [];
+  selectedAttributes: string[] = [];
 
   form = {
     name: '',
@@ -1031,7 +1051,8 @@ export class ProductsComponent implements OnInit {
     subcategoryId: null as number | null,
     childCategoryId: null as number | null,
     brandId: null as number | null,
-    isActive: true
+    isActive: true,
+    characteristics: {} as { [key: string]: string }
   };
 
   subcategories: any[] = [];
@@ -1127,7 +1148,23 @@ export class ProductsComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', fullDescription: '', price: 0, discount: 0, stockQuantity: 0, imageUrl: '', imageUrls: [], categoryId: null, subcategoryId: null, childCategoryId: null, brandId: null, isActive: true };
+    this.form = {
+      name: '',
+      description: '',
+      fullDescription: '',
+      price: 0,
+      discount: 0,
+      stockQuantity: 0,
+      imageUrl: '',
+      imageUrls: [],
+      categoryId: null,
+      subcategoryId: null,
+      childCategoryId: null,
+      brandId: null,
+      isActive: true,
+      characteristics: {}
+    };
+    this.selectedAttributes = [];
     this.filteredSubcategories = [];
     this.filteredChildCategories = [];
     this.imagePreviewUrl = null;
@@ -1151,8 +1188,23 @@ export class ProductsComponent implements OnInit {
       subcategoryId: product.childCategory?.subcategory?.id || product.subcategory?.id || null,
       childCategoryId: product.childCategory?.id || null,
       brandId: product.brand?.id || null,
-      isActive: product.isActive
+      isActive: product.isActive,
+      characteristics: product.characteristics ? { ...product.characteristics } : {}
     };
+    // Load spec attributes template
+    this.selectedAttributes = [];
+    if (this.form.categoryId) {
+      const cat = this.categories.find(c => c.id === this.form.categoryId);
+      if (cat && cat.attributesTemplate) {
+        this.selectedAttributes = cat.attributesTemplate;
+        // Make sure all attributes exist in form.characteristics
+        this.selectedAttributes.forEach(attr => {
+          if (!(attr in this.form.characteristics)) {
+            this.form.characteristics[attr] = '';
+          }
+        });
+      }
+    }
     // Load subcategories for existing category
     if (this.form.categoryId) {
       this.filteredSubcategories = this.subcategories.filter(s => s.category?.id === this.form.categoryId);
@@ -1181,6 +1233,7 @@ export class ProductsComponent implements OnInit {
     this.showModal = false;
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
+    this.selectedAttributes = [];
   }
 
   onCategoryChange(): void {
@@ -1188,6 +1241,19 @@ export class ProductsComponent implements OnInit {
     this.form.childCategoryId = null;
     this.filteredSubcategories = [];
     this.filteredChildCategories = [];
+    // Resolve dynamic spec attributes template
+    this.selectedAttributes = [];
+    if (this.form.categoryId) {
+      const cat = this.categories.find(c => c.id === this.form.categoryId);
+      if (cat && cat.attributesTemplate) {
+        this.selectedAttributes = cat.attributesTemplate;
+        this.selectedAttributes.forEach(attr => {
+          if (!(attr in this.form.characteristics)) {
+            this.form.characteristics[attr] = '';
+          }
+        });
+      }
+    }
     if (this.form.categoryId) {
       this.productService.getSubcategoriesByCategory(this.form.categoryId).subscribe({
         next: (data) => {
@@ -1342,7 +1408,8 @@ export class ProductsComponent implements OnInit {
       imageUrls: this.form.imageUrls,
       isActive: this.form.isActive,
       childCategory: { id: this.form.childCategoryId },
-      brand: this.form.brandId ? { id: this.form.brandId } : null
+      brand: this.form.brandId ? { id: this.form.brandId } : null,
+      characteristics: this.form.characteristics
     };
 
     const request$ = this.isEditMode && this.editingId

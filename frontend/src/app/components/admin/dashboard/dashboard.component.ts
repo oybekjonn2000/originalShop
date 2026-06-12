@@ -63,97 +63,97 @@ import { AuthService } from '../../../services/auth.service';
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="quick-actions-section">
-        <h2 class="section-title">Tezkor Amallar</h2>
-        <div class="actions-grid">
-          <a routerLink="/admin/products" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </div>
-            <h3>Yangi Mahsulot</h3>
-            <p>Katalogga yangi mahsulot qo'shing</p>
-          </a>
+      <!-- Charts Section -->
+      <div class="charts-section" style="display: grid; grid-template-columns: 2fr 1.1fr; gap: 2rem; margin-bottom: 3rem;">
+        <!-- Sales Area Chart -->
+        <div class="chart-card glass-panel" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Sotuvlar Dinamikasi (Oxirgi 6 oy)</h3>
+            <span style="font-size: 0.82rem; font-weight: 600; color: #a855f7; background: rgba(168, 85, 247, 0.1); padding: 4px 10px; border-radius: 50px;">Daromad o'sishi</span>
+          </div>
+          <!-- SVG Line/Area Graph -->
+          <div class="svg-container" style="position: relative; height: 260px; width: 100%;">
+            <svg viewBox="0 0 600 240" width="100%" height="100%" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                </linearGradient>
+                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#a855f7"/>
+                  <stop offset="100%" stop-color="#3b82f6"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid lines -->
+              <line x1="40" y1="30" x2="580" y2="30" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              <line x1="40" y1="90" x2="580" y2="90" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              <line x1="40" y1="150" x2="580" y2="150" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              <line x1="40" y1="210" x2="580" y2="210" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              
+              <!-- Y Axis labels -->
+              <text x="30" y="35" font-size="10" fill="var(--text-secondary)" text-anchor="end">{{ yAxisLabelTop }}</text>
+              <text x="30" y="95" font-size="10" fill="var(--text-secondary)" text-anchor="end">{{ yAxisLabelMiddle }}</text>
+              <text x="30" y="155" font-size="10" fill="var(--text-secondary)" text-anchor="end">{{ yAxisLabelLower }}</text>
+              <text x="30" y="215" font-size="10" fill="var(--text-secondary)" text-anchor="end">0</text>
+              
+              <!-- X Axis labels (Months) -->
+              <text *ngFor="let p of salesTrendPoints" [attr.x]="p.x" y="235" font-size="11" fill="var(--text-secondary)" text-anchor="middle">{{ p.name }}</text>
+              
+              <!-- Area -->
+              <path *ngIf="salesTrendAreaPath" [attr.d]="salesTrendAreaPath" fill="url(#areaGradient)"/>
+              
+              <!-- Line -->
+              <path *ngIf="salesTrendLinePath" [attr.d]="salesTrendLinePath" fill="none" stroke="url(#lineGradient)" stroke-width="3.5" stroke-linecap="round"/>
+              
+              <!-- Data Points -->
+              <circle *ngFor="let p of salesTrendPoints; let idx = index" [attr.cx]="p.x" [attr.cy]="p.y" r="5" [attr.fill]="idx % 2 === 0 ? '#a855f7' : '#3b82f6'" stroke="#fff" stroke-width="2">
+                <title>{{ p.name }}: {{ p.revenue | number:'1.0-0' }} so'm</title>
+              </circle>
+            </svg>
+          </div>
+        </div>
 
-          <a routerLink="/admin/categories" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <!-- Order Status Donut Chart -->
+        <div class="chart-card glass-panel" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-content: center;">
+          <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; align-self: flex-start;">Buyurtmalar Statusi</h3>
+          
+          <div style="position: relative; width: 160px; height: 160px;">
+            <svg width="100%" height="100%" viewBox="0 0 42 42" style="transform: rotate(-90deg);">
+              <!-- Donut background -->
+              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"></circle>
+              <!-- Delivered (Green) -->
+              <circle *ngIf="deliveredPct > 0" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#10b981" stroke-width="4" [attr.stroke-dasharray]="deliveredDashArray" [attr.stroke-dashoffset]="deliveredDashOffset"></circle>
+              <!-- Processing/Shipped (Blue) -->
+              <circle *ngIf="processingPct > 0" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#3b82f6" stroke-width="4" [attr.stroke-dasharray]="processingDashArray" [attr.stroke-dashoffset]="processingDashOffset"></circle>
+              <!-- Pending (Orange) -->
+              <circle *ngIf="pendingPct > 0" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#f59e0b" stroke-width="4" [attr.stroke-dasharray]="pendingDashArray" [attr.stroke-dashoffset]="pendingDashOffset"></circle>
+              <!-- Cancelled (Red) -->
+              <circle *ngIf="cancelledPct > 0" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#ef4444" stroke-width="4" [attr.stroke-dasharray]="cancelledDashArray" [attr.stroke-dashoffset]="cancelledDashOffset"></circle>
+            </svg>
+            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-heading); color: var(--text-primary);">{{ totalOrders }}</span>
+              <span style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Jami</span>
             </div>
-            <h3>Kategoriyalar</h3>
-            <p>Asosiy kategoriyalarni boshqaring</p>
-          </a>
-
-          <a routerLink="/admin/subcategories" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #f43f5e, #fb923c);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; width: 100%; margin-top: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+              <span style="color: var(--text-secondary);">Yetkazilgan: {{ deliveredPct }}% ({{ deliveredCount }})</span>
             </div>
-            <h3>Subkategoriyalar</h3>
-            <p>Ichki kategoriyalarni boshqaring</p>
-          </a>
-
-          <a routerLink="/admin/child-categories" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8M12 10H8.5c-1.5 0-3 1.5-3 3v9M12 10h3.5c1.5 0 3 1.5 3 3v9"/></svg>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; display: inline-block;"></span>
+              <span style="color: var(--text-secondary);">Jarayonda: {{ processingPct }}% ({{ processingCount }})</span>
             </div>
-            <h3>Child Kategoriyalar</h3>
-            <p>Child kategoriyalarni boshqaring</p>
-          </a>
-
-          <a routerLink="/admin/brands" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #22c55e, #10b981);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 0 1-8 0"></path><line x1="12" y1="8" x2="12" y2="16"></line></svg>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+              <span style="color: var(--text-secondary);">Kutilayotgan: {{ pendingPct }}% ({{ pendingCount }})</span>
             </div>
-            <h3>Brandlar</h3>
-            <p>Brandlarni boshqaring</p>
-          </a>
-
-          <a routerLink="/admin/orders" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #f59e0b, #f76b1c);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+              <span style="color: var(--text-secondary);">Bekor qilingan: {{ cancelledPct }}% ({{ cancelledCount }})</span>
             </div>
-            <h3>Buyurtmalar</h3>
-            <p>Buyurtmalar statusini yangilang</p>
-          </a>
-
-          <a routerLink="/admin/banner-control" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            </div>
-            <h3>Bannerlar</h3>
-            <p>Bosh sahifa bannerlarini boshqarish</p>
-          </a>
-
-          <a routerLink="/" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            </div>
-            <h3>Magazinga qaytish</h3>
-            <p>Foydalanuvchi ko'rinishiga o'ting</p>
-          </a>
-
-          <a routerLink="/admin/messages" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            </div>
-            <h3>Xabarlar</h3>
-            <p>Foydalanuvchilar murojaatlari</p>
-          </a>
-
-          <a routerLink="/admin/users" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <h3>Foydalanuvchilar</h3>
-            <p>Mijozlar va adminlar ro'yxati</p>
-          </a>
-
-          <a routerLink="/admin/reviews" class="action-card glass-panel">
-            <div class="action-icon" style="background: linear-gradient(135deg, #fb7185, #f43f5e);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            </div>
-            <h3>Sharhlar</h3>
-            <p>Mijozlar tomonidan yozilgan sharhlar</p>
-          </a>
+          </div>
         </div>
       </div>
 
@@ -387,11 +387,51 @@ export class DashboardComponent implements OnInit {
   adminName = '';
   currentDate = new Date();
 
+  // Donut chart status counts
+  deliveredCount = 0;
+  processingCount = 0;
+  pendingCount = 0;
+  cancelledCount = 0;
+
+  // Donut chart status percentages
+  deliveredPct = 0;
+  processingPct = 0;
+  pendingPct = 0;
+  cancelledPct = 0;
+
+  // Donut chart SVG rendering dash parameters
+  deliveredDashArray = '0 100';
+  deliveredDashOffset = 0;
+  processingDashArray = '0 100';
+  processingDashOffset = 0;
+  pendingDashArray = '0 100';
+  pendingDashOffset = 0;
+  cancelledDashArray = '0 100';
+  cancelledDashOffset = 0;
+
+  // Sales trend chart parameters
+  salesTrendPoints: { x: number; y: number; name: string; revenue: number }[] = [];
+  salesTrendLinePath = '';
+  salesTrendAreaPath = '';
+  yAxisLabelTop = '20M';
+  yAxisLabelMiddle = '10M';
+  yAxisLabelLower = '5M';
+
   constructor(
     private productService: ProductService,
     private orderService: OrderService,
     private authService: AuthService
   ) {}
+
+  formatShortRevenue(val: number): string {
+    if (val >= 1000000) {
+      return (val / 1000000).toFixed(1).replace('.0', '') + 'M';
+    }
+    if (val >= 1000) {
+      return (val / 1000).toFixed(1).replace('.0', '') + 'K';
+    }
+    return val.toString();
+  }
 
   ngOnInit(): void {
     const user = this.authService.currentUserValue;
@@ -403,7 +443,103 @@ export class DashboardComponent implements OnInit {
 
     this.orderService.getAllOrders().subscribe(orders => {
       this.totalOrders = orders.length;
-      this.pendingOrders = orders.filter(o => o.status === 'PENDING').length;
+      
+      // Calculate individual counts
+      this.deliveredCount = orders.filter(o => o.status === 'DELIVERED').length;
+      this.processingCount = orders.filter(o => o.status === 'PROCESSING' || o.status === 'SHIPPED').length;
+      this.pendingCount = orders.filter(o => o.status === 'PENDING').length;
+      this.cancelledCount = orders.filter(o => o.status === 'CANCELLED').length;
+      
+      // Group other statuses as processing
+      const matched = this.deliveredCount + this.processingCount + this.pendingCount + this.cancelledCount;
+      if (matched < this.totalOrders) {
+        this.processingCount += (this.totalOrders - matched);
+      }
+
+      // Calculate percentages dynamically
+      if (this.totalOrders > 0) {
+        this.deliveredPct = Math.round((this.deliveredCount / this.totalOrders) * 100);
+        this.processingPct = Math.round((this.processingCount / this.totalOrders) * 100);
+        this.pendingPct = Math.round((this.pendingCount / this.totalOrders) * 100);
+        this.cancelledPct = 100 - (this.deliveredPct + this.processingPct + this.pendingPct);
+        if (this.cancelledPct < 0) this.cancelledPct = 0;
+      } else {
+        this.deliveredPct = 0;
+        this.processingPct = 0;
+        this.pendingPct = 0;
+        this.cancelledPct = 0;
+      }
+
+      // Set SVG sector lengths
+      this.deliveredDashArray = `${this.deliveredPct} ${100 - this.deliveredPct}`;
+      this.deliveredDashOffset = 0;
+
+      this.processingDashArray = `${this.processingPct} ${100 - this.processingPct}`;
+      this.processingDashOffset = -this.deliveredPct;
+
+      this.pendingDashArray = `${this.pendingPct} ${100 - this.pendingPct}`;
+      this.pendingDashOffset = -(this.deliveredPct + this.processingPct);
+
+      this.cancelledDashArray = `${this.cancelledPct} ${100 - this.cancelledPct}`;
+      this.cancelledDashOffset = -(this.deliveredPct + this.processingPct + this.pendingPct);
+
+      // --- Calculate Sales Trend Dynamics dynamically ---
+      const MONTH_NAMES_UZ = [
+        'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+        'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+      ];
+      const now = new Date();
+      const monthsData: { year: number; month: number; name: string; revenue: number }[] = [];
+      
+      // Get last 6 months in chronological order
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        monthsData.push({
+          year: d.getFullYear(),
+          month: d.getMonth(),
+          name: MONTH_NAMES_UZ[d.getMonth()],
+          revenue: 0
+        });
+      }
+
+      // Aggregate revenue (excluding cancelled orders)
+      orders.forEach((o: any) => {
+        if (o.status === 'CANCELLED') return;
+        const orderDate = new Date(o.orderDate);
+        const year = orderDate.getFullYear();
+        const month = orderDate.getMonth();
+        const matchedMonth = monthsData.find(m => m.year === year && m.month === month);
+        if (matchedMonth) {
+          matchedMonth.revenue += o.totalAmount;
+        }
+      });
+
+      // Calculate SVG Coordinates for line and area paths
+      const xCoords = [75, 175, 275, 375, 475, 560];
+      const maxRevenue = Math.max(...monthsData.map(m => m.revenue), 1000000); // base of 1M to avoid division by 0
+
+      this.salesTrendPoints = monthsData.map((mData, idx) => {
+        const x = xCoords[idx];
+        const ratio = mData.revenue / maxRevenue;
+        const y = 210 - (ratio * 180); // Y ranges from 30 (max) to 210 (base 0)
+        return {
+          x,
+          y,
+          name: mData.name,
+          revenue: mData.revenue
+        };
+      });
+
+      // Generate paths
+      this.salesTrendLinePath = this.salesTrendPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      this.salesTrendAreaPath = `M ${this.salesTrendPoints[0].x} 210 ` + this.salesTrendPoints.map(p => `L ${p.x} ${p.y}`).join(' ') + ` L ${this.salesTrendPoints[this.salesTrendPoints.length - 1].x} 210 Z`;
+
+      // Set Y-axis labels dynamically
+      this.yAxisLabelTop = this.formatShortRevenue(maxRevenue);
+      this.yAxisLabelMiddle = this.formatShortRevenue(maxRevenue * 2 / 3);
+      this.yAxisLabelLower = this.formatShortRevenue(maxRevenue / 3);
+
+      this.pendingOrders = this.pendingCount;
       this.totalRevenue = orders
         .filter(o => o.status !== 'CANCELLED')
         .reduce((acc: number, o: any) => acc + o.totalAmount, 0);

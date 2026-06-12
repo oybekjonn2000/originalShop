@@ -24,11 +24,11 @@
 </div>
 
 <div class="app-shell">
-  <app-header></app-header>
+  <app-header *ngIf="!isAdminRoute"></app-header>
   <main class="main-content">
     <router-outlet></router-outlet>
   </main>
-  <app-footer></app-footer>
+  <app-footer *ngIf="!isAdminRoute"></app-footer>
 </div>
 
 <app-catalog-portal></app-catalog-portal>

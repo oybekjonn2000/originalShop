@@ -669,3 +669,307 @@ select option {
   }
 }
 
+@media (max-width: 768px) {
+  /* General Table Card transformation for admin tables */
+  app-admin-categories .glass-table-container,
+  app-admin-subcategories .glass-table-container,
+  app-admin-child-categories .glass-table-container,
+  app-admin-brands .glass-table-container,
+  app-users .glass-table-container,
+  app-messages .glass-table-container,
+  app-admin-reviews .glass-table-container,
+  app-banner-control .glass-table-container {
+    border: none !important;
+    background: transparent !important;
+    overflow-x: visible !important;
+  }
+
+  app-admin-categories .glass-table,
+  app-admin-categories .glass-table tbody,
+  app-admin-categories .glass-table tr,
+  app-admin-categories .glass-table td,
+  app-admin-subcategories .glass-table,
+  app-admin-subcategories .glass-table tbody,
+  app-admin-subcategories .glass-table tr,
+  app-admin-subcategories .glass-table td,
+  app-admin-child-categories .glass-table,
+  app-admin-child-categories .glass-table tbody,
+  app-admin-child-categories .glass-table tr,
+  app-admin-child-categories .glass-table td,
+  app-admin-brands .glass-table,
+  app-admin-brands .glass-table tbody,
+  app-admin-brands .glass-table tr,
+  app-admin-brands .glass-table td,
+  app-users .glass-table,
+  app-users .glass-table tbody,
+  app-users .glass-table tr,
+  app-users .glass-table td,
+  app-messages .glass-table,
+  app-messages .glass-table tbody,
+  app-messages .glass-table tr,
+  app-messages .glass-table td,
+  app-admin-reviews .glass-table,
+  app-admin-reviews .glass-table tbody,
+  app-admin-reviews .glass-table tr,
+  app-admin-reviews .glass-table td,
+  app-banner-control .glass-table,
+  app-banner-control .glass-table tbody,
+  app-banner-control .glass-table tr,
+  app-banner-control .glass-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  app-admin-categories .glass-table thead,
+  app-admin-subcategories .glass-table thead,
+  app-admin-child-categories .glass-table thead,
+  app-admin-brands .glass-table thead,
+  app-users .glass-table thead,
+  app-messages .glass-table thead,
+  app-admin-reviews .glass-table thead,
+  app-banner-control .glass-table thead {
+    display: none !important;
+  }
+
+  app-admin-categories .glass-table tr,
+  app-admin-subcategories .glass-table tr,
+  app-admin-child-categories .glass-table tr,
+  app-admin-brands .glass-table tr,
+  app-users .glass-table tr,
+  app-messages .glass-table tr,
+  app-admin-reviews .glass-table tr,
+  app-banner-control .glass-table tr {
+    padding: 1rem !important;
+    border-radius: 12px !important;
+    background: var(--panel-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    margin-bottom: 0.75rem !important;
+    box-shadow: var(--shadow-sm);
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  app-admin-categories .glass-table td,
+  app-admin-subcategories .glass-table td,
+  app-admin-child-categories .glass-table td,
+  app-admin-brands .glass-table td,
+  app-users .glass-table td,
+  app-messages .glass-table td,
+  app-admin-reviews .glass-table td,
+  app-banner-control .glass-table td {
+    padding: 0.25rem 0 !important;
+    border-bottom: none !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.85rem !important;
+    text-align: left !important;
+  }
+
+  app-admin-categories .glass-table tr:hover td,
+  app-admin-subcategories .glass-table tr:hover td,
+  app-admin-child-categories .glass-table tr:hover td,
+  app-admin-brands .glass-table tr:hover td,
+  app-users .glass-table tr:hover td,
+  app-messages .glass-table tr:hover td,
+  app-admin-reviews .glass-table tr:hover td,
+  app-banner-control .glass-table tr:hover td {
+    background: transparent !important;
+  }
+
+  /* 1. Categories Component styling */
+  app-admin-categories .glass-table tr td:nth-child(2) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-admin-categories .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-categories .glass-table tr td:nth-child(3)::before { content: "Tavsif: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-categories .glass-table tr td:nth-child(4)::before { content: "Atributlar: "; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.2rem; }
+  app-admin-categories .glass-table tr td:nth-child(6) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 2. Subcategories Component styling */
+  app-admin-subcategories .glass-table tr td:nth-child(3) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-admin-subcategories .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-subcategories .glass-table tr td:nth-child(4)::before { content: "Kategoriya: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-subcategories .glass-table tr td:nth-child(5)::before { content: "Tavsif: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-subcategories .glass-table tr td:nth-child(7) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 3. Child Categories Component styling */
+  app-admin-child-categories .glass-table tr td:nth-child(2) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-admin-child-categories .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-child-categories .glass-table tr td:nth-child(3)::before { content: "Kategoriya & Subkategoriya: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-child-categories .glass-table tr td:nth-child(4)::before { content: "Tavsif: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-child-categories .glass-table tr td:nth-child(6) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 4. Brands Component styling */
+  app-admin-brands .glass-table tr {
+    display: grid !important;
+    grid-template-columns: 52px 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 0.35rem 0.75rem !important;
+    align-items: center !important;
+  }
+  app-admin-brands .glass-table tr td {
+    display: inline-block !important;
+  }
+  app-admin-brands .glass-table tr td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+  }
+  app-admin-brands .glass-table tr td:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+  }
+  app-admin-brands .glass-table tr td:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: 0.75rem !important;
+  }
+  app-admin-brands .glass-table tr td:nth-child(2)::before { content: "ID: "; font-weight: 600; }
+  app-admin-brands .glass-table tr td:nth-child(4) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    margin-left: 5rem !important;
+    align-self: center !important;
+  }
+  app-admin-brands .glass-table tr td:nth-child(5) {
+    grid-column: 3 !important;
+    grid-row: 1 / span 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+  }
+
+  /* 5. Users Component styling */
+  app-users .glass-table tr td:nth-child(3) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-users .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-users .glass-table tr td:nth-child(2)::before { content: "Username: "; font-weight: 600; color: var(--text-primary); }
+  app-users .glass-table tr td:nth-child(4)::before { content: "Email: "; font-weight: 600; color: var(--text-primary); }
+  app-users .glass-table tr td:nth-child(5)::before { content: "Rol: "; font-weight: 600; color: var(--text-primary); }
+  app-users .glass-table tr td:nth-child(6) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 6. Messages Component styling */
+  app-messages .glass-table tr td:nth-child(4) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-messages .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-messages .glass-table tr td:nth-child(2)::before { content: "Kimdan: "; font-weight: 600; color: var(--text-primary); }
+  app-messages .glass-table tr td:nth-child(3)::before { content: "Aloqa: "; font-weight: 600; color: var(--text-primary); }
+  app-messages .glass-table tr td:nth-child(5)::before { content: "Sana: "; font-weight: 600; color: var(--text-primary); }
+  app-messages .glass-table tr td:nth-child(6)::before { content: "Status: "; font-weight: 600; color: var(--text-primary); }
+  app-messages .glass-table tr td:nth-child(7) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 7. Reviews Component styling */
+  app-admin-reviews .glass-table tr td:nth-child(2) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-admin-reviews .glass-table tr td:nth-child(1)::before { content: "ID: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-reviews .glass-table tr td:nth-child(3)::before { content: "Foydalanuvchi: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-reviews .glass-table tr td:nth-child(4)::before { content: "Sharh: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-reviews .glass-table tr td:nth-child(5)::before { content: "Baho: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-reviews .glass-table tr td:nth-child(6)::before { content: "Sana: "; font-weight: 600; color: var(--text-primary); }
+  app-admin-reviews .glass-table tr td:nth-child(7) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+
+  /* 8. Banner Control Component styling */
+  app-banner-control .glass-table tr td:nth-child(2) {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  app-banner-control .glass-table tr td:nth-child(1)::before { content: "Tartib: "; font-weight: 600; color: var(--text-primary); }
+  app-banner-control .glass-table tr td:nth-child(3)::before { content: "Kollaj Rasmlari: "; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.25rem; }
+  app-banner-control .glass-table tr td:nth-child(4) {
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    justify-content: flex-end !important;
+  }
+}
+

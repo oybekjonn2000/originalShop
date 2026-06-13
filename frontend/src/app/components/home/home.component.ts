@@ -66,6 +66,69 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
         </div>
       </section>
 
+      <!-- Horizontal Categories Slider (Doiraviy va qizil chegarali) -->
+      <section class="home-categories-slider-section" *ngIf="categories.length > 0" style="position: relative; margin: 2.5rem 0; padding: 0 1rem; width: 100%;">
+        <div style="position: relative; display: flex; align-items: center; width: 100%;">
+          
+          <!-- Left scroll button -->
+          <button 
+            (click)="scrollCategories('left')" 
+            class="slider-scroll-btn prev"
+            style="position: absolute; left: -10px; z-index: 10; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.15); backdrop-filter: blur(8px);"
+            onmouseover="this.style.background='var(--primary-gradient)'; this.style.color='#0b0e14'; this.style.borderColor='transparent';"
+            onmouseout="this.style.background='var(--glass-bg)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--glass-border)';"
+          >
+            ❮
+          </button>
+
+          <!-- Categories Scroll Window -->
+          <div 
+            #catsContainer
+            class="categories-scroll-wrapper" 
+            style="display: flex; gap: 2.2rem; overflow-x: auto; scroll-behavior: smooth; width: 100%; padding: 0.75rem 1.5rem; scrollbar-width: none;"
+          >
+            <!-- Category Item -->
+            <div 
+              *ngFor="let cat of categories" 
+              [routerLink]="['/catalog']" 
+              [queryParams]="{ category: cat.id }"
+              class="home-cat-item-wrap"
+              style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.85rem; text-align: center; flex-shrink: 0; width: 120px; transition: transform 0.25s ease;"
+              onmouseover="this.style.transform='translateY(-5px)';"
+              onmouseout="this.style.transform='none';"
+            >
+              <!-- Circle Image Box with Red Border -->
+              <div 
+                class="home-cat-circle" 
+                style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2.5px solid #ef4444; display: flex; align-items: center; justify-content: center; background: #ffffff; padding: 6px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15), inset 0 2px 5px rgba(0,0,0,0.05); transition: all 0.3s ease;"
+                onmouseover="this.style.borderColor='#dc2626'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.35)';"
+                onmouseout="this.style.borderColor='#ef4444'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.15)';"
+              >
+                <img *ngIf="cat.imageUrl" [src]="cat.imageUrl" [alt]="cat.name" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" />
+                <span *ngIf="!cat.imageUrl" style="font-size: 2.2rem; color: #ef4444;">📦</span>
+              </div>
+              
+              <!-- Category Name -->
+              <span class="home-cat-name" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); line-height: 1.35; max-width: 110px;">
+                {{ cat.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Right scroll button -->
+          <button 
+            (click)="scrollCategories('right')" 
+            class="slider-scroll-btn next"
+            style="position: absolute; right: -10px; z-index: 10; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.15); backdrop-filter: blur(8px);"
+            onmouseover="this.style.background='var(--primary-gradient)'; this.style.color='#0b0e14'; this.style.borderColor='transparent';"
+            onmouseout="this.style.background='var(--glass-bg)'; this.style.color='var(--text-primary)'; this.style.borderColor='var(--glass-border)';"
+          >
+            ❯
+          </button>
+
+        </div>
+      </section>
+
       <!-- Hero Banner -->
       <section class="hero-banner glass-panel">
         <div class="hero-text">
@@ -84,7 +147,9 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
         <div class="deals-scroll-container" #dealsContainer>
           <div *ngFor="let product of discountedProducts" class="deal-card glass-card">
             <div class="product-img-wrapper">
-              <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+              <div class="product-img-track" [style.transform]="'translateX(-' + ((product.activeImageIndex || 0) * 100) + '%)'" style="display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);">
+                <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: cover;" />
+              </div>
               
               <!-- Card Image Slider Controls -->
               <ng-container *ngIf="getProductImages(product).length > 1">
@@ -214,7 +279,9 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           <ng-template #productCardTemplate let-product="product">
             <div class="product-card glass-card">
               <div class="product-img-wrapper">
-                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                <div class="product-img-track" [style.transform]="'translateX(-' + ((product.activeImageIndex || 0) * 100) + '%)'" style="display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);">
+                  <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: cover;" />
+                </div>
                 
                 <!-- Card Image Slider Controls -->
                 <ng-container *ngIf="getProductImages(product).length > 1">
@@ -333,7 +400,9 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
           <div class="deals-scroll-container mt-3" *ngIf="banner.products && banner.products.length > 0">
             <div *ngFor="let product of banner.products" class="deal-card glass-card">
               <div class="product-img-wrapper">
-                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                <div class="product-img-track" [style.transform]="'translateX(-' + ((product.activeImageIndex || 0) * 100) + '%)'" style="display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);">
+                  <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: cover;" />
+                </div>
                 
                 <!-- Card Image Slider Controls -->
                 <ng-container *ngIf="getProductImages(product).length > 1">
@@ -401,7 +470,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     /* Brands Reels Styles - Infinite scrolling marquee */
     .brands-reels-section {
       margin-bottom: 2rem;
-      margin-top: 1.5rem;
+      margin-top: -1.2rem;
       width: 100%;
       overflow: hidden;
       position: relative;
@@ -942,7 +1011,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     .product-img-wrapper {
       position: relative;
       width: 100%;
-      height: 200px;
+      height: 300px;
       overflow: hidden;
       cursor: pointer;
       background: rgba(0, 0, 0, 0.2);
@@ -1269,7 +1338,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
 
       .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
       .product-card { padding: 0; }
-      .product-img-wrapper { height: 160px; }
+      .product-img-wrapper { height: 220px; }
       .product-info { padding: 0.85rem; }
       .product-name { font-size: 0.9rem; }
       .product-desc { display: none; }
@@ -1681,6 +1750,9 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       text-shadow: 0 0 8px var(--primary-glow);
       transform: translateX(5px);
     }
+    .categories-scroll-wrapper::-webkit-scrollbar {
+      display: none;
+    }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {
@@ -1764,6 +1836,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   @ViewChild('dealsContainer') dealsContainer!: ElementRef;
   @ViewChild('catalogAnchor') catalogAnchor!: ElementRef;
+  @ViewChild('catsContainer') catsContainer!: ElementRef;
   dealsInterval: any;
 
   wishlistProductIds = new Set<number>();
@@ -1862,6 +1935,14 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
       }
     }, 3000);
+  }
+
+  scrollCategories(direction: 'left' | 'right'): void {
+    if (this.catsContainer && this.catsContainer.nativeElement) {
+      const el = this.catsContainer.nativeElement;
+      const scrollAmount = 350;
+      el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
   }
 
   loadCategories(): void {

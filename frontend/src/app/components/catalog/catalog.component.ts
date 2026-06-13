@@ -144,6 +144,32 @@ import { WishlistService } from '../../services/wishlist.service';
             <p>Mahsulotlar yuklanmoqda...</p>
           </div>
 
+          <!-- Subcategories Grid (Chiroyli dizaynda) -->
+          <div *ngIf="!isLoading && selectedCategoryId !== null && selectedSubcategoryId === null && selectedChildCategoryId === null && getSubsForCategory(selectedCategoryId).length > 0" class="subcategories-grid-container fade-in-el" style="margin-bottom: 3rem; width: 100%;">
+            <div class="subcategories-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; border-left: 4px solid var(--primary-color); padding-left: 0.75rem;">Bo'limlar</div>
+            <div class="subcategories-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.5rem 1.25rem;">
+              <div 
+                *ngFor="let sub of getSubsForCategory(selectedCategoryId)" 
+                class="subcategory-item-wrap"
+                (click)="selectSubcategoryOnly(sub)"
+                style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; text-align: center; transition: transform 0.25s ease;"
+                onmouseover="this.style.transform='translateY(-5px)';"
+                onmouseout="this.style.transform='none';"
+              >
+                <!-- Image Wrapper as Rounded Square Box -->
+                <div class="sub-img-box" style="width: 100%; aspect-ratio: 1 / 1; border-radius: 20px; overflow: hidden; border: 1.5px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease;"
+                  onmouseover="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 8px 25px rgba(0, 242, 254, 0.25)';"
+                  onmouseout="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none';"
+                >
+                  <img *ngIf="sub.imageUrl" [src]="sub.imageUrl" [alt]="sub.name" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <span *ngIf="!sub.imageUrl" style="font-size: 2.5rem; color: var(--primary-color);">📦</span>
+                </div>
+                <!-- Title Text Below Image Box -->
+                <div class="sub-title" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); line-height: 1.3; max-width: 95%;">{{ sub.name }}</div>
+              </div>
+            </div>
+          </div>
+
           <div *ngIf="!isLoading && filteredProducts.length === 0" class="empty-state glass-panel">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <h3>Mahsulot topilmadi</h3>
@@ -163,7 +189,9 @@ import { WishlistService } from '../../services/wishlist.service';
               <div class="products-grid">
                 <div *ngFor="let product of recGroup.products" class="product-card glass-card">
                   <div class="product-img-wrapper">
-                    <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                    <div class="product-img-track" [style.transform]="'translateX(-' + ((product.activeImageIndex || 0) * 100) + '%)'" style="display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);">
+                      <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: cover;" />
+                    </div>
                     
                     <!-- Card Image Slider Controls -->
                     <ng-container *ngIf="getProductImages(product).length > 1">
@@ -179,7 +207,7 @@ import { WishlistService } from '../../services/wishlist.service';
                     </ng-container>
 
                     <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
-                    <span class="category-badge">{{ product.subcategory?.name || 'Kategoriyasiz' }}</span>
+                    <span class="category-badge">{{ product.childCategory?.subcategory?.name || product.subcategory?.name || 'Kategoriyasiz' }}</span>
                     <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
                     <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
                   </div>
@@ -262,7 +290,9 @@ import { WishlistService } from '../../services/wishlist.service';
           <div *ngIf="!isLoading && filteredProducts.length > 0" class="products-grid">
             <div *ngFor="let product of pagedProducts" class="product-card glass-card">
               <div class="product-img-wrapper">
-                <img [src]="getProductImages(product)[product.activeImageIndex || 0]" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" />
+                <div class="product-img-track" [style.transform]="'translateX(-' + ((product.activeImageIndex || 0) * 100) + '%)'" style="display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);">
+                  <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="product-img" [routerLink]="['/product', product.id]" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: cover;" />
+                </div>
                 
                 <!-- Card Image Slider Controls -->
                 <ng-container *ngIf="getProductImages(product).length > 1">
@@ -278,7 +308,7 @@ import { WishlistService } from '../../services/wishlist.service';
                 </ng-container>
 
                 <span *ngIf="product.discount" class="discount-badge">-{{ product.discount }}%</span>
-                <span class="category-badge">{{ product.subcategory?.name || 'Kategoriyasiz' }}</span>
+                <span class="category-badge">{{ product.childCategory?.subcategory?.name || product.subcategory?.name || 'Kategoriyasiz' }}</span>
                 <div class="stock-badge" *ngIf="product.stockQuantity < 5 && product.stockQuantity > 0">Sanoqli qoldi</div>
                 <div class="stock-badge out-of-stock" *ngIf="product.stockQuantity === 0">Tugagan</div>
               </div>
@@ -763,7 +793,7 @@ import { WishlistService } from '../../services/wishlist.service';
     .product-img-wrapper {
       position: relative;
       width: 100%;
-      height: 200px;
+      height: 300px;
       overflow: hidden;
       cursor: pointer;
       background: rgba(0, 0, 0, 0.2);
@@ -1150,7 +1180,7 @@ import { WishlistService } from '../../services/wishlist.service';
       .catalog-container { padding: 0 0.75rem; }
       .page-header h1 { font-size: 1.8rem; }
       .products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-      .product-img-wrapper { height: 160px; }
+      .product-img-wrapper { height: 220px; }
       .product-info { padding: 0.85rem; }
       .product-name { font-size: 0.9rem; }
       .product-price { font-size: 1.1rem; }
@@ -1318,6 +1348,78 @@ import { WishlistService } from '../../services/wishlist.service';
       color: #04080f;
       box-shadow: 0 0 15px var(--primary-glow);
       transform: translateY(-2px);
+    }
+
+    /* Card Image Slider Controls inside catalog */
+    .card-slider-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(11, 14, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition-smooth);
+      opacity: 0;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+      padding: 0;
+      line-height: 1;
+    }
+    
+    .product-img-wrapper:hover .card-slider-arrow {
+      opacity: 1;
+    }
+    
+    .card-slider-arrow:hover {
+      background: var(--primary-color);
+      color: #0b0e14;
+      box-shadow: 0 0 10px var(--primary-glow);
+      border-color: var(--primary-color);
+    }
+    
+    .card-slider-arrow.prev {
+      left: 8px;
+    }
+    
+    .card-slider-arrow.next {
+      right: 8px;
+    }
+    
+    .card-slider-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      z-index: 5;
+      background: rgba(11, 14, 20, 0.5);
+      padding: 3px 8px;
+      border-radius: 50px;
+      backdrop-filter: blur(4px);
+    }
+    
+    .card-slider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    
+    .card-slider-dot.active {
+      background: var(--primary-color);
+      width: 12px;
+      border-radius: 3px;
     }
   `]
 })
@@ -1515,6 +1617,8 @@ export class CatalogComponent implements OnInit {
     this.selectedCategoryId = sub.category?.id || null;
     this.selectedSubcategoryId = sub.id;
     this.selectedChildCategoryId = null;
+    this.openCategoryId = sub.category?.id || null;
+    this.openSubcategoryId = sub.id;
     this.applyFilters();
   }
 

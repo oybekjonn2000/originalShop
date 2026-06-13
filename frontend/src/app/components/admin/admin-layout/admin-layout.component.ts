@@ -511,20 +511,6 @@ import { ThemeService } from '../../../services/theme.service';
         padding: 1rem;
       }
 
-      @media (max-width: 768px) {
-        .admin-main {
-          padding: 0.75rem 0.5rem;
-        }
-        .admin-top-bar {
-          position: sticky;
-          top: 0.5rem;
-          z-index: 99;
-          border-radius: 12px;
-          margin-bottom: 1rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-      }
-
       .btn-toggle-sidebar-mobile {
         display: flex;
       }
@@ -579,6 +565,20 @@ import { ThemeService } from '../../../services/theme.service';
       .admin-profile {
         padding-left: 0.5rem;
         border-left: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-main {
+        padding: 0.75rem 0.5rem;
+      }
+      .admin-top-bar {
+        position: sticky;
+        top: 0.5rem;
+        z-index: 99;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       }
     }
   `]

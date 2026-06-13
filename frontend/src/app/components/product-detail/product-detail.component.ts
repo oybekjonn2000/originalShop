@@ -30,8 +30,10 @@ import { ReviewService } from '../../services/review.service';
       <div class="detail-grid">
         <!-- Product Image Gallery -->
         <div class="gallery-wrapper">
-          <div class="image-wrapper glass-panel">
-            <img [src]="getProductImages(product)[activeImageIndex]" [alt]="product.name" class="detail-image" />
+          <div class="image-wrapper glass-panel" style="overflow: hidden; padding: 0;">
+            <div class="product-img-track" [style.transform]="'translateX(-' + (activeImageIndex * 100) + '%)'" style="display: flex; width: 100%; height: 450px; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
+              <img *ngFor="let img of getProductImages(product)" [src]="img" [alt]="product.name" class="detail-image" style="width: 100%; height: 100%; flex-shrink: 0; object-fit: contain; padding: 2rem;" />
+            </div>
             
             <!-- Gallery Arrows -->
             <button class="gallery-arrow prev" *ngIf="getProductImages(product).length > 1" (click)="prevImage()">❮</button>
@@ -1234,8 +1236,12 @@ export class ProductDetailComponent implements OnInit {
   }
 
   loadSimilarProducts(currentProduct: any): void {
-    if (currentProduct.category && currentProduct.category.id) {
-      this.productService.getProductsByCategory(currentProduct.category.id).subscribe({
+    const categoryId = currentProduct.childCategory?.subcategory?.category?.id 
+      || currentProduct.subcategory?.category?.id 
+      || currentProduct.category?.id;
+
+    if (categoryId) {
+      this.productService.getProductsByCategory(categoryId).subscribe({
         next: (products) => {
           this.similarProducts = products
             .filter(p => p.id !== currentProduct.id)
@@ -1297,9 +1303,25 @@ export class ProductDetailComponent implements OnInit {
       const viewedStr = localStorage.getItem(key);
       if (viewedStr) {
         const viewed = JSON.parse(viewedStr);
-        this.recentlyViewedProducts = viewed
-          .filter((p: any) => p.id !== currentProductId)
-          .slice(0, 4);
+        // Validating against actual database products
+        this.productService.getProducts().subscribe({
+          next: (allProducts) => {
+            const validIds = new Set(allProducts.map(p => p.id));
+            this.recentlyViewedProducts = viewed
+              .filter((p: any) => p.id !== currentProductId && validIds.has(p.id))
+              .slice(0, 4);
+
+            // Clean up localStorage to remove deleted/stale products
+            const updatedViewed = viewed.filter((p: any) => validIds.has(p.id));
+            localStorage.setItem(key, JSON.stringify(updatedViewed));
+          },
+          error: () => {
+            // Fallback: show offline localStorage products if server is unreachable
+            this.recentlyViewedProducts = viewed
+              .filter((p: any) => p.id !== currentProductId)
+              .slice(0, 4);
+          }
+        });
       } else {
         this.recentlyViewedProducts = [];
       }
@@ -1431,12 +1453,21 @@ export class ProductDetailComponent implements OnInit {
 
   hasCharacteristics(charObj: any): boolean {
     if (!charObj) return false;
-    return Object.keys(charObj).length > 0;
+    return Object.keys(charObj).some(key => {
+      const val = charObj[key];
+      return val !== null && val !== undefined && String(val).trim().length > 0;
+    });
   }
 
   getCharacteristicsList(charObj: any): { key: string, value: string }[] {
     if (!charObj) return [];
-    const list = Object.keys(charObj).map(k => ({ key: k, value: charObj[k] }));
+    const list = Object.keys(charObj)
+      .filter(key => {
+        const val = charObj[key];
+        return val !== null && val !== undefined && String(val).trim().length > 0;
+      })
+      .map(k => ({ key: k, value: String(charObj[k]).trim() }));
+      
     const template = this.product?.childCategory?.subcategory?.category?.attributesTemplate 
       || this.product?.subcategory?.category?.attributesTemplate 
       || this.product?.category?.attributesTemplate 

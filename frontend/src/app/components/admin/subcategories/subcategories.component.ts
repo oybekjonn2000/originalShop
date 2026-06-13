@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
+import { forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-subcategories',
@@ -64,6 +66,7 @@ import { ProductService } from '../../../services/product.service';
           <thead>
             <tr>
               <th>ID</th>
+              <th>Rasm</th>
               <th>Subkategoriya Nomi</th>
               <th>Asosiy Kategoriya</th>
               <th>Tavsif</th>
@@ -74,6 +77,10 @@ import { ProductService } from '../../../services/product.service';
           <tbody>
             <tr *ngFor="let sub of pagedSubcategories">
               <td>{{ sub.id }}</td>
+              <td>
+                <img *ngIf="sub.imageUrl" [src]="sub.imageUrl" [alt]="sub.name" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.1);" />
+                <span *ngIf="!sub.imageUrl" class="no-desc">—</span>
+              </td>
               <td><strong>{{ sub.name }}</strong></td>
               <td>{{ sub.category?.name || '—' }}</td>
               <td>
@@ -102,7 +109,7 @@ import { ProductService } from '../../../services/product.service';
               </td>
             </tr>
             <tr *ngIf="filteredSubcategories.length === 0">
-              <td colspan="6" class="empty-row">Subkategoriyalar topilmadi</td>
+              <td colspan="7" class="empty-row">Subkategoriyalar topilmadi</td>
             </tr>
           </tbody>
         </table>
@@ -162,7 +169,17 @@ import { ProductService } from '../../../services/product.service';
 
             <div class="form-group">
               <label class="glass-label">Subkategoriya nomi *</label>
+              <textarea
+                *ngIf="!isEditMode"
+                [(ngModel)]="form.name"
+                name="name"
+                class="glass-input"
+                required
+                rows="3"
+                placeholder="Nomlarni vergul bilan ajratib kiriting (masalan: Apple iPhone, Smart soatlar, Quloqchinlar...)"
+              ></textarea>
               <input
+                *ngIf="isEditMode"
                 type="text"
                 [(ngModel)]="form.name"
                 name="name"
@@ -181,6 +198,26 @@ import { ProductService } from '../../../services/product.service';
                 rows="3"
                 placeholder="Subkategoriya haqida qisqacha ma'lumot..."
               ></textarea>
+            </div>
+
+            <!-- Rasm Yuklash Qismi -->
+            <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+              <label class="glass-label">Subkategoriya Rasmi</label>
+              <div class="single-image-upload" style="display: flex; gap: 15px; align-items: center;">
+                <div class="image-preview-box" *ngIf="form.imageUrl" style="position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border);">
+                  <img [src]="form.imageUrl" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <button type="button" class="remove-img-btn" (click)="removeImage()" style="position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(239, 68, 68, 0.85); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; font-size: 0.65rem;">✕</button>
+                </div>
+                <div class="add-image-btn" *ngIf="!form.imageUrl" (click)="fileInput.click()" style="width: 80px; height: 80px; border: 2px dashed rgba(79, 172, 254, 0.35); border-radius: 8px; background: rgba(79, 172, 254, 0.03); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span style="font-size: 0.65rem; font-weight: 600; color: var(--primary-color);">Yuklash</span>
+                </div>
+                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
+                <div *ngIf="isUploading" class="upload-progress" style="display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-size: 0.8rem;">
+                  <div class="upload-spinner" style="width: 14px; height: 14px; border: 2px solid rgba(79, 172, 254, 0.25); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                  <span>Yuklanmoqda...</span>
+                </div>
+              </div>
             </div>
 
             <div *ngIf="errorMsg" class="error-msg">
@@ -418,11 +455,13 @@ export class SubcategoriesComponent implements OnInit {
   toastMessage = '';
   toastType: 'snack-success' | 'snack-error' = 'snack-success';
   private toastTimer: any;
+  isUploading = false;
 
   form = {
     name: '',
     description: '',
-    categoryId: null as number | null
+    categoryId: null as number | null,
+    imageUrl: ''
   };
 
   // Pagination
@@ -457,7 +496,7 @@ export class SubcategoriesComponent implements OnInit {
     this.currentPage = 1;
   }
 
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadAll();
@@ -494,7 +533,7 @@ export class SubcategoriesComponent implements OnInit {
   openAddModal(): void {
     this.isEditMode = false;
     this.editingId = null;
-    this.form = { name: '', description: '', categoryId: null };
+    this.form = { name: '', description: '', categoryId: null, imageUrl: '' };
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -502,9 +541,39 @@ export class SubcategoriesComponent implements OnInit {
   openEditModal(sub: any): void {
     this.isEditMode = true;
     this.editingId = sub.id;
-    this.form = { name: sub.name, description: sub.description || '', categoryId: sub.category?.id || null };
+    this.form = { 
+      name: sub.name, 
+      description: sub.description || '', 
+      categoryId: sub.category?.id || null,
+      imageUrl: sub.imageUrl || ''
+    };
     this.errorMsg = '';
     this.showModal = true;
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.isUploading = true;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any>('http://localhost:8080/api/upload/image', formData).subscribe({
+      next: (res) => {
+        this.form.imageUrl = res.imageUrl;
+        this.isUploading = false;
+        this.triggerToast('Rasm yuklandi!', 'snack-success');
+      },
+      error: () => {
+        this.isUploading = false;
+        this.triggerToast('Rasm yuklashda xatolik!', 'snack-error');
+      }
+    });
+  }
+
+  removeImage(): void {
+    this.form.imageUrl = '';
   }
 
   closeModal(): void {
@@ -520,28 +589,64 @@ export class SubcategoriesComponent implements OnInit {
     this.isSaving = true;
     this.errorMsg = '';
 
-    const payload = { 
-      name: this.form.name.trim(), 
-      description: this.form.description.trim(),
-      category: { id: this.form.categoryId }
-    };
+    if (this.isEditMode && this.editingId) {
+      const payload = { 
+        name: this.form.name.trim(), 
+        description: this.form.description.trim(),
+        imageUrl: this.form.imageUrl,
+        category: { id: this.form.categoryId }
+      };
 
-    const request$ = this.isEditMode && this.editingId
-      ? this.productService.updateSubcategory(this.editingId, payload)
-      : this.productService.createSubcategory(payload);
+      this.productService.updateSubcategory(this.editingId, payload).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.closeModal();
+          this.loadAll();
+          this.triggerToast('Subkategoriya muvaffaqiyatli yangilandi!', 'snack-success');
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.errorMsg = err.error?.message || "Xatolik yuz berdi. Qayta urinib ko'ring.";
+        }
+      });
+    } else {
+      // Add mode - split by comma to allow bulk addition
+      const names = this.form.name.split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
 
-    request$.subscribe({
-      next: () => {
+      if (names.length === 0) {
         this.isSaving = false;
-        this.closeModal();
-        this.loadAll();
-        this.triggerToast(this.isEditMode ? 'Subkategoriya muvaffaqiyatli yangilandi!' : "Yangi subkategoriya qo'shildi!", 'snack-success');
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.errorMsg = err.error?.message || "Xatolik yuz berdi. Qayta urinib ko'ring.";
+        this.errorMsg = 'Subkategoriya nomlari noto\'g\'ri formatda!';
+        return;
       }
-    });
+
+      const requests = names.map(name => {
+        const payload = {
+          name: name,
+          description: this.form.description.trim(),
+          imageUrl: this.form.imageUrl,
+          category: { id: this.form.categoryId }
+        };
+        return this.productService.createSubcategory(payload);
+      });
+
+      forkJoin(requests).subscribe({
+        next: (results) => {
+          this.isSaving = false;
+          this.closeModal();
+          this.loadAll();
+          const message = names.length > 1 
+            ? `${names.length} ta yangi subkategoriya muvaffaqiyatli qo'shildi!` 
+            : "Yangi subkategoriya qo'shildi!";
+          this.triggerToast(message, 'snack-success');
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.errorMsg = err.error?.message || "Subkategoriyalarni qo'shishda xatolik yuz berdi. Qayta urinib ko'ring.";
+        }
+      });
+    }
   }
 
   deleteSubcategory(id: number): void {

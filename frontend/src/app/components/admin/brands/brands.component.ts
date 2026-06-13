@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { BrandService } from '../../../services/brand.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-admin-brands',
@@ -147,14 +148,24 @@ import { BrandService } from '../../../services/brand.service';
           <form (ngSubmit)="saveBrand()" class="modal-form">
             <div class="form-group">
               <label class="glass-label">Brand nomi *</label>
+              <textarea
+                *ngIf="!isEditMode"
+                [(ngModel)]="form.name"
+                name="name"
+                class="glass-input"
+                required
+                rows="3"
+                placeholder="Nomlarni vergul bilan ajratib kiriting (masalan: Apple, Samsung, Xiaomi...)"
+                autofocus
+              ></textarea>
               <input
+                *ngIf="isEditMode"
                 type="text"
                 [(ngModel)]="form.name"
                 name="name"
                 class="glass-input"
                 required
                 placeholder="Masalan: Apple, Samsung..."
-                autofocus
               />
             </div>
 
@@ -984,24 +995,56 @@ export class BrandsComponent implements OnInit {
     this.isSaving = true;
     this.errorMsg = '';
 
-    const payload = { name: this.form.name.trim(), imageUrl: this.form.imageUrl.trim() };
+    if (this.isEditMode && this.editingId) {
+      const payload = { name: this.form.name.trim(), imageUrl: this.form.imageUrl.trim() };
+      this.brandService.updateBrand(this.editingId, payload).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.closeModal();
+          this.loadBrands();
+          this.triggerToast('Brand muvaffaqiyatli yangilandi!', 'snack-success');
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.errorMsg = err.error?.message || 'Xatolik yuz berdi. Qayta urinib ko\'ring.';
+        }
+      });
+    } else {
+      // Add mode - split by comma to allow bulk addition
+      const names = this.form.name.split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
 
-    const request$ = this.isEditMode && this.editingId
-      ? this.brandService.updateBrand(this.editingId, payload)
-      : this.brandService.createBrand(payload);
-
-    request$.subscribe({
-      next: () => {
+      if (names.length === 0) {
         this.isSaving = false;
-        this.closeModal();
-        this.loadBrands();
-        this.triggerToast(this.isEditMode ? 'Brand muvaffaqiyatli yangilandi!' : 'Yangi brand qo\'shildi!', 'snack-success');
-      },
-      error: (err) => {
-        this.isSaving = false;
-        this.errorMsg = err.error?.message || 'Xatolik yuz berdi. Qayta urinib ko\'ring.';
+        this.errorMsg = 'Brand nomlari noto\'g\'ri formatda!';
+        return;
       }
-    });
+
+      const requests = names.map(name => {
+        const payload = {
+          name: name,
+          imageUrl: this.form.imageUrl.trim()
+        };
+        return this.brandService.createBrand(payload);
+      });
+
+      forkJoin(requests).subscribe({
+        next: (results) => {
+          this.isSaving = false;
+          this.closeModal();
+          this.loadBrands();
+          const message = names.length > 1 
+            ? `${names.length} ta yangi brand muvaffaqiyatli qo'shildi!` 
+            : "Yangi brand qo'shildi!";
+          this.triggerToast(message, 'snack-success');
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.errorMsg = err.error?.message || "Brandlarni qo'shishda xatolik yuz berdi. Qayta urinib ko'ring.";
+        }
+      });
+    }
   }
 
   deleteBrand(id: number): void {

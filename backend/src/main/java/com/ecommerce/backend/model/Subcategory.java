@@ -25,6 +25,8 @@ public class Subcategory {
 
     private String description;
 
+    private String imageUrl;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     @JsonIgnoreProperties("subcategories")

@@ -54,6 +54,10 @@ import { BrandService } from '../../../services/brand.service';
         <table class="glass-table">
           <thead>
             <tr>
+              <th (click)="toggleSort('id')" class="sortable-header" style="width: 80px;">
+                ID
+                <span class="sort-icon" *ngIf="sortBy.startsWith('id')">{{ sortBy.endsWith('-asc') ? ' ▲' : ' ▼' }}</span>
+              </th>
               <th>Rasm</th>
               <th (click)="toggleSort('name')" class="sortable-header">
                 Mahsulot nomi
@@ -89,6 +93,9 @@ import { BrandService } from '../../../services/brand.service';
           </thead>
           <tbody>
             <tr *ngFor="let product of pagedProducts">
+              <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                {{ product.id }}
+              </td>
               <td>
                 <img [src]="product.imageUrl" [alt]="product.name" class="product-thumb" />
               </td>
@@ -144,7 +151,7 @@ import { BrandService } from '../../../services/brand.service';
               </td>
             </tr>
             <tr *ngIf="filteredProducts.length === 0">
-              <td colspan="10" class="empty-row">Mahsulotlar topilmadi</td>
+              <td colspan="11" class="empty-row">Mahsulotlar topilmadi</td>
             </tr>
           </tbody>
         </table>
@@ -256,9 +263,34 @@ import { BrandService } from '../../../services/brand.service';
               </div>
 
               <!-- DYNAMIC ATTRIBUTES AREA -->
-              <div *ngIf="selectedAttributes.length > 0" class="dynamic-section" style="margin-top: 1rem; padding: 1rem; border: 1px dashed rgba(168, 85, 247, 0.3); border-radius: 12px; background: rgba(168, 85, 247, 0.02);">
-                <h4 style="margin-top: 0; margin-bottom: 0.75rem; color: #a855f7; font-weight: 700; font-size: 0.9rem;">Kategoriya Xarakteristikalari</h4>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 0.85rem;">
+              <div class="dynamic-section" style="margin-top: 1rem; padding: 1rem; border: 1px dashed rgba(168, 85, 247, 0.3); border-radius: 12px; background: rgba(168, 85, 247, 0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                  <h4 style="margin: 0; color: #a855f7; font-weight: 700; font-size: 0.9rem;">Xususiyatlari (Xarakteristikalari)</h4>
+                  <div class="mode-selector" style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-mode" 
+                      [style.background]="charMode === 'fields' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.03)'"
+                      [style.color]="charMode === 'fields' ? '#04080f' : 'var(--text-secondary)'"
+                      [style.borderColor]="charMode === 'fields' ? 'transparent' : 'var(--glass-border)'"
+                      (click)="setCharMode('fields')" 
+                      style="padding: 4px 10px; font-size: 0.78rem; font-weight: 600; border-radius: 6px; border: 1px solid; cursor: pointer; transition: all 0.2s;">
+                      1-variant (Alohida)
+                    </button>
+                    <button type="button" class="btn-mode" 
+                      [style.background]="charMode === 'text' ? 'var(--primary-gradient)' : 'rgba(255,255,255,0.03)'"
+                      [style.color]="charMode === 'text' ? '#04080f' : 'var(--text-secondary)'"
+                      [style.borderColor]="charMode === 'text' ? 'transparent' : 'var(--glass-border)'"
+                      (click)="setCharMode('text')" 
+                      style="padding: 4px 10px; font-size: 0.78rem; font-weight: 600; border-radius: 6px; border: 1px solid; cursor: pointer; transition: all 0.2s;">
+                      2-variant (Matn)
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 1-variant: Fields -->
+                <div *ngIf="charMode === 'fields'" style="display: grid; grid-template-columns: 1fr; gap: 0.85rem;">
+                  <div *ngIf="selectedAttributes.length === 0" style="color: var(--text-secondary); font-size: 0.85rem; font-style: italic; padding: 0.5rem 0;">
+                    Ushbu kategoriya uchun xarakteristikalar andozasi mavjud emas. 2-variantdan foydalanib o'zingiz kiriting.
+                  </div>
                   <div class="form-group" *ngFor="let attr of selectedAttributes">
                     <label class="glass-label" [for]="'dyn_' + attr">{{ attr }} *</label>
                     <input 
@@ -270,6 +302,30 @@ import { BrandService } from '../../../services/brand.service';
                       [placeholder]="attr + ' qiymati...'"
                       required
                     />
+                  </div>
+                </div>
+
+                <!-- 2-variant: Textarea -->
+                <div *ngIf="charMode === 'text'" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                  <textarea
+                    [(ngModel)]="rawCharacteristicsText"
+                    (input)="onRawCharacteristicsChange()"
+                    name="rawCharacteristics"
+                    class="glass-input"
+                    rows="6"
+                    placeholder="Xususiyatlarni kiriting (masalan: Ekran: 1270*720, RAM: 4gb, Xotira: 128 gb)..."
+                    style="resize: vertical;"
+                  ></textarea>
+                  
+                  <!-- Parsed preview list -->
+                  <div *ngIf="objectKeys(form.characteristics).length > 0" class="parsed-preview" style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; text-transform: uppercase;">Aniqlangan xususiyatlar ({{ objectKeys(form.characteristics).length }} ta):</div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <div *ngFor="let item of getCharacteristicsList()" style="display: flex; justify-content: space-between; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 3px;">
+                        <span style="color: var(--text-secondary);">{{ item.key }}</span>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ item.val }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1135,7 +1191,11 @@ export class ProductsComponent implements OnInit {
       return matchSearch && matchCat;
     });
 
-    if (this.sortBy === 'name-asc') {
+    if (this.sortBy === 'id-asc') {
+      result.sort((a, b) => a.id - b.id);
+    } else if (this.sortBy === 'id-desc') {
+      result.sort((a, b) => b.id - a.id);
+    } else if (this.sortBy === 'name-asc') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (this.sortBy === 'name-desc') {
       result.sort((a, b) => b.name.localeCompare(a.name));
@@ -1170,7 +1230,9 @@ export class ProductsComponent implements OnInit {
   }
 
   toggleSort(column: string): void {
-    if (column === 'name') {
+    if (column === 'id') {
+      this.sortBy = this.sortBy === 'id-asc' ? 'id-desc' : 'id-asc';
+    } else if (column === 'name') {
       this.sortBy = this.sortBy === 'name-asc' ? 'name-desc' : 'name-asc';
     } else if (column === 'category') {
       this.sortBy = this.sortBy === 'category-asc' ? 'category-desc' : 'category-asc';
@@ -1212,6 +1274,8 @@ export class ProductsComponent implements OnInit {
     this.filteredChildCategories = [];
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
+    this.charMode = 'fields';
+    this.rawCharacteristicsText = '';
     this.showModal = true;
   }
 
@@ -1269,6 +1333,8 @@ export class ProductsComponent implements OnInit {
         if (url && !this.allImageUrls.includes(url)) this.allImageUrls.push(url);
       });
     }
+    this.charMode = 'fields';
+    this.syncRawTextFromCharacteristics();
     this.showModal = true;
   }
 
@@ -1277,6 +1343,81 @@ export class ProductsComponent implements OnInit {
     this.imagePreviewUrl = null;
     this.allImageUrls = [];
     this.selectedAttributes = [];
+    this.rawCharacteristicsText = '';
+  }
+
+  charMode: 'fields' | 'text' = 'fields';
+  rawCharacteristicsText = '';
+
+  setCharMode(mode: 'fields' | 'text'): void {
+    this.charMode = mode;
+    if (mode === 'text') {
+      this.syncRawTextFromCharacteristics();
+    }
+  }
+
+  objectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+
+  getCharacteristicsList(): { key: string, val: string }[] {
+    return Object.keys(this.form.characteristics).map(key => ({
+      key: key,
+      val: this.form.characteristics[key]
+    }));
+  }
+
+  parseRawCharacteristics(text: string): { [key: string]: string } {
+    const parsed: { [key: string]: string } = {};
+    if (!text) return parsed;
+    
+    let lines = text.split('\n');
+    if (lines.length === 1 && text.includes(',')) {
+      const parts = text.split(',');
+      const tempLines: string[] = [];
+      let currentPart = '';
+      for (const part of parts) {
+        if (part.includes(':')) {
+          if (currentPart) {
+            tempLines.push(currentPart);
+          }
+          currentPart = part;
+        } else {
+          currentPart += ',' + part;
+        }
+      }
+      if (currentPart) {
+        tempLines.push(currentPart);
+      }
+      lines = tempLines;
+    }
+    
+    for (const line of lines) {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex > 0) {
+        const key = line.substring(0, colonIndex).trim();
+        const val = line.substring(colonIndex + 1).trim();
+        if (key && val) {
+          parsed[key] = val;
+        }
+      }
+    }
+    return parsed;
+  }
+
+  syncRawTextFromCharacteristics(): void {
+    const lines: string[] = [];
+    for (const key of Object.keys(this.form.characteristics)) {
+      const val = this.form.characteristics[key];
+      if (val) {
+        lines.push(`${key}: ${val}`);
+      }
+    }
+    this.rawCharacteristicsText = lines.join('\n');
+  }
+
+  onRawCharacteristicsChange(): void {
+    this.form.characteristics = this.parseRawCharacteristics(this.rawCharacteristicsText);
   }
 
   onCategoryChange(): void {

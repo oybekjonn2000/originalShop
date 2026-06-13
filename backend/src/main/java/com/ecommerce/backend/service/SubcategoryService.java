@@ -43,6 +43,7 @@ public class SubcategoryService {
         Subcategory existing = getSubcategoryById(id);
         existing.setName(updated.getName());
         existing.setDescription(updated.getDescription());
+        existing.setImageUrl(updated.getImageUrl());
         if (updated.getCategory() != null && updated.getCategory().getId() != null) {
             Category category = categoryRepository.findById(updated.getCategory().getId())
                     .orElseThrow(() -> new RuntimeException("Kategoriya topilmadi ID: " + updated.getCategory().getId()));

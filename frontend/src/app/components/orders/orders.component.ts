@@ -145,6 +145,44 @@ import { ReviewService } from '../../services/review.service';
                     </div>
                   </ng-container>
                 </div>
+
+                <!-- Existing Review & Admin Reply Display -->
+                <div
+                  *ngIf="reviewedProductIds.has(item.product.id) && myReviews[item.product.id]"
+                  class="existing-review-panel"
+                >
+                  <div class="user-review-bubble">
+                    <div class="review-meta">
+                      <div class="stars-display">
+                        <span *ngFor="let s of stars" [class.filled]="myReviews[item.product.id].rating >= s">★</span>
+                      </div>
+                      <span class="review-date">{{ myReviews[item.product.id].createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                    </div>
+                    <div class="review-text">
+                      <strong>Sizning sharhingiz:</strong> {{ myReviews[item.product.id].comment }}
+                    </div>
+                  </div>
+
+                  <!-- Admin reply -->
+                  <div *ngIf="myReviews[item.product.id].replyText" class="admin-reply-box">
+                    <div class="reply-header">
+                      <div class="admin-avatar">
+                        <img *ngIf="myReviews[item.product.id].replier?.profilePicture" [src]="myReviews[item.product.id].replier.profilePicture" class="admin-avatar-img" />
+                        <svg *ngIf="!myReviews[item.product.id].replier?.profilePicture" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </div>
+                      <div>
+                        <span class="admin-name">{{ myReviews[item.product.id].replier?.firstName || myReviews[item.product.id].replier?.username || 'Admin' }}</span>
+                        <span class="badge-admin">Admin</span>
+                        <span class="reply-date" *ngIf="myReviews[item.product.id].replyCreatedAt">
+                          {{ myReviews[item.product.id].replyCreatedAt | date:'dd.MM.yyyy HH:mm' }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="reply-content">
+                      <p>{{ myReviews[item.product.id].replyText }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -514,6 +552,134 @@ import { ReviewService } from '../../services/review.service';
       margin-bottom: 0.75rem;
     }
 
+    /* Existing Review & Admin Reply Styling */
+    .existing-review-panel {
+      padding: 1.25rem;
+      background: rgba(0, 0, 0, 0.15);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .user-review-bubble {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .review-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-date {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+    }
+
+    .review-text {
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .stars-display {
+      color: #fbbf24;
+      font-size: 0.95rem;
+      display: inline-flex;
+      gap: 1px;
+    }
+
+    .stars-display span {
+      opacity: 0.22;
+    }
+
+    .stars-display span.filled {
+      opacity: 1;
+    }
+
+    /* Admin reply block */
+    .admin-reply-box {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(168, 85, 247, 0.05);
+      border-left: 3px solid #a855f7;
+      text-align: left;
+    }
+
+    /* Dark mode override */
+    :host-context([data-theme="dark"]) .admin-reply-box {
+      background: rgba(0, 242, 254, 0.05);
+      border-left: 3px solid #00f2fe;
+    }
+
+    .reply-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .admin-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .admin-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .admin-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-right: 6px;
+    }
+
+    .badge-admin {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 50px;
+      text-transform: uppercase;
+      margin-right: 8px;
+      letter-spacing: 0.02em;
+    }
+
+    :host-context([data-theme="dark"]) .badge-admin {
+      background: rgba(0, 242, 254, 0.15);
+      color: #00f2fe;
+    }
+
+    .reply-date {
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+    }
+
+    .reply-content {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .reply-content p {
+      margin: 0;
+    }
+
     .order-footer {
       display: flex;
       justify-content: space-between;
@@ -566,6 +732,7 @@ export class OrdersComponent implements OnInit {
   isLoading = true;
   stars = [1, 2, 3, 4, 5];
   reviewedProductIds: Set<number> = new Set<number>();
+  myReviews: Record<number, any> = {};
 
   // Tracks which (orderId-productId) forms are open
   private openForms = new Set<string>();
@@ -601,6 +768,17 @@ export class OrdersComponent implements OnInit {
     this.reviewService.getReviewedProductIds().subscribe({
       next: (ids) => {
         this.reviewedProductIds = new Set(ids);
+      },
+      error: () => {}
+    });
+
+    this.reviewService.getMyReviews().subscribe({
+      next: (reviews) => {
+        reviews.forEach(r => {
+          if (r.product && r.product.id) {
+            this.myReviews[r.product.id] = r;
+          }
+        });
       },
       error: () => {}
     });
@@ -664,9 +842,10 @@ export class OrdersComponent implements OnInit {
     this.states[k] = 'submitting';
 
     this.reviewService.addReview(productId, draft.comment, draft.rating).subscribe({
-      next: () => {
+      next: (savedReview) => {
         this.states[k] = 'success';
         this.reviewedProductIds.add(productId);
+        this.myReviews[productId] = savedReview;
         // auto-close form after 2s
         setTimeout(() => {
           this.openForms.delete(k);

@@ -303,7 +303,7 @@ import { ReviewService } from '../../services/review.service';
                   <strong>Manzil:</strong> {{ order.shippingAddress }}
                 </div>
                 <div class="order-items">
-                  <strong>Mahsulotlar:</strong> {{ order.items?.length || 0 }} xil
+                  <strong>Mahsulotlar:</strong> {{ order.orderItems?.length || 0 }} xil
                 </div>
               </div>
               <div class="order-footer">

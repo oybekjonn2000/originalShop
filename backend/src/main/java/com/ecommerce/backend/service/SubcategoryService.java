@@ -16,6 +16,7 @@ import com.ecommerce.backend.repository.CategoryRepository;
 public class SubcategoryService {
     private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categoryRepository;
+    private final AuditLogService auditLogService;
 
     public List<Subcategory> getAllSubcategories() {
         return subcategoryRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
@@ -36,7 +37,9 @@ public class SubcategoryService {
                     .orElseThrow(() -> new RuntimeException("Kategoriya topilmadi ID: " + subcategory.getCategory().getId()));
             subcategory.setCategory(category);
         }
-        return subcategoryRepository.save(subcategory);
+        Subcategory saved = subcategoryRepository.save(subcategory);
+        auditLogService.logAdminAction("Subkategoriya yaratildi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public Subcategory updateSubcategory(Long id, Subcategory updated) {
@@ -51,14 +54,19 @@ public class SubcategoryService {
         } else if (updated.getCategory() == null) {
             existing.setCategory(null);
         }
-        return subcategoryRepository.save(existing);
+        Subcategory saved = subcategoryRepository.save(existing);
+        auditLogService.logAdminAction("Subkategoriya tahrirlandi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public void deleteSubcategory(Long id) {
+        Subcategory subcategory = getSubcategoryById(id);
         subcategoryRepository.deleteById(id);
+        auditLogService.logAdminAction("Subkategoriya o'chirildi: " + subcategory.getName() + " (ID: " + id + ")");
     }
 
     public void deleteAllSubcategories() {
         subcategoryRepository.deleteAll();
+        auditLogService.logAdminAction("Barcha subkategoriyalar o'chirildi");
     }
 }

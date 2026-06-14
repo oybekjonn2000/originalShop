@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 import { OrderService } from '../../../services/order.service';
 import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
+import { AuditLogService } from '../../../services/audit-log.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -70,6 +72,53 @@ import { AuthService } from '../../../services/auth.service';
             <span class="stat-value revenue">{{ formatTotalRevenue(totalRevenue) }}</span>
             <span *ngIf="totalRevenue >= 1000000" class="stat-subvalue" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.1rem; font-weight: 500;">
               {{ formatFullRevenue(totalRevenue) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- New Card: AOV -->
+        <div class="stat-card glass-panel">
+          <div class="stat-icon aov-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">O'rtacha Buyurtma (AOV)</span>
+            <span class="stat-value">{{ formatFullRevenue(aov) }}</span>
+          </div>
+        </div>
+
+        <!-- New Card: Conversion Rate -->
+        <div class="stat-card glass-panel">
+          <div class="stat-icon conversion-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Konversiya Darajasi</span>
+            <span class="stat-value">{{ conversionRate | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <!-- New Card: Returning Customer Rate -->
+        <div class="stat-card glass-panel">
+          <div class="stat-icon returning-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Sodiq Mijozlar (RCR)</span>
+            <span class="stat-value">{{ returningCustomerRate | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <!-- New Card: Total Inventory Value -->
+        <div class="stat-card glass-panel">
+          <div class="stat-icon inventory-value-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Ombor Umumiy Qiymati</span>
+            <span class="stat-value revenue">{{ formatTotalRevenue(totalInventoryValue) }}</span>
+            <span *ngIf="totalInventoryValue >= 1000000" class="stat-subvalue" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.1rem; font-weight: 500;">
+              {{ formatFullRevenue(totalInventoryValue) }}
             </span>
           </div>
         </div>
@@ -169,14 +218,82 @@ import { AuthService } from '../../../services/auth.service';
         </div>
       </div>
 
-      <!-- Recent Orders Table -->
-      <div class="recent-orders-section">
-        <div class="section-header">
-          <h2 class="section-title">So'nggi Buyurtmalar</h2>
-          <a routerLink="/admin/orders" class="view-all-link">Barchasini ko'rish →</a>
+      <!-- Analytics Section -->
+      <div class="analytics-grid">
+        <!-- Top Selling Products & Brands -->
+        <div class="card glass-panel" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Eng Ko'p Sotilgan Mahsulotlar</h3>
+            <span style="font-size: 0.82rem; font-weight: 600; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 50px;">Top 5</span>
+          </div>
+          <div class="glass-table-container">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Mahsulot</th>
+                  <th style="text-align: center;">Sotilgan</th>
+                  <th style="text-align: right;">Jami Summa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of topSellingProducts">
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <img [src]="item.product.imageUrl || 'assets/placeholder.png'" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid var(--glass-border);" />
+                      <div>
+                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary); text-align: left;">{{ item.product.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-align: left;">{{ item.product.brand?.name || 'No Brand' }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="text-align: center; font-weight: 600;">{{ item.quantity }} ta</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--primary-color);">{{ item.revenue | number:'1.0-0' }} so'm</td>
+                </tr>
+                <tr *ngIf="topSellingProducts.length === 0">
+                  <td colspan="3" class="empty-row">Sotuvlar mavjud emas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="glass-table-container">
+        <!-- Low Stock Alerts -->
+        <div class="card glass-panel" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Zaxira Ogohlantirishlari (Kam qolgan)</h3>
+            <span class="stock-alert-badge" [class.danger]="lowStockProducts.length > 0">{{ lowStockProducts.length }} ta mahsulot</span>
+          </div>
+          <div class="stock-alerts-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 280px; overflow-y: auto;">
+            <div *ngFor="let item of lowStockProducts" class="stock-alert-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 8px;">
+              <div style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
+                <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">{{ item.name }}</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">ID: {{ item.id }} | {{ item.brand?.name || 'No Brand' }}</span>
+              </div>
+              <span class="stock-qty-badge" [class.danger]="item.stockQuantity === 0" [class.warning]="item.stockQuantity > 0 && item.stockQuantity < 5">
+                {{ item.stockQuantity }} dona qoldi
+              </span>
+            </div>
+            <div *ngIf="lowStockProducts.length === 0" class="empty-alerts" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <p style="font-size: 0.85rem; font-weight: 500;">Barcha mahsulotlar zaxirasi yetarli</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Tabs Section (Recent Orders, Audit Logs, Customer Regions) -->
+      <div class="bottom-tabs-section glass-panel" style="padding: 2rem; margin-bottom: 3rem; display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="tabs-header-wrapper" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+          <div class="tabs-header" style="display: flex; gap: 1rem;">
+            <button [class.active]="activeTab === 'orders'" (click)="activeTab = 'orders'" class="tab-btn">So'nggi Buyurtmalar</button>
+            <button [class.active]="activeTab === 'logs'" (click)="activeTab = 'logs'" class="tab-btn">Audit Jurnali (Admin faolligi)</button>
+            <button [class.active]="activeTab === 'regions'" (click)="activeTab = 'regions'" class="tab-btn">Xaridorlar Geografiyasi</button>
+          </div>
+          <a *ngIf="activeTab === 'orders'" routerLink="/admin/orders" class="view-all-link" style="font-size: 0.85rem;">Barcha buyurtmalarni ko'rish →</a>
+        </div>
+
+        <!-- Tab Content 1: Orders -->
+        <div *ngIf="activeTab === 'orders'" class="glass-table-container">
           <table class="glass-table">
             <thead>
               <tr>
@@ -199,6 +316,52 @@ import { AuthService } from '../../../services/auth.service';
               </tr>
               <tr *ngIf="recentOrders.length === 0">
                 <td colspan="5" class="empty-row">Hali buyurtmalar mavjud emas</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab Content 2: Audit Logs -->
+        <div *ngIf="activeTab === 'logs'" class="glass-table-container">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>Sana</th>
+                <th>Admin</th>
+                <th>Amal (Action)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of auditLogs">
+                <td>{{ log.timestamp | date:'dd.MM.yy HH:mm:ss' }}</td>
+                <td><strong style="color: var(--primary-color);">{{ log.adminUsername }}</strong></td>
+                <td>{{ log.action }}</td>
+              </tr>
+              <tr *ngIf="auditLogs.length === 0">
+                <td colspan="3" class="empty-row">Audit yozuvlari mavjud emas</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab Content 3: Customer Regions -->
+        <div *ngIf="activeTab === 'regions'" class="glass-table-container">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>Hudud / Shahar</th>
+                <th style="text-align: center;">Buyurtmalar Soni</th>
+                <th style="text-align: right;">Umumiy Savdo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let reg of customerRegions">
+                <td><strong>{{ reg.name }}</strong></td>
+                <td style="text-align: center;">{{ reg.count }} ta</td>
+                <td style="text-align: right; font-weight: 700; color: var(--success-color);">{{ reg.revenue | number:'1.0-0' }} so'm</td>
+              </tr>
+              <tr *ngIf="customerRegions.length === 0">
+                <td colspan="3" class="empty-row">Geografik ma'lumotlar mavjud emas</td>
               </tr>
             </tbody>
           </table>
@@ -248,8 +411,8 @@ import { AuthService } from '../../../services/auth.service';
     }
 
     .stats-grid {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.5rem;
       margin-bottom: 3rem;
     }
@@ -259,8 +422,6 @@ import { AuthService } from '../../../services/auth.service';
       display: flex;
       align-items: center;
       gap: 1.5rem;
-      flex: 1 1 280px;
-      min-width: fit-content;
     }
 
     .stat-icon {
@@ -277,11 +438,16 @@ import { AuthService } from '../../../services/auth.service';
     .orders-icon { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
     .pending-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
     .revenue-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .aov-icon { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .conversion-icon { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+    .returning-icon { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
+    .inventory-value-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 
     .stat-info {
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
+      text-align: left;
     }
 
     .stat-label {
@@ -293,7 +459,7 @@ import { AuthService } from '../../../services/auth.service';
     }
 
     .stat-value {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 800;
       color: var(--text-primary);
       font-family: var(--font-heading);
@@ -308,20 +474,9 @@ import { AuthService } from '../../../services/auth.service';
     }
 
     .section-title {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .section-header .section-title {
-      margin-bottom: 0;
+      color: var(--text-primary);
     }
 
     .view-all-link {
@@ -334,56 +489,6 @@ import { AuthService } from '../../../services/auth.service';
 
     .view-all-link:hover {
       text-decoration: underline;
-    }
-
-    .quick-actions-section {
-      margin-bottom: 3rem;
-    }
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .action-card {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 2rem;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .action-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .action-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.25rem;
-      color: #04080f;
-    }
-
-    .action-card h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 0.35rem;
-    }
-
-    .action-card p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .recent-orders-section {
-      margin-bottom: 3rem;
     }
 
     .empty-row {
@@ -399,12 +504,73 @@ import { AuthService } from '../../../services/auth.service';
       margin-bottom: 3rem;
     }
 
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
     .donut-legend-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px 16px;
       width: 100%;
       margin-top: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-color);
+      background: rgba(79, 172, 254, 0.1);
+    }
+
+    .stock-qty-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 50px;
+    }
+
+    .stock-qty-badge.danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .stock-qty-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+
+    .stock-alert-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+    }
+
+    .stock-alert-badge.danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
     }
 
     @media (max-width: 1024px) {
@@ -416,7 +582,7 @@ import { AuthService } from '../../../services/auth.service';
       .page-header h1 {
         font-size: 2rem;
       }
-      .charts-section {
+      .charts-section, .analytics-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
       }
@@ -424,7 +590,7 @@ import { AuthService } from '../../../services/auth.service';
 
     @media (max-width: 768px) {
       .stats-grid {
-        flex-direction: column;
+        grid-template-columns: 1fr;
         gap: 1rem;
       }
       .stat-card {
@@ -438,15 +604,16 @@ import { AuthService } from '../../../services/auth.service';
         grid-template-columns: 1fr;
         gap: 8px;
       }
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
     }
   `]
 })
 export class DashboardComponent implements OnInit {
   selectedPeriod = 'ALL';
   allOrders: any[] = [];
+  allUsers: any[] = [];
+  allProducts: any[] = [];
+  auditLogs: any[] = [];
+
   totalProducts = 0;
   totalOrders = 0;
   pendingOrders = 0;
@@ -454,6 +621,19 @@ export class DashboardComponent implements OnInit {
   recentOrders: any[] = [];
   adminName = '';
   currentDate = new Date();
+
+  // Advanced Analytics Metrics
+  aov = 0;
+  conversionRate = 0;
+  returningCustomerRate = 0;
+  totalInventoryValue = 0;
+  newUsers = 0;
+  topSellingProducts: any[] = [];
+  topCategories: any[] = [];
+  topBrands: any[] = [];
+  lowStockProducts: any[] = [];
+  customerRegions: any[] = [];
+  activeTab: 'orders' | 'logs' | 'regions' = 'orders';
 
   // Donut chart status counts
   deliveredCount = 0;
@@ -488,7 +668,9 @@ export class DashboardComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private orderService: OrderService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService,
+    private auditLogService: AuditLogService
   ) {}
 
   formatTotalRevenue(val: number): string {
@@ -518,10 +700,25 @@ export class DashboardComponent implements OnInit {
     const user = this.authService.currentUserValue;
     this.adminName = user?.firstName || user?.username || 'Admin';
 
-    this.productService.getProducts().subscribe(p => {
-      this.totalProducts = p.length;
+    // Fetch users
+    this.userService.getAllUsers().subscribe(users => {
+      this.allUsers = users;
+      this.applyPeriodFilter();
     });
 
+    // Fetch products
+    this.productService.getProducts().subscribe(products => {
+      this.allProducts = products;
+      this.totalProducts = products.length;
+      this.calculateInventoryMetrics();
+    });
+
+    // Fetch audit logs
+    this.auditLogService.getAuditLogs().subscribe(logs => {
+      this.auditLogs = logs;
+    });
+
+    // Fetch orders and setup chart
     this.orderService.getAllOrders().subscribe(orders => {
       this.allOrders = orders;
       
@@ -585,6 +782,12 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  calculateInventoryMetrics(): void {
+    const activeProducts = this.allProducts.filter(p => p.isActive);
+    this.totalInventoryValue = activeProducts.reduce((acc, p) => acc + (p.price * p.stockQuantity), 0);
+    this.lowStockProducts = activeProducts.filter(p => p.stockQuantity < 5);
+  }
+
   applyPeriodFilter(): void {
     const now = new Date();
     let filteredOrders = this.allOrders;
@@ -642,6 +845,83 @@ export class DashboardComponent implements OnInit {
       .filter(o => o.status !== 'CANCELLED')
       .reduce((acc: number, o: any) => acc + o.totalAmount, 0);
     this.recentOrders = filteredOrders.slice(0, 8);
+
+    // Calculate AOV
+    const nonCancelled = filteredOrders.filter(o => o.status !== 'CANCELLED');
+    this.aov = nonCancelled.length > 0 ? (this.totalRevenue / nonCancelled.length) : 0;
+
+    // Calculate Conversion Rate
+    const uniqueUsersWithOrders = new Set(filteredOrders.map(o => o.user?.id).filter(id => id != null)).size;
+    this.conversionRate = this.allUsers.length > 0 ? (uniqueUsersWithOrders / this.allUsers.length) * 100 : 0;
+
+    // Calculate Returning Customer Rate (RCR)
+    const userOrderCounts = new Map<number, number>();
+    filteredOrders.forEach(o => {
+      if (o.user?.id) {
+        userOrderCounts.set(o.user.id, (userOrderCounts.get(o.user.id) || 0) + 1);
+      }
+    });
+    let usersWithOneOrMore = 0;
+    let usersWithTwoOrMore = 0;
+    userOrderCounts.forEach(count => {
+      if (count >= 1) usersWithOneOrMore++;
+      if (count >= 2) usersWithTwoOrMore++;
+    });
+    this.returningCustomerRate = usersWithOneOrMore > 0 ? (usersWithTwoOrMore / usersWithOneOrMore) * 100 : 0;
+
+    // Top Selling Products
+    const productMap = new Map<number, { product: any; quantity: number; revenue: number }>();
+    filteredOrders.forEach(o => {
+      if (o.status === 'CANCELLED') return;
+      if (o.orderItems) {
+        o.orderItems.forEach((item: any) => {
+          if (item.product) {
+            const prodId = item.product.id;
+            const current = productMap.get(prodId) || { product: item.product, quantity: 0, revenue: 0 };
+            current.quantity += item.quantity;
+            current.revenue += item.price * item.quantity;
+            productMap.set(prodId, current);
+          }
+        });
+      }
+    });
+    this.topSellingProducts = Array.from(productMap.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+
+    // Customer Regions
+    const regionMap = new Map<string, { name: string; count: number; revenue: number }>();
+    filteredOrders.forEach(o => {
+      let region = 'Noma\'lum';
+      if (o.shippingAddress) {
+        const parts = o.shippingAddress.split(',');
+        region = parts[0].trim();
+      }
+      const current = regionMap.get(region) || { name: region, count: 0, revenue: 0 };
+      current.count++;
+      if (o.status !== 'CANCELLED') {
+        current.revenue += o.totalAmount;
+      }
+      regionMap.set(region, current);
+    });
+    this.customerRegions = Array.from(regionMap.values())
+      .sort((a, b) => b.count - a.count);
+
+    // New Users
+    let newUsersCount = 0;
+    if (this.selectedPeriod === 'WEEK') {
+      const limit = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      newUsersCount = this.allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= limit).length;
+    } else if (this.selectedPeriod === 'MONTH') {
+      const limit = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      newUsersCount = this.allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= limit).length;
+    } else if (this.selectedPeriod === 'YEAR') {
+      const limit = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      newUsersCount = this.allUsers.filter(u => u.createdAt && new Date(u.createdAt) >= limit).length;
+    } else {
+      newUsersCount = this.allUsers.length;
+    }
+    this.newUsers = newUsersCount;
   }
 
   getStatusClass(status: string): string {

@@ -29,6 +29,9 @@ public class ProductService {
     @Autowired
     private BrandRepository brandRepository;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public List<Product> getAllProducts() {
         return productRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
@@ -71,7 +74,9 @@ public class ProductService {
                     .orElseThrow(() -> new RuntimeException("Brand topilmadi ID: " + product.getBrand().getId()));
             product.setBrand(brand);
         }
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        auditLogService.logAdminAction("Yangi mahsulot yaratildi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public Product updateProduct(Long id, Product productDetails) {
@@ -108,15 +113,19 @@ public class ProductService {
             product.setBrand(null);
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        auditLogService.logAdminAction("Mahsulot tahrirlandi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public void deleteProduct(Long id) {
         Product product = getProductById(id);
         productRepository.delete(product);
+        auditLogService.logAdminAction("Mahsulot o'chirildi: " + product.getName() + " (ID: " + id + ")");
     }
 
     public void deleteAllProducts() {
         productRepository.deleteAll();
+        auditLogService.logAdminAction("Barcha mahsulotlar o'chirildi");
     }
 }

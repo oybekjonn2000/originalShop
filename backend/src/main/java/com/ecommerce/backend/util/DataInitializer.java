@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
                 log.info("Foydalanuvchilarni bazaga yozish...");
                 for (JsonNode u : usersNode) {
                     jdbcTemplate.update(
-                        "INSERT INTO users (id, username, email, password, first_name, last_name, role, address, phone_number, profile_picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        "INSERT INTO users (id, username, email, password, first_name, last_name, role, address, phone_number, profile_picture, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         u.get("id").asLong(),
                         u.get("username").asText(),
                         u.get("email").asText(),
@@ -66,7 +66,8 @@ public class DataInitializer implements CommandLineRunner {
                         u.has("role") && !u.get("role").isNull() ? u.get("role").asText() : null,
                         u.has("address") && !u.get("address").isNull() ? u.get("address").asText() : null,
                         u.has("phone_number") && !u.get("phone_number").isNull() ? u.get("phone_number").asText() : null,
-                        u.has("profile_picture") && !u.get("profile_picture").isNull() ? u.get("profile_picture").asText() : null
+                        u.has("profile_picture") && !u.get("profile_picture").isNull() ? u.get("profile_picture").asText() : null,
+                        new java.sql.Timestamp(System.currentTimeMillis())
                     );
                 }
             }

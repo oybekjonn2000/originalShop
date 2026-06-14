@@ -14,6 +14,9 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public List<Category> getAllCategories() {
         return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
@@ -24,7 +27,9 @@ public class CategoryService {
     }
 
     public Category createCategory(Category category) {
-        return categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        auditLogService.logAdminAction("Kategoriya yaratildi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public Category updateCategory(Long id, Category categoryDetails) {
@@ -33,15 +38,19 @@ public class CategoryService {
         category.setDescription(categoryDetails.getDescription());
         category.setImageUrl(categoryDetails.getImageUrl());
         category.setAttributesTemplate(categoryDetails.getAttributesTemplate());
-        return categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        auditLogService.logAdminAction("Kategoriya tahrirlandi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public void deleteCategory(Long id) {
         Category category = getCategoryById(id);
         categoryRepository.delete(category);
+        auditLogService.logAdminAction("Kategoriya o'chirildi: " + category.getName() + " (ID: " + id + ")");
     }
 
     public void deleteAllCategories() {
         categoryRepository.deleteAll();
+        auditLogService.logAdminAction("Barcha kategoriyalar o'chirildi");
     }
 }

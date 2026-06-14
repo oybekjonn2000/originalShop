@@ -86,9 +86,15 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Buyurtma topilmadi ID: " + orderId));
     }
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = getOrderById(orderId);
+        OrderStatus oldStatus = order.getStatus();
         order.setStatus(status);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        auditLogService.logAdminAction("Buyurtma statusi o'zgartirildi: ID " + orderId + " (" + oldStatus + " -> " + status + ")");
+        return saved;
     }
 }

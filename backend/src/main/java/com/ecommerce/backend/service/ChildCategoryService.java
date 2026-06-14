@@ -15,6 +15,7 @@ import java.util.List;
 public class ChildCategoryService {
     private final ChildCategoryRepository childCategoryRepository;
     private final SubcategoryRepository subcategoryRepository;
+    private final AuditLogService auditLogService;
 
     public List<ChildCategory> getAllChildCategories() {
         return childCategoryRepository.findAll();
@@ -35,7 +36,9 @@ public class ChildCategoryService {
                     .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + childCategory.getSubcategory().getId()));
             childCategory.setSubcategory(subcategory);
         }
-        return childCategoryRepository.save(childCategory);
+        ChildCategory saved = childCategoryRepository.save(childCategory);
+        auditLogService.logAdminAction("Child kategoriya yaratildi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public ChildCategory updateChildCategory(Long id, ChildCategory details) {
@@ -47,14 +50,19 @@ public class ChildCategoryService {
                     .orElseThrow(() -> new RuntimeException("Subkategoriya topilmadi ID: " + details.getSubcategory().getId()));
             childCategory.setSubcategory(subcategory);
         }
-        return childCategoryRepository.save(childCategory);
+        ChildCategory saved = childCategoryRepository.save(childCategory);
+        auditLogService.logAdminAction("Child kategoriya tahrirlandi: " + saved.getName() + " (ID: " + saved.getId() + ")");
+        return saved;
     }
 
     public void deleteChildCategory(Long id) {
+        ChildCategory childCategory = getChildCategoryById(id);
         childCategoryRepository.deleteById(id);
+        auditLogService.logAdminAction("Child kategoriya o'chirildi: " + childCategory.getName() + " (ID: " + id + ")");
     }
 
     public void deleteAllChildCategories() {
         childCategoryRepository.deleteAll();
+        auditLogService.logAdminAction("Barcha child kategoriyalar o'chirildi");
     }
 }

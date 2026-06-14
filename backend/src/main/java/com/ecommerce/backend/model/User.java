@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -45,4 +47,8 @@ public class User {
     private String phoneNumber;
 
     private String profilePicture;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 }

@@ -1517,6 +1517,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     }
 
     .deal-card {
+      width: 280px;
       min-width: 280px;
       flex-shrink: 0;
       display: flex;
@@ -1543,7 +1544,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
-      margin-top: 1rem;
+      margin-top: auto;
       margin-bottom: 1rem;
     }
 
@@ -1560,6 +1561,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
     }
 
     .btn-deal {
+      flex: 1;
       width: 100%;
       background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 import { OrderService } from '../../../services/order.service';
 import { AuthService } from '../../../services/auth.service';
@@ -8,7 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="dashboard-container fade-in-el">
       <!-- Page Header -->
@@ -17,7 +18,15 @@ import { AuthService } from '../../../services/auth.service';
           <h1>Admin Panel</h1>
           <p class="subtitle">Xush kelibsiz, <strong>{{ adminName }}</strong>! NexShop boshqaruv paneli.</p>
         </div>
-        <div class="header-time">{{ currentDate | date:'EEEE, d MMMM y' }}</div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 1rem;">
+          <select [(ngModel)]="selectedPeriod" (change)="applyPeriodFilter()" class="glass-select" style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 600; outline: none; cursor: pointer; font-family: var(--font-main);">
+            <option value="ALL">Barcha vaqt</option>
+            <option value="WEEK">Oxirgi hafta (7 kun)</option>
+            <option value="MONTH">Oxirgi oy (30 kun)</option>
+            <option value="YEAR">Oxirgi yil (365 kun)</option>
+          </select>
+          <div class="header-time">{{ currentDate | date:'EEEE, d MMMM y' }}</div>
+        </div>
       </div>
 
       <!-- Stats Grid -->
@@ -58,7 +67,10 @@ import { AuthService } from '../../../services/auth.service';
           </div>
           <div class="stat-info">
             <span class="stat-label">Jami Daromad</span>
-            <span class="stat-value revenue">{{ totalRevenue | number:'1.0-0' }} so'm</span>
+            <span class="stat-value revenue">{{ formatTotalRevenue(totalRevenue) }}</span>
+            <span *ngIf="totalRevenue >= 1000000" class="stat-subvalue" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.1rem; font-weight: 500;">
+              {{ formatFullRevenue(totalRevenue) }}
+            </span>
           </div>
         </div>
       </div>
@@ -236,8 +248,8 @@ import { AuthService } from '../../../services/auth.service';
     }
 
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 1.5rem;
       margin-bottom: 3rem;
     }
@@ -247,6 +259,8 @@ import { AuthService } from '../../../services/auth.service';
       display: flex;
       align-items: center;
       gap: 1.5rem;
+      flex: 1 1 280px;
+      min-width: fit-content;
     }
 
     .stat-icon {
@@ -284,6 +298,7 @@ import { AuthService } from '../../../services/auth.service';
       color: var(--text-primary);
       font-family: var(--font-heading);
       line-height: 1;
+      white-space: nowrap;
     }
 
     .stat-value.revenue {
@@ -409,7 +424,7 @@ import { AuthService } from '../../../services/auth.service';
 
     @media (max-width: 768px) {
       .stats-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
         gap: 1rem;
       }
       .stat-card {
@@ -430,6 +445,8 @@ import { AuthService } from '../../../services/auth.service';
   `]
 })
 export class DashboardComponent implements OnInit {
+  selectedPeriod = 'ALL';
+  allOrders: any[] = [];
   totalProducts = 0;
   totalOrders = 0;
   pendingOrders = 0;
@@ -474,6 +491,19 @@ export class DashboardComponent implements OnInit {
     private authService: AuthService
   ) {}
 
+  formatTotalRevenue(val: number): string {
+    if (!val) return "0 so'm";
+    if (val >= 1000000) {
+      return Math.floor(val / 1000000).toLocaleString() + " mln so'm";
+    }
+    return val.toLocaleString() + " so'm";
+  }
+
+  formatFullRevenue(val: number): string {
+    if (!val) return "0 so'm";
+    return val.toLocaleString() + " so'm";
+  }
+
   formatShortRevenue(val: number): string {
     if (val >= 1000000) {
       return (val / 1000000).toFixed(1).replace('.0', '') + 'M';
@@ -493,47 +523,8 @@ export class DashboardComponent implements OnInit {
     });
 
     this.orderService.getAllOrders().subscribe(orders => {
-      this.totalOrders = orders.length;
+      this.allOrders = orders;
       
-      // Calculate individual counts
-      this.deliveredCount = orders.filter(o => o.status === 'DELIVERED').length;
-      this.processingCount = orders.filter(o => o.status === 'PROCESSING' || o.status === 'SHIPPED').length;
-      this.pendingCount = orders.filter(o => o.status === 'PENDING').length;
-      this.cancelledCount = orders.filter(o => o.status === 'CANCELLED').length;
-      
-      // Group other statuses as processing
-      const matched = this.deliveredCount + this.processingCount + this.pendingCount + this.cancelledCount;
-      if (matched < this.totalOrders) {
-        this.processingCount += (this.totalOrders - matched);
-      }
-
-      // Calculate percentages dynamically
-      if (this.totalOrders > 0) {
-        this.deliveredPct = Math.round((this.deliveredCount / this.totalOrders) * 100);
-        this.processingPct = Math.round((this.processingCount / this.totalOrders) * 100);
-        this.pendingPct = Math.round((this.pendingCount / this.totalOrders) * 100);
-        this.cancelledPct = 100 - (this.deliveredPct + this.processingPct + this.pendingPct);
-        if (this.cancelledPct < 0) this.cancelledPct = 0;
-      } else {
-        this.deliveredPct = 0;
-        this.processingPct = 0;
-        this.pendingPct = 0;
-        this.cancelledPct = 0;
-      }
-
-      // Set SVG sector lengths
-      this.deliveredDashArray = `${this.deliveredPct} ${100 - this.deliveredPct}`;
-      this.deliveredDashOffset = 0;
-
-      this.processingDashArray = `${this.processingPct} ${100 - this.processingPct}`;
-      this.processingDashOffset = -this.deliveredPct;
-
-      this.pendingDashArray = `${this.pendingPct} ${100 - this.pendingPct}`;
-      this.pendingDashOffset = -(this.deliveredPct + this.processingPct);
-
-      this.cancelledDashArray = `${this.cancelledPct} ${100 - this.cancelledPct}`;
-      this.cancelledDashOffset = -(this.deliveredPct + this.processingPct + this.pendingPct);
-
       // --- Calculate Sales Trend Dynamics dynamically ---
       const MONTH_NAMES_UZ = [
         'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
@@ -590,12 +581,67 @@ export class DashboardComponent implements OnInit {
       this.yAxisLabelMiddle = this.formatShortRevenue(maxRevenue * 2 / 3);
       this.yAxisLabelLower = this.formatShortRevenue(maxRevenue / 3);
 
-      this.pendingOrders = this.pendingCount;
-      this.totalRevenue = orders
-        .filter(o => o.status !== 'CANCELLED')
-        .reduce((acc: number, o: any) => acc + o.totalAmount, 0);
-      this.recentOrders = orders.slice(0, 8);
+      this.applyPeriodFilter();
     });
+  }
+
+  applyPeriodFilter(): void {
+    const now = new Date();
+    let filteredOrders = this.allOrders;
+
+    if (this.selectedPeriod === 'WEEK') {
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      filteredOrders = this.allOrders.filter(o => new Date(o.orderDate) >= oneWeekAgo);
+    } else if (this.selectedPeriod === 'MONTH') {
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      filteredOrders = this.allOrders.filter(o => new Date(o.orderDate) >= oneMonthAgo);
+    } else if (this.selectedPeriod === 'YEAR') {
+      const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      filteredOrders = this.allOrders.filter(o => new Date(o.orderDate) >= oneYearAgo);
+    }
+
+    this.totalOrders = filteredOrders.length;
+    
+    this.deliveredCount = filteredOrders.filter(o => o.status === 'DELIVERED').length;
+    this.processingCount = filteredOrders.filter(o => o.status === 'PROCESSING' || o.status === 'SHIPPED').length;
+    this.pendingCount = filteredOrders.filter(o => o.status === 'PENDING').length;
+    this.cancelledCount = filteredOrders.filter(o => o.status === 'CANCELLED').length;
+    
+    const matched = this.deliveredCount + this.processingCount + this.pendingCount + this.cancelledCount;
+    if (matched < this.totalOrders) {
+      this.processingCount += (this.totalOrders - matched);
+    }
+
+    if (this.totalOrders > 0) {
+      this.deliveredPct = Math.round((this.deliveredCount / this.totalOrders) * 100);
+      this.processingPct = Math.round((this.processingCount / this.totalOrders) * 100);
+      this.pendingPct = Math.round((this.pendingCount / this.totalOrders) * 100);
+      this.cancelledPct = 100 - (this.deliveredPct + this.processingPct + this.pendingPct);
+      if (this.cancelledPct < 0) this.cancelledPct = 0;
+    } else {
+      this.deliveredPct = 0;
+      this.processingPct = 0;
+      this.pendingPct = 0;
+      this.cancelledPct = 0;
+    }
+
+    this.deliveredDashArray = `${this.deliveredPct} ${100 - this.deliveredPct}`;
+    this.deliveredDashOffset = 0;
+
+    this.processingDashArray = `${this.processingPct} ${100 - this.processingPct}`;
+    this.processingDashOffset = -this.deliveredPct;
+
+    this.pendingDashArray = `${this.pendingPct} ${100 - this.pendingPct}`;
+    this.pendingDashOffset = -(this.deliveredPct + this.processingPct);
+
+    this.cancelledDashArray = `${this.cancelledPct} ${100 - this.cancelledPct}`;
+    this.cancelledDashOffset = -(this.deliveredPct + this.processingPct + this.pendingPct);
+
+    this.pendingOrders = this.pendingCount;
+    this.totalRevenue = filteredOrders
+      .filter(o => o.status !== 'CANCELLED')
+      .reduce((acc: number, o: any) => acc + o.totalAmount, 0);
+    this.recentOrders = filteredOrders.slice(0, 8);
   }
 
   getStatusClass(status: string): string {

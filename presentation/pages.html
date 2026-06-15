@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexShop — Sahifalar Taqdimoti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #00f2fe; --secondary: #e11d74; --accent: #a855f7;
+      --bg: #060a12; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+      --text: #f0f4ff; --muted: rgba(255,255,255,0.5);
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; user-select: none; }
+    .glow { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: 0.13; }
+    .g1 { width:600px;height:600px;background:var(--primary);top:-250px;left:-200px; }
+    .g2 { width:500px;height:500px;background:var(--accent);bottom:-200px;right:-150px; }
+
+    .slides-wrap { width:100vw; height:100vh; position:relative; }
+    .slide {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 2.5rem 5rem;
+      opacity: 0; transform: translateX(60px);
+      transition: opacity .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+      pointer-events: none; z-index: 1;
+    }
+    .slide.active { opacity:1; transform:translateX(0); pointer-events:all; }
+
+    .tag {
+      display:inline-block; padding:.28rem .9rem; border-radius:999px;
+      font-size:.75rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; margin-bottom:1rem;
+    }
+    .tag.cyan  { background:rgba(0,242,254,.12);color:var(--primary);border:1px solid rgba(0,242,254,.25); }
+    .tag.pink  { background:rgba(225,29,116,.12);color:var(--secondary);border:1px solid rgba(225,29,116,.25); }
+    .tag.purple{ background:rgba(168,85,247,.12);color:var(--accent);border:1px solid rgba(168,85,247,.25); }
+    .tag.green { background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25); }
+    .tag.orange{ background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.25); }
+
+    h1.hero {
+      font-family:'Space Grotesk',sans-serif; font-size:clamp(2.8rem,5.5vw,5rem);
+      font-weight:900; line-height:1.05;
+      background:linear-gradient(135deg,#00f2fe 0%,#a855f7 50%,#e11d74 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      text-align:center; margin-bottom:0.8rem;
+    }
+    h2.stitle {
+      font-family:'Space Grotesk',sans-serif; font-size:clamp(1.4rem,3vw,2.4rem);
+      font-weight:800; text-align:center; margin-bottom:.8rem;
+    }
+    .hi { color:var(--primary); }
+    .sub { font-size:clamp(.85rem,1.6vw,1.1rem); color:var(--muted); text-align:center; line-height:1.7; max-width:680px; margin-bottom:1.5rem; }
+
+    /* Screenshot containers */
+    .ss-wrap { width:100%;max-width:1080px; }
+
+    .ss-single img {
+      width:100%; max-height:65vh; border-radius:16px; border:1px solid var(--border);
+      box-shadow:0 28px 70px rgba(0,0,0,.65); object-fit:cover; object-position:top;
+      display:block;
+    }
+
+    .ss-duo { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+    .ss-duo-item { display:flex; flex-direction:column; gap:.5rem; }
+    .ss-duo-item img {
+      width:100%; height:52vh; border-radius:13px; border:1px solid var(--border);
+      box-shadow:0 18px 45px rgba(0,0,0,.55); object-fit:cover; object-position:top; display:block;
+    }
+
+    .ss-label { font-size:.78rem; font-weight:600; color:var(--muted); display:flex; align-items:center; gap:.4rem; }
+    .ss-dot { width:7px;height:7px;border-radius:50%;background:var(--primary); }
+
+    .url-tag {
+      font-size:.72rem; color:rgba(0,242,254,.75); font-family:monospace;
+      background:rgba(0,242,254,.07); border:1px solid rgba(0,242,254,.18);
+      padding:.18rem .65rem; border-radius:5px; display:inline-block; margin-bottom:.6rem;
+    }
+
+    .badge-row { display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:.85rem; }
+    .badge { padding:.32rem .85rem;border-radius:999px;font-size:.78rem;font-weight:600; background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted); }
+
+    .nav-bar {
+      position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:1rem;
+      background:rgba(6,10,18,.9); border:1px solid var(--border);
+      border-radius:999px; padding:.6rem 1.3rem; backdrop-filter:blur(20px); z-index:100;
+    }
+    .nav-btn { background:none;border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:50%;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s; }
+    .nav-btn:hover { background:rgba(0,242,254,.1);border-color:var(--primary);color:var(--primary); }
+    .slide-counter { font-size:.8rem;color:var(--muted);font-weight:600;min-width:55px;text-align:center; }
+    .dots { display:flex;gap:.35rem; }
+    .dot-el { width:5px;height:5px;border-radius:50%;background:var(--border);transition:all .3s;cursor:pointer; }
+    .dot-el.active { background:var(--primary);transform:scale(1.5); }
+
+    .rocket { font-size:clamp(3rem,6vw,5.5rem);animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.1)} }
+  </style>
+</head>
+<body>
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<div class="slides-wrap" id="wrap">
+
+  <!-- 1: TITLE -->
+  <div class="slide active" id="s0">
+    <div class="tag cyan">📸 Vizual Taqdimot</div>
+    <h1 class="hero">NexShop Sahifalari</h1>
+    <p class="sub">Saytning barcha sahifalari — haqiqiy skrinshotlar bilan ko'ring</p>
+    <div class="badge-row">
+      <span class="badge">🏠 Bosh sahifa</span><span class="badge">🔍 Katalog</span>
+      <span class="badge">📦 Mahsulot</span><span class="badge">🛒 Savat</span>
+      <span class="badge">❤️ Sevimlilar</span><span class="badge">📋 Buyurtmalar</span>
+      <span class="badge">👤 Profil</span><span class="badge">🔧 Admin panel</span>
+      <span class="badge">🔐 Kirish / Ro'yxat</span><span class="badge">📞 Aloqa</span>
+    </div>
+  </div>
+
+  <!-- 2: HOME -->
+  <div class="slide" id="s1">
+    <div class="tag cyan">🏠 Bosh sahifa</div>
+    <h2 class="stitle">Asosiy sahifa — <span class="hi">banner, mahsulotlar, kategoriyalar</span></h2>
+    <span class="url-tag">localhost:4200/</span>
+    <div class="ss-wrap ss-single"><img src="home_page.png" alt="Bosh sahifa" /></div>
+  </div>
+
+  <!-- 3: CATALOG -->
+  <div class="slide" id="s2">
+    <div class="tag purple">🔍 Katalog</div>
+    <h2 class="stitle">Katalog — <span class="hi">qidiruv va filtrlash</span></h2>
+    <span class="url-tag">localhost:4200/catalog</span>
+    <div class="ss-wrap ss-single"><img src="catalog_page.png" alt="Katalog" /></div>
+  </div>
+
+  <!-- 4: PRODUCT -->
+  <div class="slide" id="s3">
+    <div class="tag green">📦 Mahsulot Tafsilotlari</div>
+    <h2 class="stitle">Mahsulot sahifasi — <span class="hi">gallery, narx, bo'lib to'lash, sharhlar</span></h2>
+    <span class="url-tag">localhost:4200/product/:id</span>
+    <div class="ss-wrap ss-single"><img src="product_page.png" alt="Mahsulot" /></div>
+  </div>
+
+  <!-- 5: ADMIN DASHBOARD -->
+  <div class="slide" id="s4">
+    <div class="tag orange">🔧 Admin Panel — Dashboard</div>
+    <h2 class="stitle">Statistika — <span class="hi">daromad, buyurtmalar, ombor</span></h2>
+    <span class="url-tag">localhost:4200/admin/dashboard</span>
+    <div class="ss-wrap ss-single"><img src="admin_dashboard.png" alt="Admin Dashboard" /></div>
+  </div>
+
+  <!-- 6: CART + WISHLIST -->
+  <div class="slide" id="s5">
+    <div class="tag cyan">🛒 Savat & ❤️ Sevimlilar</div>
+    <h2 class="stitle">Xarid va <span class="hi">sevimlilar sahifalari</span></h2>
+    <div class="ss-wrap ss-duo">
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/cart</span>
+        <img src="cart_page.png" alt="Savat" />
+        <div class="ss-label"><span class="ss-dot"></span>Savat (Cart)</div>
+      </div>
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/wishlist</span>
+        <img src="wishlist_page.png" alt="Sevimlilar" />
+        <div class="ss-label"><span class="ss-dot"></span>Sevimlilar (Wishlist)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7: ORDERS + PROFILE -->
+  <div class="slide" id="s6">
+    <div class="tag purple">📋 Buyurtmalar & 👤 Profil</div>
+    <h2 class="stitle">Foydalanuvchi <span class="hi">shaxsiy sahifalari</span></h2>
+    <div class="ss-wrap ss-duo">
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/orders</span>
+        <img src="orders_page.png" alt="Buyurtmalar" />
+        <div class="ss-label"><span class="ss-dot"></span>Buyurtmalarim</div>
+      </div>
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/profile</span>
+        <img src="profile_page.png" alt="Profil" />
+        <div class="ss-label"><span class="ss-dot"></span>Profilim</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8: LOGIN + REGISTER -->
+  <div class="slide" id="s7">
+    <div class="tag pink">🔐 Kirish & Ro'yxat</div>
+    <h2 class="stitle">Autentifikatsiya <span class="hi">sahifalari</span></h2>
+    <div class="ss-wrap ss-duo">
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/login</span>
+        <img src="login_page.png" alt="Login" />
+        <div class="ss-label"><span class="ss-dot"></span>Tizimga kirish</div>
+      </div>
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/register</span>
+        <img src="register_page.png" alt="Register" />
+        <div class="ss-label"><span class="ss-dot"></span>Ro'yxatdan o'tish</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9: ABOUT + CONTACT -->
+  <div class="slide" id="s8">
+    <div class="tag green">ℹ️ Biz haqimizda & 📞 Aloqa</div>
+    <h2 class="stitle">Qo'shimcha <span class="hi">sahifalar</span></h2>
+    <div class="ss-wrap ss-duo">
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/about</span>
+        <img src="about_page.png" alt="About" />
+        <div class="ss-label"><span class="ss-dot"></span>Biz haqimizda</div>
+      </div>
+      <div class="ss-duo-item">
+        <span class="url-tag">localhost:4200/contact</span>
+        <img src="contact_page.png" alt="Contact" />
+        <div class="ss-label"><span class="ss-dot"></span>Aloqa</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10: FINAL -->
+  <div class="slide" id="s9">
+    <div class="rocket">🚀</div>
+    <div class="tag cyan">Xulosa</div>
+    <h1 class="hero">NexShop tayyor!</h1>
+    <p class="sub">To'liq onlayn do'kon — faqat hosting va domen kerak.<br/>Real biznes boshlashga tayyor! 🎯</p>
+    <div class="badge-row">
+      <span class="badge">✅ 12 ta sahifa</span>
+      <span class="badge">✅ Admin panel</span>
+      <span class="badge">✅ JWT xavfsizlik</span>
+      <span class="badge">✅ Responsive dizayn</span>
+      <span class="badge">✅ Dark mode</span>
+      <span class="badge">✅ Spring Boot + Angular</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+  <button class="nav-btn" onclick="go(-1)">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-counter" id="ctr">1 / 10</span>
+  <button class="nav-btn" onclick="go(1)">›</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const N = slides.length;
+  let cur = 0;
+
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot-el' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function render() {
+    document.querySelectorAll('.dot-el').forEach((d, i) => d.classList.toggle('active', i === cur));
+    document.getElementById('ctr').textContent = `${cur + 1} / ${N}`;
+  }
+  function goTo(n) {
+    if (n < 0 || n >= N) return;
+    slides[cur].classList.remove('active');
+    cur = n;
+    slides[cur].classList.add('active');
+    render();
+  }
+  function go(d) { goTo(cur + d); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End') goTo(N - 1); });
+
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+  document.addEventListener('touchend', e => { const d = tx - e.changedTouches[0].clientX; if (Math.abs(d) > 50) go(d > 0 ? 1 : -1); });
+  render();
+</script>
+</body>
+</html>

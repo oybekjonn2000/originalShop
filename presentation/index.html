@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexShop — Taqdimot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #00f2fe;
+      --secondary: #e11d74;
+      --accent: #a855f7;
+      --bg: #060a12;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f4ff;
+      --muted: rgba(255,255,255,0.5);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ── SLIDES WRAPPER ── */
+    .slides-wrapper {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 6rem;
+      opacity: 0;
+      transform: translateX(60px);
+      transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1);
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: all;
+    }
+    .slide.exit {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    /* ── SHARED ── */
+    .tag {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .tag.cyan  { background: rgba(0,242,254,0.12); color: var(--primary); border: 1px solid rgba(0,242,254,0.25); }
+    .tag.pink  { background: rgba(225,29,116,0.12); color: var(--secondary); border: 1px solid rgba(225,29,116,0.25); }
+    .tag.purple{ background: rgba(168,85,247,0.12); color: var(--accent); border: 1px solid rgba(168,85,247,0.25); }
+    .tag.green { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+
+    h1.hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3.5rem, 7vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #00f2fe 0%, #a855f7 50%, #e11d74 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    h2.slide-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .highlight { color: var(--primary); }
+
+    .subtitle {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+      max-width: 750px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── TECH GRID ── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 900px;
+    }
+    .tech-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      backdrop-filter: blur(12px);
+      transition: transform 0.25s, border-color 0.25s;
+    }
+    .tech-card:hover { transform: translateY(-4px); border-color: rgba(0,242,254,0.3); }
+    .tech-card .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .tech-card .value { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .tech-card .icon { font-size: 2rem; margin-bottom: 0.25rem; }
+
+    /* ── FEATURE LIST ── */
+    .feature-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 1000px;
+    }
+    .feature-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .feature-box h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .feature-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .feature-box ul li {
+      font-size: 0.875rem;
+      color: var(--muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.5;
+    }
+    .feature-box ul li::before {
+      content: '▸';
+      color: var(--primary);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── ADMIN STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+    .stat-card .stat-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .stat-card .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--primary); font-family: 'Space Grotesk', sans-serif; }
+    .stat-card .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── PRICE TABLE ── */
+    .price-table {
+      width: 100%;
+      max-width: 700px;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .price-table th {
+      background: rgba(0,242,254,0.08);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: left;
+    }
+    .price-table td {
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .price-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .price-highlight { color: #10b981 !important; font-weight: 700; font-size: 1rem !important; }
+
+    /* ── BIG NUMBER ── */
+    .big-numbers {
+      display: flex;
+      gap: 3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+    .big-num-item { text-align: center; }
+    .big-num-item .num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .big-num-item .num-label { font-size: 0.9rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      width: 100%;
+      max-width: 700px;
+    }
+    .tl-item {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .tl-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1rem; color: #060a12;
+      flex-shrink: 0;
+    }
+    .tl-text { font-size: 0.95rem; color: var(--muted); }
+    .tl-text strong { color: var(--text); }
+
+    /* ── BOTTOM NAV ── */
+    .nav-bar {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      background: rgba(6,10,18,0.85);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.75rem 1.5rem;
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+    .nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: rgba(0,242,254,0.1); border-color: var(--primary); color: var(--primary); }
+    .slide-counter { font-size: 0.85rem; color: var(--muted); font-weight: 600; min-width: 60px; text-align: center; }
+    .dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .dot.active { background: var(--primary); transform: scale(1.4); }
+
+    /* ── BG GLOW ── */
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.18;
+    }
+    .glow-1 { width: 600px; height: 600px; background: var(--primary); top: -200px; left: -150px; }
+    .glow-2 { width: 500px; height: 500px; background: var(--accent); bottom: -200px; right: -100px; }
+    .glow-3 { width: 400px; height: 400px; background: var(--secondary); top: 40%; left: 40%; transform: translate(-50%,-50%); opacity: 0.1; }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    /* ── BADGE ROW ── */
+    .badge-row {
+      display: flex; flex-wrap: wrap; gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .badge {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* final slide */
+    .final-glow {
+      font-size: clamp(4rem, 10vw, 8rem);
+      margin-bottom: 1rem;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+  </style>
+</head>
+<body>
+
+<!-- Background glows -->
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+
+<div class="slides-wrapper" id="wrapper">
+
+  <!-- ── SLIDE 1: TITLE ── -->
+  <div class="slide active" id="slide-0">
+    <div class="tag cyan">🛍️ Onlayn Do'kon Platformasi</div>
+    <h1 class="hero-title">NexShop</h1>
+    <p class="subtitle">
+      Zamonaviy, to'liq funksional <strong style="color:var(--text)">e-commerce platformasi</strong> —<br/>
+      xaridor ham, admin ham o'z ishini bemalol bajara oladigan onlayn do'kon.
+    </p>
+    <div class="badge-row">
+      <span class="badge">☕ Java 17 + Spring Boot 3</span>
+      <span class="badge">🅰️ Angular 17</span>
+      <span class="badge">🐘 PostgreSQL</span>
+      <span class="badge">🔐 JWT Auth</span>
+      <span class="badge">🎨 Glassmorphism</span>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2: TECH STACK ── -->
+  <div class="slide" id="slide-1">
+    <div class="tag purple">Texnologiyalar</div>
+    <h2 class="slide-title">Qanday texnologiyalar <span class="highlight">ishlatildi?</span></h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="icon">☕</div>
+        <div class="label">Backend</div>
+        <div class="value">Java 17 + Spring Boot 3</div>
+      </div>
+      <div class="tech-card">
+        <div class="icon">🅰️</div>
+        <div class="label">Frontend</div>
+        <div class="value">Angular 17 (Standalone)</div>
+      </div>
+      <div class="tech-card">
+        <div class="icon">🐘</div>
+        <div class="label">Ma'lumotlar bazasi</div>
+        <div class="value">PostgreSQL</div>
+      </div>
+      <div class="tech-card">
+        <div class="icon">🔐</div>
+        <div class="label">Autentifikatsiya</div>
+        <div class="value">JWT Token (stateless)</div>
+      </div>
+      <div class="tech-card">
+        <div class="icon">🛡️</div>
+        <div class="label">Xavfsizlik</div>
+        <div class="value">Spring Security + RBAC</div>
+      </div>
+      <div class="tech-card">
+        <div class="icon">🎨</div>
+        <div class="label">Dizayn</div>
+        <div class="value">Vanilla CSS + Glassmorphism</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: RAQAMLAR ── -->
+  <div class="slide" id="slide-2">
+    <div class="tag cyan">Loyiha hajmi</div>
+    <h2 class="slide-title">Raqamlarda <span class="highlight">NexShop</span></h2>
+    <div class="big-numbers">
+      <div class="big-num-item">
+        <div class="num">16+</div>
+        <div class="num-label">Ma'lumotlar bazasi<br/>modeli (jadval)</div>
+      </div>
+      <div class="big-num-item">
+        <div class="num">15</div>
+        <div class="num-label">Sahifalar<br/>(frontend)</div>
+      </div>
+      <div class="big-num-item">
+        <div class="num">12</div>
+        <div class="num-label">Admin panel<br/>bo'limlari</div>
+      </div>
+      <div class="big-num-item">
+        <div class="num">40+</div>
+        <div class="num-label">REST API<br/>endpointlar</div>
+      </div>
+    </div>
+    <div class="badge-row">
+      <span class="badge">🔄 Real-vaqt qidiruv</span>
+      <span class="badge">📱 Responsive dizayn</span>
+      <span class="badge">🌙 Dark mode</span>
+      <span class="badge">✨ Micro-animatsiyalar</span>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: USER FEATURES ── -->
+  <div class="slide" id="slide-3">
+    <div class="tag cyan">Foydalanuvchi</div>
+    <h2 class="slide-title">Xaridor nima <span class="highlight">qila oladi?</span></h2>
+    <div class="feature-cols">
+      <div class="feature-box">
+        <h3>🔐 Kirish va Profil</h3>
+        <ul>
+          <li>Ro'yxatdan o'tish (ism, login, parol)</li>
+          <li>JWT token bilan tizimga kirish</li>
+          <li>Profil, rasm, parol tahrirlash</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>🔍 Qidiruv va Katalog</h3>
+        <ul>
+          <li>3 darajali kategoriya filtri</li>
+          <li>Real-vaqtda mahsulot qidiruv</li>
+          <li>Narx, nomi bo'yicha saralash</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>📦 Mahsulot sahifasi</h3>
+        <ul>
+          <li>Ko'p rasmli gallery slider</li>
+          <li>6 oy / 12 oylik bo'lib to'lash hisobi</li>
+          <li>Batafsil xususiyatlar jadvali</li>
+          <li>O'xshash va so'nggi ko'rilgan mahsulotlar</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>🛒 Xarid va Boshqalar</h3>
+        <ul>
+          <li>Savatga qo'shish va buyurtma berish</li>
+          <li>Buyurtma holatini kuzatish</li>
+          <li>❤️ Sevimlilar (uchuvchi yurak animatsiya)</li>
+          <li>⭐ Sharh va 5 yulduzli baholash</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5: ADMIN PANEL ── -->
+  <div class="slide" id="slide-4">
+    <div class="tag pink">Admin Panel</div>
+    <h2 class="slide-title">Sayt egasi nima <span class="highlight">boshqara oladi?</span></h2>
+    <div class="feature-cols">
+      <div class="feature-box">
+        <h3>📊 Dashboard</h3>
+        <ul>
+          <li>Umumiy daromad (235 mln so'm formatida)</li>
+          <li>Haftalik / Oylik / Yillik statistika</li>
+          <li>Ombor qiymati va kam qolgan tovarlar</li>
+          <li>Admin harakatlar jurnal (Audit log)</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>📦 Mahsulotlar</h3>
+        <ul>
+          <li>Ko'p rasm bilan mahsulot qo'shish</li>
+          <li>Tahrirlash, o'chirish, yashirish</li>
+          <li>Chegirma foizi qo'yish</li>
+          <li>Xususiyatlar (characteristics) boshqaruvi</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>🗂️ Tizim Boshqaruvi</h3>
+        <ul>
+          <li>3 darajali kategoriya tizimi</li>
+          <li>Brendlar boshqaruvi</li>
+          <li>Reklama bannerlari (yoqish/o'chirish)</li>
+          <li>Foydalanuvchilar va rol berish</li>
+        </ul>
+      </div>
+      <div class="feature-box">
+        <h3>📋 Buyurtmalar va Sharhlar</h3>
+        <ul>
+          <li>Barcha buyurtmalarni ko'rish</li>
+          <li>Holat yangilash: Yangi → Yetkazildi</li>
+          <li>Sharhlarga javob yozish / o'chirish</li>
+          <li>Aloqa xabarlarini o'qish</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 6: SECURITY ── -->
+  <div class="slide" id="slide-5">
+    <div class="tag green">Xavfsizlik</div>
+    <h2 class="slide-title">Ma'lumotlar <span class="highlight">qanchalik xavfsiz?</span></h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-num">1</div>
+        <div class="tl-text"><strong>JWT Token</strong> — foydalanuvchi kirganida maxsus "kalit" beriladi. Har bir so'rovda shu kalit tekshiriladi.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num">2</div>
+        <div class="tl-text"><strong>2 darajali ruxsat (RBAC)</strong> — oddiy foydalanuvchi faqat o'z ma'lumotlarini ko'radi. Admin sahifalariga faqat admin kira oladi.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num">3</div>
+        <div class="tl-text"><strong>Ma'lumotlar izolyatsiyasi</strong> — har bir foydalanuvchi faqat o'z buyurtmasi, sharhi, sevimlilari va profilini ko'ra oladi.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num">4</div>
+        <div class="tl-text"><strong>Spring Security</strong> — barcha API endpointlar himoyalangan. Ruxsatsiz kirish urinishlari avtomatik bloklangan.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 7: DESIGN ── -->
+  <div class="slide" id="slide-6">
+    <div class="tag purple">Dizayn</div>
+    <h2 class="slide-title">Nima uchun <span class="highlight">chiroyli?</span></h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🌙</div>
+        <div class="stat-num">Dark</div>
+        <div class="stat-label">Mode — qoramtir fon, neon ranglar</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💎</div>
+        <div class="stat-num">Glass</div>
+        <div class="stat-label">morphism — shaffof kartochkalar</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✨</div>
+        <div class="stat-num">Micro</div>
+        <div class="stat-label">animatsiyalar — silliq effektlar</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📱</div>
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Responsive — har qanday ekran</div>
+      </div>
+    </div>
+    <div class="badge-row" style="margin-top:1.5rem">
+      <span class="badge">❤️ Uchuvchi yurak animatsiyasi</span>
+      <span class="badge">🌊 Silliq sahifa o'tishlar</span>
+      <span class="badge">🎠 Rasm galereyasi slider</span>
+      <span class="badge">💫 Hover effektlar</span>
+      <span class="badge">🔔 Toast xabarnomalar</span>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 8: PRICE ── -->
+  <div class="slide" id="slide-7">
+    <div class="tag pink">Bozor qiymati</div>
+    <h2 class="slide-title">Bu loyiha real bozorda <span class="highlight">qancha turadi?</span></h2>
+    <table class="price-table">
+      <thead>
+        <tr>
+          <th>Buyurtma turi</th>
+          <th>Narxi (USD)</th>
+          <th>Vaqti</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Arzon freelancer (Fiverr / junior)</td>
+          <td>$500 – $1,500</td>
+          <td>3–5 oy</td>
+        </tr>
+        <tr>
+          <td>O'rta mahalliy kompaniya</td>
+          <td>$2,000 – $5,000</td>
+          <td>4–6 oy</td>
+        </tr>
+        <tr>
+          <td>Professional (Yevropa / AQSH)</td>
+          <td>$10,000 – $30,000</td>
+          <td>6–12 oy</td>
+        </tr>
+        <tr>
+          <td><strong>Siz bu loyihani yaratdingiz</strong></td>
+          <td class="price-highlight">Bepul 🎉</td>
+          <td class="price-highlight">Bir necha kun ⚡</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="subtitle" style="margin-top:1.5rem; font-size:1rem;">
+      AI — qurol, <strong style="color:var(--text)">siz</strong> — me'mor. Loyihani <span class="highlight">siz yaratdingiz!</span>
+    </p>
+  </div>
+
+  <!-- ── SLIDE 9: FINAL ── -->
+  <div class="slide" id="slide-8">
+    <div class="final-glow">🚀</div>
+    <div class="tag cyan">Xulosa</div>
+    <h1 class="hero-title" style="font-size:clamp(2.5rem,5vw,4.5rem)">NexShop tayyor!</h1>
+    <p class="subtitle">
+      To'liq funktsional onlayn do'kon platformasi.<br/>
+      Hosting va domen olsangiz — <strong style="color:var(--text)">real biznes boshlashga tayyor.</strong>
+    </p>
+    <div class="badge-row">
+      <span class="badge">✅ Backend — Spring Boot 3</span>
+      <span class="badge">✅ Frontend — Angular 17</span>
+      <span class="badge">✅ Admin panel</span>
+      <span class="badge">✅ JWT xavfsizlik</span>
+      <span class="badge">✅ Zamonaviy dizayn</span>
+      <span class="badge">✅ Hosting uchun tayyor</span>
+    </div>
+  </div>
+
+</div><!-- /slides-wrapper -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-counter" id="counter">1 / 9</span>
+  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">›</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let current = 0;
+
+  // Create dots
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < totalSlides; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function updateDots() {
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+    document.getElementById('counter').textContent = `${current + 1} / ${totalSlides}`;
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= totalSlides) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(() => slides[current === n ? n : current].classList.remove('exit'), 550);
+    current = n;
+    slides[current].classList.add('active');
+    updateDots();
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next < 0 || next >= totalSlides) return;
+    slides[current].classList.remove('active');
+    const prev = current;
+    current = next;
+    slides[current].classList.add('active');
+    setTimeout(() => slides[prev].classList.remove('exit'), 0);
+    updateDots();
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); changeSlide(-1); }
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End') goTo(totalSlides - 1);
+  });
+
+  // Touch/swipe support
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+  });
+
+  updateDots();
+</script>
+</body>
+</html>

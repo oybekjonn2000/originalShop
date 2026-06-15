@@ -1,0 +1,26 @@
+INSERT INTO products (
+    name, 
+    description, 
+    price, 
+    image_url, 
+    stock_quantity, 
+    child_category_id, 
+    is_active, 
+    discount, 
+    characteristics, 
+    created_at, 
+    updated_at
+)
+SELECT 
+    cc.name || ' - Mahsulot',
+    'Sifatli va ajoyib ' || cc.name || ' mahsuloti.',
+    250000.0,
+    '/assets/placeholder.png',
+    100,
+    cc.id,
+    true,
+    0.0,
+    '{}'::jsonb,
+    NOW(),
+    NOW()
+FROM child_categories cc;

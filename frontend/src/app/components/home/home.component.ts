@@ -97,14 +97,12 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
               onmouseover="this.style.transform='translateY(-5px)';"
               onmouseout="this.style.transform='none';"
             >
-              <!-- Circle Image Box with Red Border -->
+              <!-- Category Image Box without Background or Border -->
               <div 
                 class="home-cat-circle" 
-                style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2.5px solid #ef4444; display: flex; align-items: center; justify-content: center; background: #ffffff; padding: 6px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15), inset 0 2px 5px rgba(0,0,0,0.05); transition: all 0.3s ease;"
-                onmouseover="this.style.borderColor='#dc2626'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.35)';"
-                onmouseout="this.style.borderColor='#ef4444'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.15)';"
+                style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
               >
-                <img *ngIf="cat.imageUrl" [src]="cat.imageUrl" [alt]="cat.name" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" />
+                <img *ngIf="cat.imageUrl" [src]="cat.imageUrl" [alt]="cat.name" style="width: 100%; height: 100%; object-fit: contain;" />
                 <span *ngIf="!cat.imageUrl" style="font-size: 2.2rem; color: #ef4444;">📦</span>
               </div>
               
@@ -432,7 +430,7 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
                   </div>
                 </div>
                 <div class="deal-actions">
-                  <button class="btn-primary btn-deal" style="background: var(--primary-gradient); box-shadow: 0 4px 15px var(--primary-glow); border: none; flex: 1;" (click)="addToCart(product, $event)">
+                  <button class="btn-primary btn-deal" style="background: var(--primary-gradient); color: #04080f; font-weight: 700; box-shadow: 0 4px 15px var(--primary-glow); border: none; flex: 1;" (click)="addToCart(product, $event)">
                     Savatga
                   </button>
                   <button class="btn-wish deal-wish-btn" [class.wished]="isInWishlist(product.id)" (click)="toggleWishlist(product, $event)">
@@ -458,7 +456,8 @@ import { CategoryBannerService, CategoryBanner } from '../../services/category-b
   styles: [`
 
   .btn-primary{
-    color: wheat;
+    color: #04080f;
+    font-weight: 700;
   }
     .home-container {
       max-width: 1400px;
@@ -1976,12 +1975,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (lower.includes('tv') || lower.includes('тв') || lower.includes('проектор')) {
       return 'TB va proyektorlar';
     }
+    if (lower.includes('maishiy') || lower.includes('бытовая')) {
+      return 'Maishiy texnika';
+    }
     return null;
   }
 
   buildCategorySections(): void {
     const sectionsMap = new Map<string, { categoryName: string, categoryId: number, products: any[] }>();
-    const keysOrder = ['Smartfonlar', 'Noutbuklar', 'Aksessuarlar', 'TB va proyektorlar'];
+    const keysOrder = ['Smartfonlar', 'Noutbuklar', 'Aksessuarlar', 'TB va proyektorlar', 'Maishiy texnika'];
     
     this.categories.forEach(cat => {
       const key = this.getCategoryKey(cat.name);

@@ -100,7 +100,7 @@ import { ReviewService } from '../../services/review.service';
             <div class="cart-wish-row">
               <ng-container *ngIf="!addedToCart; else goToCartBtn">
                 <button (click)="addToCart()" [disabled]="isAdding" class="btn-primary flex-1">
-                  <span *ngIf="!isAdding">Savatga qo'shish ({{ getDiscountedPrice(product.price, product.discount) * quantity | number:'1.0-0' }} so'm)</span>
+                  <span *ngIf="!isAdding">Savatga qo'shish</span>
                   <span *ngIf="isAdding">Qo'shilmoqda...</span>
                 </button>
               </ng-container>

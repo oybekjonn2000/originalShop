@@ -247,14 +247,15 @@ import { forkJoin } from 'rxjs';
         </div>
       </div>
 
-      <!-- Toast -->
-      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
-        <div class="mat-snack-icon">
-          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        </div>
-        <span class="mat-snack-text">{{ toastMessage }}</span>
+    </div>
+
+    <!-- Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
       </div>
+      <span class="mat-snack-text">{{ toastMessage }}</span>
     </div>
   `,
   styles: [`
@@ -312,7 +313,7 @@ import { forkJoin } from 'rxjs';
     .btn-delete { color: var(--danger-color); } .btn-delete:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--danger-color); }
     .empty-state { grid-column: 1 / -1; padding: 5rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--text-secondary); }
     .empty-state svg { opacity: 0.3; } .empty-state h3 { font-size: 1.3rem; color: var(--text-primary); } .empty-state p { font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 50px 1rem 1rem; animation: fadeIn 0.2s ease; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease; }
     .modal-card {
       width: 90%;
       max-width: 550px;
@@ -497,8 +498,10 @@ export class ChildCategoriesComponent implements OnInit {
     this.loadAll();
   }
 
-  loadAll(): void {
-    this.isLoading = true;
+  loadAll(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.isLoading = true;
+    }
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
       this.productService.getSubcategories().subscribe(subs => {
@@ -506,7 +509,7 @@ export class ChildCategoriesComponent implements OnInit {
         this.productService.getChildCategories().subscribe({
           next: (children) => {
             this.childCategories = children;
-            this.filterChildCategories();
+            this.filterChildCategories(keepPage);
             this.isLoading = false;
           },
           error: () => {
@@ -532,8 +535,10 @@ export class ChildCategoriesComponent implements OnInit {
     }
   }
 
-  filterChildCategories(): void {
-    this.currentPage = 1;
+  filterChildCategories(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.currentPage = 1;
+    }
     const q = this.searchTerm.toLowerCase();
     this.filteredChildCategories = this.childCategories.filter(c => {
       const matchSearch = c.name.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q));
@@ -541,6 +546,12 @@ export class ChildCategoriesComponent implements OnInit {
       const matchSub = this.filterSubcategoryId === null || c.subcategory?.id === this.filterSubcategoryId;
       return matchSearch && matchCat && matchSub;
     });
+    if (keepPage) {
+      const totalPages = Math.ceil(this.filteredChildCategories.length / this.pageSize) || 1;
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages;
+      }
+    }
   }
 
   openAddModal(): void {
@@ -609,7 +620,7 @@ export class ChildCategoriesComponent implements OnInit {
         next: () => {
           this.isSaving = false;
           this.closeModal();
-          this.loadAll();
+          this.loadAll(true);
           this.triggerToast('Child kategoriya muvaffaqiyatli yangilandi!', 'snack-success');
         },
         error: (err) => {
@@ -670,7 +681,7 @@ export class ChildCategoriesComponent implements OnInit {
     if (!this.itemToDelete) return;
     this.productService.deleteChildCategory(this.itemToDelete).subscribe({
       next: () => {
-        this.loadAll();
+        this.loadAll(true);
         this.triggerToast("Child kategoriya muvaffaqiyatli o'chirildi!", 'snack-success');
         this.closeConfirmModal();
       },

@@ -78,8 +78,8 @@ import { HttpClient } from '@angular/common/http';
             <tr *ngFor="let sub of pagedSubcategories">
               <td>{{ sub.id }}</td>
               <td>
-                <img *ngIf="sub.imageUrl" [src]="sub.imageUrl" [alt]="sub.name" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.1);" />
-                <span *ngIf="!sub.imageUrl" class="no-desc">—</span>
+                <img *ngIf="sub.imageUrl" [src]="sub.imageUrl" [alt]="sub.name" (click)="openEditModal(sub)" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.1); cursor: pointer;" title="Tahrirlash uchun bosing" />
+                <span *ngIf="!sub.imageUrl" class="no-desc" (click)="openEditModal(sub)" style="cursor: pointer;" title="Tahrirlash uchun bosing">—</span>
               </td>
               <td><strong>{{ sub.name }}</strong></td>
               <td>{{ sub.category?.name || '—' }}</td>
@@ -254,15 +254,15 @@ import { HttpClient } from '@angular/common/http';
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Material Snackbar Toast -->
-      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
-        <div class="mat-snack-icon">
-          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        </div>
-        <span class="mat-snack-text">{{ toastMessage }}</span>
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
       </div>
+      <span class="mat-snack-text">{{ toastMessage }}</span>
     </div>
   `,
   styles: [`
@@ -320,7 +320,7 @@ import { HttpClient } from '@angular/common/http';
     .btn-delete { color: var(--danger-color); } .btn-delete:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--danger-color); }
     .empty-state { grid-column: 1 / -1; padding: 5rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--text-secondary); }
     .empty-state svg { opacity: 0.3; } .empty-state h3 { font-size: 1.3rem; color: var(--text-primary); } .empty-state p { font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 50px 1rem 1rem; animation: fadeIn 0.2s ease; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease; }
     .modal-card {
       width: 90%;
       max-width: 550px;
@@ -502,15 +502,16 @@ export class SubcategoriesComponent implements OnInit {
     this.loadAll();
   }
 
-  loadAll(): void {
-    this.isLoading = true;
+  loadAll(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.isLoading = true;
+    }
     this.productService.getCategories().subscribe(cats => {
       this.categories = cats;
       this.productService.getSubcategories().subscribe({
         next: (subs) => {
           this.subcategories = subs;
-          this.filteredSubcategories = subs;
-          this.currentPage = 1;
+          this.filterSubcategories(keepPage);
           this.isLoading = false;
         },
         error: () => {
@@ -520,14 +521,23 @@ export class SubcategoriesComponent implements OnInit {
     });
   }
 
-  filterSubcategories(): void {
-    this.currentPage = 1;
+  filterSubcategories(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.currentPage = 1;
+    }
     const q = this.searchTerm.toLowerCase();
     this.filteredSubcategories = this.subcategories.filter(s => {
       const matchSearch = s.name.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q));
       const matchCat = this.filterCategoryId === null || s.category?.id === this.filterCategoryId;
       return matchSearch && matchCat;
     });
+
+    if (keepPage) {
+      const totalPages = Math.ceil(this.filteredSubcategories.length / this.pageSize) || 1;
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages;
+      }
+    }
   }
 
   openAddModal(): void {
@@ -601,7 +611,7 @@ export class SubcategoriesComponent implements OnInit {
         next: () => {
           this.isSaving = false;
           this.closeModal();
-          this.loadAll();
+          this.loadAll(true);
           this.triggerToast('Subkategoriya muvaffaqiyatli yangilandi!', 'snack-success');
         },
         error: (err) => {
@@ -663,7 +673,7 @@ export class SubcategoriesComponent implements OnInit {
     if (!this.itemToDelete) return;
     this.productService.deleteSubcategory(this.itemToDelete).subscribe({
       next: () => {
-        this.loadAll();
+        this.loadAll(true);
         this.triggerToast("Subkategoriya muvaffaqiyatli o'chirildi!", 'snack-success');
         this.closeConfirmModal();
       },

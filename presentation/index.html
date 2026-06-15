@@ -3,20 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NexShop — Taqdimot</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <title>NexShop — Premium Taqdimot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --primary: #00f2fe;
+      --primary-glow: rgba(0, 242, 254, 0.3);
       --secondary: #e11d74;
+      --secondary-glow: rgba(225, 29, 116, 0.3);
       --accent: #a855f7;
-      --bg: #060a12;
-      --card: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --text: #f0f4ff;
-      --muted: rgba(255,255,255,0.5);
+      --accent-glow: rgba(168, 85, 247, 0.3);
+      --bg: #070a13;
+      --card: rgba(255, 255, 255, 0.03);
+      --card-hover: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+      --muted: rgba(241, 245, 249, 0.55);
+      --success: #10b981;
+      --warning: #f59e0b;
     }
 
     body {
@@ -25,14 +31,100 @@
       font-family: 'Inter', sans-serif;
       height: 100vh;
       overflow: hidden;
-      user-select: none;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* ── SLIDES WRAPPER ── */
-    .slides-wrapper {
-      width: 100vw;
-      height: 100vh;
+    /* ── HEADER TABS ── */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 3rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 10, 19, 0.75);
+      backdrop-filter: blur(20px);
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 0.25rem;
+      border-radius: 999px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 0.5rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn.active {
+      color: #070a13;
+      background: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* ── CONTENT AREA ── */
+    .deck-container {
+      flex: 1;
       position: relative;
+      overflow: hidden;
+    }
+
+    .deck {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .deck.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── DECK 1 & 2: SLIDES WRAPPER ── */
+    .slides-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .slide {
@@ -42,144 +134,218 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 4rem 6rem;
+      padding: 3rem 6rem;
       opacity: 0;
-      transform: translateX(60px);
-      transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1);
+      transform: translateX(50px);
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }
+
     .slide.active {
       opacity: 1;
       transform: translateX(0);
       pointer-events: all;
     }
+
     .slide.exit {
       opacity: 0;
-      transform: translateX(-60px);
+      transform: translateX(-50px);
     }
 
-    /* ── SHARED ── */
+    /* ── BASE CARDS & GRID ── */
     .tag {
       display: inline-block;
-      padding: 0.3rem 1rem;
+      padding: 0.35rem 1.1rem;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
-    .tag.cyan  { background: rgba(0,242,254,0.12); color: var(--primary); border: 1px solid rgba(0,242,254,0.25); }
-    .tag.pink  { background: rgba(225,29,116,0.12); color: var(--secondary); border: 1px solid rgba(225,29,116,0.25); }
-    .tag.purple{ background: rgba(168,85,247,0.12); color: var(--accent); border: 1px solid rgba(168,85,247,0.25); }
-    .tag.green { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+
+    .tag.cyan { background: rgba(0, 242, 254, 0.12); color: var(--primary); border: 1px solid rgba(0, 242, 254, 0.25); }
+    .tag.pink { background: rgba(225, 29, 116, 0.12); color: var(--secondary); border: 1px solid rgba(225, 29, 116, 0.25); }
+    .tag.purple { background: rgba(168, 85, 247, 0.12); color: var(--accent); border: 1px solid rgba(168, 85, 247, 0.25); }
+    .tag.green { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.25); }
 
     h1.hero-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(3.5rem, 7vw, 6rem);
+      font-size: clamp(3.2rem, 6vw, 5rem);
       font-weight: 900;
       line-height: 1.05;
       background: linear-gradient(135deg, #00f2fe 0%, #a855f7 50%, #e11d74 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-align: center;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
+
     h2.slide-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
       font-weight: 800;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       text-align: center;
     }
-    .highlight { color: var(--primary); }
+
+    .highlight {
+      color: var(--primary);
+      text-shadow: 0 0 15px var(--primary-glow);
+    }
 
     .subtitle {
-      font-size: clamp(1rem, 2vw, 1.35rem);
+      font-size: clamp(0.95rem, 1.8vw, 1.2rem);
       color: var(--muted);
       text-align: center;
-      line-height: 1.7;
-      max-width: 750px;
-      margin-bottom: 2.5rem;
+      line-height: 1.6;
+      max-width: 720px;
+      margin-bottom: 2rem;
     }
 
     /* ── TECH GRID ── */
     .tech-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      gap: 1rem;
       width: 100%;
-      max-width: 900px;
+      max-width: 860px;
     }
+
     .tech-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem;
       backdrop-filter: blur(12px);
-      transition: transform 0.25s, border-color 0.25s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .tech-card:hover { transform: translateY(-4px); border-color: rgba(0,242,254,0.3); }
-    .tech-card .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-    .tech-card .value { font-size: 1rem; font-weight: 700; color: var(--text); }
-    .tech-card .icon { font-size: 2rem; margin-bottom: 0.25rem; }
 
-    /* ── FEATURE LIST ── */
+    .tech-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 242, 254, 0.3);
+      box-shadow: 0 10px 20px rgba(0, 242, 254, 0.05);
+    }
+
+    .tech-card .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tech-card .value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .tech-card .icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.2rem;
+    }
+
+    /* ── FEATURE COLS ── */
     .feature-cols {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.25rem;
       width: 100%;
-      max-width: 1000px;
+      max-width: 960px;
     }
+
     .feature-box {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.25rem 1.5rem;
       backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
     }
+    .feature-box:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: var(--card-hover);
+    }
+
     .feature-box h3 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.75rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
+
     .feature-box ul {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
+      gap: 0.4rem;
     }
+
     .feature-box ul li {
-      font-size: 0.875rem;
+      font-size: 0.82rem;
       color: var(--muted);
       display: flex;
       align-items: flex-start;
-      gap: 0.5rem;
-      line-height: 1.5;
+      gap: 0.45rem;
+      line-height: 1.45;
     }
+
     .feature-box ul li::before {
       content: '▸';
       color: var(--primary);
       flex-shrink: 0;
-      margin-top: 1px;
     }
 
-    /* ── ADMIN STATS ── */
+    /* ── BIG NUMBERS ── */
+    .big-numbers {
+      display: flex;
+      gap: 2.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 1.25rem 0;
+    }
+
+    .big-num-item {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 2rem;
+      min-width: 160px;
+      backdrop-filter: blur(8px);
+    }
+
+    .big-num-item .num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .big-num-item .num-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      line-height: 1.3;
+    }
+
+    /* ── STATS GRID ── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
       width: 100%;
-      max-width: 1000px;
-      margin-bottom: 1.5rem;
+      max-width: 960px;
     }
+
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -187,63 +353,26 @@
       padding: 1.25rem 1rem;
       text-align: center;
       backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
     }
-    .stat-card .stat-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
-    .stat-card .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--primary); font-family: 'Space Grotesk', sans-serif; }
-    .stat-card .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+    .stat-card:hover {
+      transform: scale(1.03);
+      border-color: var(--accent);
+    }
 
-    /* ── PRICE TABLE ── */
-    .price-table {
-      width: 100%;
-      max-width: 700px;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    .price-table th {
-      background: rgba(0,242,254,0.08);
-      border: 1px solid var(--border);
-      padding: 0.75rem 1.25rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-align: left;
-    }
-    .price-table td {
-      border: 1px solid var(--border);
-      padding: 0.75rem 1.25rem;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-    .price-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-    .price-highlight { color: #10b981 !important; font-weight: 700; font-size: 1rem !important; }
-
-    /* ── BIG NUMBER ── */
-    .big-numbers {
-      display: flex;
-      gap: 3rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 1.5rem 0;
-    }
-    .big-num-item { text-align: center; }
-    .big-num-item .num {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .big-num-item .num-label { font-size: 0.9rem; color: var(--muted); margin-top: 0.25rem; }
+    .stat-card .stat-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+    .stat-card .stat-num { font-size: 1.35rem; font-weight: 800; color: var(--primary); font-family: 'Space Grotesk', sans-serif; }
+    .stat-card .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.3; }
 
     /* ── TIMELINE ── */
     .timeline {
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 0.75rem;
       width: 100%;
-      max-width: 700px;
+      max-width: 680px;
     }
+
     .tl-item {
       display: flex;
       align-items: center;
@@ -251,21 +380,373 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1rem 1.5rem;
+      padding: 0.85rem 1.25rem;
       backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
     }
+    .tl-item:hover {
+      background: var(--card-hover);
+      border-color: rgba(255,255,255,0.15);
+    }
+
     .tl-num {
-      width: 40px; height: 40px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 1rem; color: #060a12;
+      font-weight: 800; font-size: 0.9rem; color: #070a13;
       flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
     }
-    .tl-text { font-size: 0.95rem; color: var(--muted); }
+
+    .tl-text { font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
     .tl-text strong { color: var(--text); }
 
-    /* ── BOTTOM NAV ── */
+    /* ── PRICE TABLE ── */
+    .price-table {
+      width: 100%;
+      max-width: 760px;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .price-table th {
+      background: rgba(0, 242, 254, 0.06);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.25rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .price-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.25rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .price-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .price-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .price-highlight {
+      color: var(--success) !important;
+      font-weight: 700;
+      font-size: 0.95rem !important;
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+
+    /* ── BADGE ROW ── */
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-top: 0.8rem;
+    }
+
+    .badge {
+      padding: 0.35rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: all 0.25s ease;
+    }
+    .badge:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    /* ── SCREENSHOT SLIDES (DECK 2) ── */
+    .ss-container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .ss-single {
+      position: relative;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+
+    .ss-single img {
+      width: 100%;
+      max-height: 55vh;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .ss-single:hover img {
+      transform: scale(1.02);
+    }
+
+    .url-tag {
+      font-size: 0.7rem;
+      color: var(--primary);
+      font-family: monospace;
+      background: rgba(0, 242, 254, 0.08);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      padding: 0.2rem 0.65rem;
+      border-radius: 5px;
+      display: inline-block;
+      align-self: center;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .ss-duo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .ss-duo-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .ss-duo-item img {
+      width: 100%;
+      height: 48vh;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .ss-duo-item:hover img {
+      transform: scale(1.02);
+    }
+
+    .ss-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+
+    .ss-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    /* ── ARCHITECTURE & JWT SIMULATOR (DECK 3) ── */
+    .arch-container {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+      width: 100%;
+      max-width: 1100px;
+      height: 100%;
+      padding: 2rem 4rem;
+    }
+
+    .arch-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+
+    .diagram-svg {
+      width: 100%;
+      height: 100%;
+      max-height: 420px;
+    }
+
+    .arch-node {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .arch-node:hover {
+      filter: drop-shadow(0 0 8px var(--primary-glow));
+    }
+
+    .arch-node rect, .arch-node circle, .arch-node polygon {
+      transition: all 0.3s ease;
+    }
+
+    .arch-node:hover rect { fill: rgba(0, 242, 254, 0.15) !important; stroke: var(--primary) !important; }
+    .arch-node:hover circle { fill: rgba(168, 85, 247, 0.15) !important; stroke: var(--accent) !important; }
+
+    .arch-info-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .info-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      backdrop-filter: blur(12px);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .info-box h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-box p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── JWT SIMULATOR CARD ── */
+    .jwt-simulator-card {
+      background: rgba(7, 10, 19, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .jwt-simulator-card h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .sim-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sim-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.8rem;
+      flex: 1;
+      outline: none;
+    }
+    .sim-input:focus {
+      border-color: var(--primary);
+    }
+
+    .sim-btn {
+      background: var(--primary);
+      border: none;
+      color: #070a13;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .sim-btn:hover {
+      box-shadow: 0 0 10px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    .sim-btn-accent {
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .sim-btn-accent:hover {
+      background: rgba(168, 85, 247, 0.1);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .sim-console {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+      min-height: 100px;
+      max-height: 100px;
+      overflow-y: auto;
+      color: #34d399;
+      white-space: pre-wrap;
+    }
+
+    .sim-storage-box {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.6rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.01);
+      word-break: break-all;
+    }
+
+    .sim-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .sim-indicator.active {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+
+    /* ── FOOTER NAVIGATION BAR ── */
     .nav-bar {
       position: fixed;
       bottom: 2rem;
@@ -273,447 +754,884 @@
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 1.25rem;
-      background: rgba(6,10,18,0.85);
+      gap: 1rem;
+      background: rgba(7, 10, 19, 0.85);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.75rem 1.5rem;
+      padding: 0.6rem 1.25rem;
       backdrop-filter: blur(20px);
       z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
+
     .nav-btn {
       background: none;
       border: 1px solid var(--border);
       color: var(--text);
-      width: 36px; height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .nav-btn:hover { background: rgba(0,242,254,0.1); border-color: var(--primary); color: var(--primary); }
-    .slide-counter { font-size: 0.85rem; color: var(--muted); font-weight: 600; min-width: 60px; text-align: center; }
+
+    .nav-btn:hover {
+      background: rgba(0, 242, 254, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .slide-counter {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+      min-width: 50px;
+      text-align: center;
+    }
+
     .dots {
       display: flex;
       gap: 0.4rem;
     }
-    .dot {
-      width: 6px; height: 6px;
+
+    .dot-el {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--border);
-      transition: all 0.3s;
+      transition: all 0.3s ease;
       cursor: pointer;
     }
-    .dot.active { background: var(--primary); transform: scale(1.4); }
 
-    /* ── BG GLOW ── */
+    .dot-el.active {
+      background: var(--primary);
+      transform: scale(1.4);
+    }
+
+    .control-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+    }
+
+    /* ── BACKGROUND GLOWS ── */
     .glow {
       position: fixed;
       border-radius: 50%;
       filter: blur(120px);
       pointer-events: none;
       z-index: 0;
-      opacity: 0.18;
+      opacity: 0.12;
     }
-    .glow-1 { width: 600px; height: 600px; background: var(--primary); top: -200px; left: -150px; }
-    .glow-2 { width: 500px; height: 500px; background: var(--accent); bottom: -200px; right: -100px; }
-    .glow-3 { width: 400px; height: 400px; background: var(--secondary); top: 40%; left: 40%; transform: translate(-50%,-50%); opacity: 0.1; }
+    .glow-1 { width: 500px; height: 500px; background: var(--primary); top: -150px; left: -100px; }
+    .glow-2 { width: 450px; height: 450px; background: var(--accent); bottom: -150px; right: -50px; }
+    .glow-3 { width: 350px; height: 350px; background: var(--secondary); top: 35%; left: 45%; }
 
-    .slide > * { position: relative; z-index: 1; }
-
-    /* ── BADGE ROW ── */
-    .badge-row {
-      display: flex; flex-wrap: wrap; gap: 0.75rem;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-    .badge {
-      padding: 0.4rem 1rem;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    /* final slide */
-    .final-glow {
-      font-size: clamp(4rem, 10vw, 8rem);
-      margin-bottom: 1rem;
+    .pulse-animation {
       animation: pulse 2.5s ease-in-out infinite;
     }
-    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    /* Tooltip Helper */
+    .tooltip-icon {
+      font-size: 1rem;
+      cursor: help;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+    .tooltip-icon:hover {
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
 
-<!-- Background glows -->
-<div class="glow glow-1"></div>
-<div class="glow glow-2"></div>
-<div class="glow glow-3"></div>
+  <!-- Background Glowing Blobs -->
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
 
-<div class="slides-wrapper" id="wrapper">
-
-  <!-- ── SLIDE 1: TITLE ── -->
-  <div class="slide active" id="slide-0">
-    <div class="tag cyan">🛍️ Onlayn Do'kon Platformasi</div>
-    <h1 class="hero-title">NexShop</h1>
-    <p class="subtitle">
-      Zamonaviy, to'liq funksional <strong style="color:var(--text)">e-commerce platformasi</strong> —<br/>
-      xaridor ham, admin ham o'z ishini bemalol bajara oladigan onlayn do'kon.
-    </p>
-    <div class="badge-row">
-      <span class="badge">☕ Java 17 + Spring Boot 3</span>
-      <span class="badge">🅰️ Angular 17</span>
-      <span class="badge">🐘 PostgreSQL</span>
-      <span class="badge">🔐 JWT Auth</span>
-      <span class="badge">🎨 Glassmorphism</span>
+  <!-- HEADER -->
+  <header>
+    <div class="logo" onclick="switchDeck('overview', 0)">
+      <span>🛍️</span> NexShop
     </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-overview" onclick="switchDeck('overview')">
+        📊 Loyiha Haqida
+      </button>
+      <button class="tab-btn" id="tab-screenshots" onclick="switchDeck('screenshots')">
+        📸 Sahifalar (Skrinshotlar)
+      </button>
+      <button class="tab-btn" id="tab-architecture" onclick="switchDeck('architecture')">
+        ⚙️ Arxitektura & JWT
+      </button>
+    </div>
+
+    <!-- Keyboard info helper -->
+    <div class="tooltip-icon" title="Navigatsiya: Chap/O'ng strelkalar, Probel yoki sichqoncha g'ildiragi">
+      ℹ️
+    </div>
+  </header>
+
+  <!-- MAIN PRESENTATION AREA -->
+  <div class="deck-container">
+
+    <!-- ── DECK 1: PROJECT OVERVIEW ── -->
+    <div class="deck active" id="deck-overview">
+      <div class="slides-wrapper">
+
+        <!-- Slide 1: Welcome -->
+        <div class="slide active" id="overview-s0">
+          <div class="tag cyan">🛍️ Onlayn Do'kon Platformasi</div>
+          <h1 class="hero-title">NexShop</h1>
+          <p class="subtitle">
+            Zamonaviy, to'liq funksional <strong style="color:var(--text)">e-commerce platformasi</strong> —<br/>
+            xaridor va do'kon administratori uchun mukammal yechim.
+          </p>
+          <div class="badge-row">
+            <span class="badge">☕ Spring Boot 3</span>
+            <span class="badge">🅰️ Angular 17 (Standalone)</span>
+            <span class="badge">🐘 PostgreSQL</span>
+            <span class="badge">🔐 JWT Autentifikatsiya</span>
+            <span class="badge">🎨 Glassmorphism</span>
+          </div>
+        </div>
+
+        <!-- Slide 2: Stack -->
+        <div class="slide" id="overview-s1">
+          <div class="tag purple">Texnologiyalar</div>
+          <h2 class="slide-title">Loyiha <span class="highlight">Texnologik Stacki</span></h2>
+          <div class="tech-grid">
+            <div class="tech-card">
+              <div class="icon">☕</div>
+              <div class="label">Backend</div>
+              <div class="value">Java 17 + Spring Boot 3</div>
+            </div>
+            <div class="tech-card">
+              <div class="icon">🅰️</div>
+              <div class="label">Frontend</div>
+              <div class="value">Angular 17 (Standalone)</div>
+            </div>
+            <div class="tech-card">
+              <div class="icon">🐘</div>
+              <div class="label">Ma'lumotlar bazasi</div>
+              <div class="value">PostgreSQL</div>
+            </div>
+            <div class="tech-card">
+              <div class="icon">🔐</div>
+              <div class="label">Autentifikatsiya</div>
+              <div class="value">JWT Token (Stateless)</div>
+            </div>
+            <div class="tech-card">
+              <div class="icon">🛡️</div>
+              <div class="label">Xavfsizlik</div>
+              <div class="value">Spring Security + RBAC</div>
+            </div>
+            <div class="tech-card">
+              <div class="icon">🎨</div>
+              <div class="label">Dizayn</div>
+              <div class="value">Vanilla CSS + Glassmorphism</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: Numbers -->
+        <div class="slide" id="overview-s2">
+          <div class="tag cyan">Hajmi</div>
+          <h2 class="slide-title">NexShop <span class="highlight">Raqamlarda</span></h2>
+          <div class="big-numbers">
+            <div class="big-num-item">
+              <div class="num">16+</div>
+              <div class="num-label">Ma'lumotlar bazasi<br/>jadvallari (DB Tables)</div>
+            </div>
+            <div class="big-num-item">
+              <div class="num">12+</div>
+              <div class="num-label">Frontend<br/>Tizim Sahifalari</div>
+            </div>
+            <div class="big-num-item">
+              <div class="num">12</div>
+              <div class="num-label">Admin panel<br/>boshqaruv bo'limlari</div>
+            </div>
+            <div class="big-num-item">
+              <div class="num">40+</div>
+              <div class="num-label">REST API<br/>Endpointlar</div>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="badge">🔄 Avtomatik real-vaqt qidiruv</span>
+            <span class="badge">📱 100% Responsive dizayn</span>
+            <span class="badge">🌙 Ko'zni charchatmaydigan Dark Mode</span>
+          </div>
+        </div>
+
+        <!-- Slide 4: User features -->
+        <div class="slide" id="overview-s3">
+          <div class="tag cyan">Foydalanuvchi</div>
+          <h2 class="slide-title">Xaridor uchun <span class="highlight">imkoniyatlar</span></h2>
+          <div class="feature-cols">
+            <div class="feature-box">
+              <h3>🔐 Kirish va Profil</h3>
+              <ul>
+                <li>JWT Token xavfsizligi ostida tezkor ro'yxatdan o'tish va kirish</li>
+                <li>Shaxsiy ma'lumotlar, parol va avatar rasmini tahrirlash</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>🔍 Qidiruv va Katalog</h3>
+              <ul>
+                <li>3 darajali kategoriya tizimi bo'yicha mahsulotlarni filtrlash</li>
+                <li>Nomlar va brendlar bo'yicha real-vaqt rejimidagi tezkor qidiruv</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>📦 Mahsulot sahifasi</h3>
+              <ul>
+                <li>Ko'p rasmli galereya slideri va to'liq tasniflar jadvali</li>
+                <li>12 oylik muddatli to'lov (kredit/installment) hisoblagichi</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>🛒 Xarid va Boshqalar</h3>
+              <ul>
+                <li>Savatga oson qo'shish va buyurtma berish (Fly-to-cart animatsiyasi bilan)</li>
+                <li>Sevimlilar (Wishlist) va mahsulotlarga yulduzli sharh qoldirish</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 5: Admin Panel -->
+        <div class="slide" id="overview-s4">
+          <div class="tag pink">Administrator</div>
+          <h2 class="slide-title">Admin Panel <span class="highlight">Boshqaruvi</span></h2>
+          <div class="feature-cols">
+            <div class="feature-box">
+              <h3>📊 Dashboard</h3>
+              <ul>
+                <li>Do'konning umumiy daromadi, buyurtmalar soni va geyjlar statistikasi</li>
+                <li>Ombordagi tovarlar qiymati va kam qolgan tovarlar haqida bildirishnoma</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>📦 Mahsulotlar & Chegirmalar</h3>
+              <ul>
+                <li>Yangi mahsulotlarni ko'p rasm va xususiyatlar bilan qo'shish</li>
+                <li>Chegirma foizlarini sozlash va mahsulotni saytda yashirish</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>🗂️ Tizim Ma'lumotlari</h3>
+              <ul>
+                <li>Kategoriyalar (Kategoriya → Subkategoriya → Child) boshqaruvi</li>
+                <li>Brendlar, foydalanuvchilar rollari va bosh sahifa reklamalarini sozlash</li>
+              </ul>
+            </div>
+            <div class="feature-box">
+              <h3>📋 Buyurtmalar & Sharhlar</h3>
+              <ul>
+                <li>Buyurtmalar holatini real-vaqtda boshqarish (Yangi, Yetkazilmoqda, Yakunlandi)</li>
+                <li>Foydalanuvchilar qoldirgan sharhlar va aloqa xabarlarini tahrirlash</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 6: Security -->
+        <div class="slide" id="overview-s5">
+          <div class="tag green">Xavfsizlik</div>
+          <h2 class="slide-title">Ma'lumotlar va API <span class="highlight">Xavfsizligi</span></h2>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-num">1</div>
+              <div class="tl-text"><strong>Stateless JWT Token</strong> — foydalanuvchi kirganida maxsus shifrlangan kalit beriladi. Har bir API so'rovda ushbu kalit interceptor orqali avtomatik tekshiriladi.</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-num">2</div>
+              <div class="tl-text"><strong>Rollar tizimi (RBAC)</strong> — oddiy xaridor faqat o'z profiliga kira oladi. Barcha admin sahifalari va yashirin REST API yo'llari faqat `ROLE_ADMIN` huquqiga ega foydalanuvchilarga ochiq.</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-num">3</div>
+              <div class="tl-text"><strong>Ma'lumotlar Izolyatsiyasi</strong> — xaridorlar faqat shaxsiy buyurtmalari, sharhlari va savatlarini ko'ra olishi ta'minlangan (Ma'lumotlar sizib chiqishining oldi olingan).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 7: Value -->
+        <div class="slide" id="overview-s6">
+          <div class="tag pink">Bozor qiymati</div>
+          <h2 class="slide-title">Ushbu Loyihaning Bozor <span class="highlight">Bahosi Qancha?</span></h2>
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>Ishlab chiquvchi turi</th>
+                <th>O'rtacha Narx (USD)</th>
+                <th>Kutish vaqti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Freelancer (Fiverr, Upwork / Junior)</td>
+                <td>$800 – $1,800</td>
+                <td>3–4 oy</td>
+              </tr>
+              <tr>
+                <td>O'rta darajadagi IT-Kompaniya</td>
+                <td>$3,000 – $6,000</td>
+                <td>4–6 oy</td>
+              </tr>
+              <tr>
+                <td>Professional Xalqaro IT Agentliklar</td>
+                <td>$12,000 – $25,000</td>
+                <td>6–9 oy</td>
+              </tr>
+              <tr>
+                <td><strong>Sizning NexShop Loyihangiz</strong></td>
+                <td class="price-highlight">Bepul 🎉</td>
+                <td class="price-highlight">Bir necha kun ⚡</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="subtitle" style="margin-top: 1rem; font-size: 0.95rem;">
+            AI — eng kuchli dasturlash asbobi, <strong style="color:var(--text)">siz esa — me'morsiz.</strong> Loyihani siz muvaffaqiyatli qurdingiz!
+          </p>
+        </div>
+
+        <!-- Slide 8: Final Summary -->
+        <div class="slide" id="overview-s7">
+          <div class="pulse-animation" style="font-size: 4.5rem; margin-bottom: 0.5rem;">🚀</div>
+          <div class="tag cyan">Xulosa</div>
+          <h1 class="hero-title" style="font-size: clamp(2.2rem, 5vw, 3.8rem);">NexShop Platformasi Tayyor!</h1>
+          <p class="subtitle">
+            Barcha backend va frontend qismlari to'liq ulangan.<br/>
+            Hosting va domen olsangiz — <strong style="color:var(--text)">real biznesingizni boshlashga tayyor mahsulot.</strong>
+          </p>
+          <div class="badge-row">
+            <span class="badge">✅ Spring Boot + Angular integration</span>
+            <span class="badge">✅ JWT Security validated</span>
+            <span class="badge">✅ Admin Dashboard ishlash holatida</span>
+            <span class="badge">✅ Responsive & Dark theme</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── DECK 2: SCREENSHOTS SLIDES ── -->
+    <div class="deck" id="deck-screenshots">
+      <div class="slides-wrapper">
+
+        <!-- Slide 1: Welcome Screenshots -->
+        <div class="slide active" id="screenshots-s0">
+          <div class="tag cyan">Vizual Taqdimot</div>
+          <h1 class="hero-title">Sahifalar Skrinshotlari</h1>
+          <p class="subtitle">Loyiha sahifalarining haqiqiy skrinshotlari orqali sayt imkoniyatlari bilan tanishing.</p>
+          <div class="badge-row">
+            <span class="badge">🏠 Bosh sahifa</span>
+            <span class="badge">🔍 Katalog & Qidiruv</span>
+            <span class="badge">📦 Mahsulot sahifasi</span>
+            <span class="badge">🔧 Admin panel</span>
+            <span class="badge">🛒 Savat & Sevimlilar</span>
+          </div>
+        </div>
+
+        <!-- Slide 2: Home Page -->
+        <div class="slide" id="screenshots-s1">
+          <div class="tag cyan">🏠 Bosh sahifa</div>
+          <h2 class="slide-title">Bosh sahifa — <span class="highlight">Banner va Mahsulotlar</span></h2>
+          <span class="url-tag">localhost:4200/</span>
+          <div class="ss-container ss-single">
+            <img src="home_page.png" alt="Bosh sahifa" />
+          </div>
+        </div>
+
+        <!-- Slide 3: Catalog Page -->
+        <div class="slide" id="screenshots-s2">
+          <div class="tag purple">🔍 Katalog</div>
+          <h2 class="slide-title">Katalog — <span class="highlight">Qidiruv va 3 darajali filtrlar</span></h2>
+          <span class="url-tag">localhost:4200/catalog</span>
+          <div class="ss-container ss-single">
+            <img src="catalog_page.png" alt="Katalog" />
+          </div>
+        </div>
+
+        <!-- Slide 4: Product Detail -->
+        <div class="slide" id="screenshots-s3">
+          <div class="tag green">📦 Mahsulot sahifasi</div>
+          <h2 class="slide-title">Batafsil ma'lumotlar — <span class="highlight">Galereya va Muddatli to'lov</span></h2>
+          <span class="url-tag">localhost:4200/product/:id</span>
+          <div class="ss-container ss-single">
+            <img src="product_page.png" alt="Mahsulot tafsilotlari" />
+          </div>
+        </div>
+
+        <!-- Slide 5: Admin Dashboard -->
+        <div class="slide" id="screenshots-s4">
+          <div class="tag pink">🔧 Admin Panel</div>
+          <h2 class="slide-title">Admin Dashboard — <span class="highlight">Umumiy Statistika</span></h2>
+          <span class="url-tag">localhost:4200/admin/dashboard</span>
+          <div class="ss-container ss-single">
+            <img src="admin_dashboard.png" alt="Admin Dashboard" />
+          </div>
+        </div>
+
+        <!-- Slide 6: Cart & Wishlist -->
+        <div class="slide" id="screenshots-s5">
+          <div class="tag cyan">🛒 Savat & ❤️ Sevimlilar</div>
+          <h2 class="slide-title">Xaridlar va <span class="highlight">Kutish Ro'yxatlari</span></h2>
+          <div class="ss-duo">
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/cart</span>
+              <img src="cart_page.png" alt="Savat" />
+              <div class="ss-label"><span class="ss-dot"></span>Savat (Cart)</div>
+            </div>
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/wishlist</span>
+              <img src="wishlist_page.png" alt="Sevimlilar" />
+              <div class="ss-label"><span class="ss-dot"></span>Sevimlilar ro'yxati (Wishlist)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 7: Orders & Profile -->
+        <div class="slide" id="screenshots-s6">
+          <div class="tag purple">📋 Buyurtmalar & 👤 Profil</div>
+          <h2 class="slide-title">Shaxsiy <span class="highlight">Kabinet Sahifalari</span></h2>
+          <div class="ss-duo">
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/orders</span>
+              <img src="orders_page.png" alt="Buyurtmalar" />
+              <div class="ss-label"><span class="ss-dot"></span>Mening buyurtmalarim tarixi</div>
+            </div>
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/profile</span>
+              <img src="profile_page.png" alt="Profil" />
+              <div class="ss-label"><span class="ss-dot"></span>Shaxsiy ma'lumotlarni sozlash</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 8: Login & Register -->
+        <div class="slide" id="screenshots-s7">
+          <div class="tag pink">🔐 Kirish & Ro'yxat</div>
+          <h2 class="slide-title">Xavfsiz <span class="highlight">Avtorizatsiya</span></h2>
+          <div class="ss-duo">
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/login</span>
+              <img src="login_page.png" alt="Kirish" />
+              <div class="ss-label"><span class="ss-dot"></span>Tizimga kirish oynasi</div>
+            </div>
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/register</span>
+              <img src="register_page.png" alt="Ro'yxatdan o'tish" />
+              <div class="ss-label"><span class="ss-dot"></span>Yangi hisob yaratish</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 9: About & Contact -->
+        <div class="slide" id="screenshots-s8">
+          <div class="tag green">ℹ️ Ma'lumot & 📞 Aloqa</div>
+          <h2 class="slide-title">Qo'shimcha <span class="highlight">Yordamchi Sahifalar</span></h2>
+          <div class="ss-duo">
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/about</span>
+              <img src="about_page.png" alt="Biz haqimizda" />
+              <div class="ss-label"><span class="ss-dot"></span>Do'kon va jamoa haqida</div>
+            </div>
+            <div class="ss-duo-item">
+              <span class="url-tag">localhost:4200/contact</span>
+              <img src="contact_page.png" alt="Aloqa" />
+              <div class="ss-label"><span class="ss-dot"></span>Xabar yo'llash shakli</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── DECK 3: INTERACTIVE ARCHITECTURE & JWT SIMULATOR ── -->
+    <div class="deck" id="deck-architecture">
+      <div class="arch-container">
+
+        <!-- Architecture Flow Diagram -->
+        <div class="arch-diagram">
+          <h3 style="font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-bottom:1rem; color:var(--text);">
+            Tizim Arxitekturasi (Kursorni olib boring)
+          </h3>
+          <svg class="diagram-svg" viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g-client" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00f2fe" />
+                <stop offset="100%" stop-color="#a855f7" />
+              </linearGradient>
+              <linearGradient id="g-server" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a855f7" />
+                <stop offset="100%" stop-color="#e11d74" />
+              </linearGradient>
+            </defs>
+
+            <!-- Connections Line -->
+            <path d="M 140 160 L 220 160" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-dasharray="6,4" />
+            <path d="M 340 160 L 410 160" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-dasharray="6,4" />
+
+            <!-- Client Node (Angular) -->
+            <g class="arch-node" onclick="showArchInfo('client')" onmouseover="showArchInfo('client')">
+              <rect x="20" y="90" width="120" height="140" rx="12" fill="rgba(0, 242, 254, 0.05)" stroke="#00f2fe" stroke-width="1.5" />
+              <circle cx="80" cy="140" r="24" fill="url(#g-client)" />
+              <text x="80" y="145" font-family="'Space Grotesk', sans-serif" font-size="16" font-weight="bold" fill="#070a13" text-anchor="middle">🅰️</text>
+              <text x="80" y="195" font-family="sans-serif" font-size="11" font-weight="700" fill="#f1f5f9" text-anchor="middle">Angular Client</text>
+              <text x="80" y="210" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle">Port: 4200</text>
+            </g>
+
+            <!-- Server Node (Spring Boot) -->
+            <g class="arch-node" onclick="showArchInfo('server')" onmouseover="showArchInfo('server')">
+              <rect x="220" y="90" width="120" height="140" rx="12" fill="rgba(168, 85, 247, 0.05)" stroke="#a855f7" stroke-width="1.5" />
+              <circle cx="280" cy="140" r="24" fill="url(#g-server)" />
+              <text x="280" y="145" font-family="'Space Grotesk', sans-serif" font-size="16" font-weight="bold" fill="#070a13" text-anchor="middle">🍃</text>
+              <text x="280" y="195" font-family="sans-serif" font-size="11" font-weight="700" fill="#f1f5f9" text-anchor="middle">Spring Boot API</text>
+              <text x="280" y="210" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle">Port: 8080</text>
+            </g>
+
+            <!-- Database Node (PostgreSQL) -->
+            <g class="arch-node" onclick="showArchInfo('db')" onmouseover="showArchInfo('db')">
+              <rect x="410" y="90" width="70" height="140" rx="12" fill="rgba(225, 29, 116, 0.05)" stroke="#e11d74" stroke-width="1.5" />
+              <!-- DB Cylinder shape -->
+              <path d="M 425 125 C 425 115, 465 115, 465 125 L 465 175 C 465 185, 425 185, 425 175 Z" fill="rgba(225, 29, 116, 0.2)" stroke="#e11d74" stroke-width="1.5" />
+              <ellipse cx="445" cy="125" rx="20" ry="8" fill="#e11d74" />
+              <text x="445" y="200" font-family="sans-serif" font-size="11" font-weight="700" fill="#f1f5f9" text-anchor="middle">PostgreSQL</text>
+              <text x="445" y="215" font-family="sans-serif" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle">Port: 5432</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- JWT Simulation and Info Panel -->
+        <div class="arch-info-panel">
+          
+          <!-- Static Info Panel -->
+          <div class="info-box">
+            <h3 id="arch-title">💡 Elementni Tanlang</h3>
+            <p id="arch-desc">Tizim arxitekturasi elementini ko'rish yoki uning ishlash mexanizmini tushunish uchun chap tomondagi diagrammadan birini tanlang.</p>
+          </div>
+
+          <!-- Dynamic JWT Simulator Console -->
+          <div class="jwt-simulator-card">
+            <h4>🔐 JWT Avtorizatsiya Simulyatori</h4>
+            <div class="sim-row">
+              <input type="text" class="sim-input" id="sim-user" value="admin" placeholder="Login" />
+              <input type="password" class="sim-input" id="sim-pass" value="password" placeholder="Parol" />
+              <button class="sim-btn" onclick="runJwtStep(1)">1. Token Olish</button>
+            </div>
+            
+            <div class="sim-row">
+              <div class="sim-storage-box" id="sim-storage">
+                Local Storage: <em>Token mavjud emas</em>
+              </div>
+              <span class="sim-indicator" id="sim-indicator"></span>
+            </div>
+
+            <div class="sim-row">
+              <button class="sim-btn sim-btn-accent" onclick="runJwtStep(2)">2. Admin So'rovini Yuborish</button>
+              <button class="sim-btn sim-btn-accent" style="border-color:#ef4444; color:#ef4444;" onclick="runJwtStep(3)">Chiqish</button>
+            </div>
+
+            <div class="sim-console" id="sim-console">
+              Simulator console is ready...
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /deck-container -->
+
+  <!-- FOOTER NAVIGATION BAR -->
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="navSlide(-1)">‹</button>
+    <div class="dots" id="dots-container"></div>
+    <span class="slide-counter" id="slide-counter-text">1 / 8</span>
+    <button class="nav-btn" onclick="navSlide(1)">›</button>
+    <div class="control-divider"></div>
+    <!-- Auto play toggle -->
+    <button class="nav-btn" id="autoplay-btn" onclick="toggleAutoplay()" title="Avtomatik aylantirish">▶️</button>
+    <!-- Fullscreen toggle -->
+    <button class="nav-btn" onclick="toggleFullscreen()" title="To'liq ekranga o'tish">🖥️</button>
   </div>
 
-  <!-- ── SLIDE 2: TECH STACK ── -->
-  <div class="slide" id="slide-1">
-    <div class="tag purple">Texnologiyalar</div>
-    <h2 class="slide-title">Qanday texnologiyalar <span class="highlight">ishlatildi?</span></h2>
-    <div class="tech-grid">
-      <div class="tech-card">
-        <div class="icon">☕</div>
-        <div class="label">Backend</div>
-        <div class="value">Java 17 + Spring Boot 3</div>
-      </div>
-      <div class="tech-card">
-        <div class="icon">🅰️</div>
-        <div class="label">Frontend</div>
-        <div class="value">Angular 17 (Standalone)</div>
-      </div>
-      <div class="tech-card">
-        <div class="icon">🐘</div>
-        <div class="label">Ma'lumotlar bazasi</div>
-        <div class="value">PostgreSQL</div>
-      </div>
-      <div class="tech-card">
-        <div class="icon">🔐</div>
-        <div class="label">Autentifikatsiya</div>
-        <div class="value">JWT Token (stateless)</div>
-      </div>
-      <div class="tech-card">
-        <div class="icon">🛡️</div>
-        <div class="label">Xavfsizlik</div>
-        <div class="value">Spring Security + RBAC</div>
-      </div>
-      <div class="tech-card">
-        <div class="icon">🎨</div>
-        <div class="label">Dizayn</div>
-        <div class="value">Vanilla CSS + Glassmorphism</div>
-      </div>
-    </div>
-  </div>
+  <script>
+    // Presenter State
+    let activeDeck = 'overview';
+    const slidesData = {
+      overview: {
+        total: 8,
+        current: 0
+      },
+      screenshots: {
+        total: 9,
+        current: 0
+      },
+      architecture: {
+        total: 1,
+        current: 0
+      }
+    };
 
-  <!-- ── SLIDE 3: RAQAMLAR ── -->
-  <div class="slide" id="slide-2">
-    <div class="tag cyan">Loyiha hajmi</div>
-    <h2 class="slide-title">Raqamlarda <span class="highlight">NexShop</span></h2>
-    <div class="big-numbers">
-      <div class="big-num-item">
-        <div class="num">16+</div>
-        <div class="num-label">Ma'lumotlar bazasi<br/>modeli (jadval)</div>
-      </div>
-      <div class="big-num-item">
-        <div class="num">15</div>
-        <div class="num-label">Sahifalar<br/>(frontend)</div>
-      </div>
-      <div class="big-num-item">
-        <div class="num">12</div>
-        <div class="num-label">Admin panel<br/>bo'limlari</div>
-      </div>
-      <div class="big-num-item">
-        <div class="num">40+</div>
-        <div class="num-label">REST API<br/>endpointlar</div>
-      </div>
-    </div>
-    <div class="badge-row">
-      <span class="badge">🔄 Real-vaqt qidiruv</span>
-      <span class="badge">📱 Responsive dizayn</span>
-      <span class="badge">🌙 Dark mode</span>
-      <span class="badge">✨ Micro-animatsiyalar</span>
-    </div>
-  </div>
+    let autoplayInterval = null;
+    let isAutoplayActive = false;
 
-  <!-- ── SLIDE 4: USER FEATURES ── -->
-  <div class="slide" id="slide-3">
-    <div class="tag cyan">Foydalanuvchi</div>
-    <h2 class="slide-title">Xaridor nima <span class="highlight">qila oladi?</span></h2>
-    <div class="feature-cols">
-      <div class="feature-box">
-        <h3>🔐 Kirish va Profil</h3>
-        <ul>
-          <li>Ro'yxatdan o'tish (ism, login, parol)</li>
-          <li>JWT token bilan tizimga kirish</li>
-          <li>Profil, rasm, parol tahrirlash</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>🔍 Qidiruv va Katalog</h3>
-        <ul>
-          <li>3 darajali kategoriya filtri</li>
-          <li>Real-vaqtda mahsulot qidiruv</li>
-          <li>Narx, nomi bo'yicha saralash</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>📦 Mahsulot sahifasi</h3>
-        <ul>
-          <li>Ko'p rasmli gallery slider</li>
-          <li>6 oy / 12 oylik bo'lib to'lash hisobi</li>
-          <li>Batafsil xususiyatlar jadvali</li>
-          <li>O'xshash va so'nggi ko'rilgan mahsulotlar</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>🛒 Xarid va Boshqalar</h3>
-        <ul>
-          <li>Savatga qo'shish va buyurtma berish</li>
-          <li>Buyurtma holatini kuzatish</li>
-          <li>❤️ Sevimlilar (uchuvchi yurak animatsiya)</li>
-          <li>⭐ Sharh va 5 yulduzli baholash</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+    // Initialize dots for current deck
+    function initDots() {
+      const container = document.getElementById('dots-container');
+      container.innerHTML = '';
+      const total = slidesData[activeDeck].total;
+      const current = slidesData[activeDeck].current;
 
-  <!-- ── SLIDE 5: ADMIN PANEL ── -->
-  <div class="slide" id="slide-4">
-    <div class="tag pink">Admin Panel</div>
-    <h2 class="slide-title">Sayt egasi nima <span class="highlight">boshqara oladi?</span></h2>
-    <div class="feature-cols">
-      <div class="feature-box">
-        <h3>📊 Dashboard</h3>
-        <ul>
-          <li>Umumiy daromad (235 mln so'm formatida)</li>
-          <li>Haftalik / Oylik / Yillik statistika</li>
-          <li>Ombor qiymati va kam qolgan tovarlar</li>
-          <li>Admin harakatlar jurnal (Audit log)</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>📦 Mahsulotlar</h3>
-        <ul>
-          <li>Ko'p rasm bilan mahsulot qo'shish</li>
-          <li>Tahrirlash, o'chirish, yashirish</li>
-          <li>Chegirma foizi qo'yish</li>
-          <li>Xususiyatlar (characteristics) boshqaruvi</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>🗂️ Tizim Boshqaruvi</h3>
-        <ul>
-          <li>3 darajali kategoriya tizimi</li>
-          <li>Brendlar boshqaruvi</li>
-          <li>Reklama bannerlari (yoqish/o'chirish)</li>
-          <li>Foydalanuvchilar va rol berish</li>
-        </ul>
-      </div>
-      <div class="feature-box">
-        <h3>📋 Buyurtmalar va Sharhlar</h3>
-        <ul>
-          <li>Barcha buyurtmalarni ko'rish</li>
-          <li>Holat yangilash: Yangi → Yetkazildi</li>
-          <li>Sharhlarga javob yozish / o'chirish</li>
-          <li>Aloqa xabarlarini o'qish</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot-el' + (i === current ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        container.appendChild(dot);
+      }
 
-  <!-- ── SLIDE 6: SECURITY ── -->
-  <div class="slide" id="slide-5">
-    <div class="tag green">Xavfsizlik</div>
-    <h2 class="slide-title">Ma'lumotlar <span class="highlight">qanchalik xavfsiz?</span></h2>
-    <div class="timeline">
-      <div class="tl-item">
-        <div class="tl-num">1</div>
-        <div class="tl-text"><strong>JWT Token</strong> — foydalanuvchi kirganida maxsus "kalit" beriladi. Har bir so'rovda shu kalit tekshiriladi.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-num">2</div>
-        <div class="tl-text"><strong>2 darajali ruxsat (RBAC)</strong> — oddiy foydalanuvchi faqat o'z ma'lumotlarini ko'radi. Admin sahifalariga faqat admin kira oladi.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-num">3</div>
-        <div class="tl-text"><strong>Ma'lumotlar izolyatsiyasi</strong> — har bir foydalanuvchi faqat o'z buyurtmasi, sharhi, sevimlilari va profilini ko'ra oladi.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-num">4</div>
-        <div class="tl-text"><strong>Spring Security</strong> — barcha API endpointlar himoyalangan. Ruxsatsiz kirish urinishlari avtomatik bloklangan.</div>
-      </div>
-    </div>
-  </div>
+      document.getElementById('slide-counter-text').textContent = `${current + 1} / ${total}`;
+    }
 
-  <!-- ── SLIDE 7: DESIGN ── -->
-  <div class="slide" id="slide-6">
-    <div class="tag purple">Dizayn</div>
-    <h2 class="slide-title">Nima uchun <span class="highlight">chiroyli?</span></h2>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">🌙</div>
-        <div class="stat-num">Dark</div>
-        <div class="stat-label">Mode — qoramtir fon, neon ranglar</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">💎</div>
-        <div class="stat-num">Glass</div>
-        <div class="stat-label">morphism — shaffof kartochkalar</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">✨</div>
-        <div class="stat-num">Micro</div>
-        <div class="stat-label">animatsiyalar — silliq effektlar</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📱</div>
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Responsive — har qanday ekran</div>
-      </div>
-    </div>
-    <div class="badge-row" style="margin-top:1.5rem">
-      <span class="badge">❤️ Uchuvchi yurak animatsiyasi</span>
-      <span class="badge">🌊 Silliq sahifa o'tishlar</span>
-      <span class="badge">🎠 Rasm galereyasi slider</span>
-      <span class="badge">💫 Hover effektlar</span>
-      <span class="badge">🔔 Toast xabarnomalar</span>
-    </div>
-  </div>
+    // Switch Decks (Overview / Screenshots / Architecture)
+    function switchDeck(deckId, slideIndex = 0) {
+      // Deactivate all tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.deck').forEach(deck => deck.classList.remove('active'));
 
-  <!-- ── SLIDE 8: PRICE ── -->
-  <div class="slide" id="slide-7">
-    <div class="tag pink">Bozor qiymati</div>
-    <h2 class="slide-title">Bu loyiha real bozorda <span class="highlight">qancha turadi?</span></h2>
-    <table class="price-table">
-      <thead>
-        <tr>
-          <th>Buyurtma turi</th>
-          <th>Narxi (USD)</th>
-          <th>Vaqti</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Arzon freelancer (Fiverr / junior)</td>
-          <td>$500 – $1,500</td>
-          <td>3–5 oy</td>
-        </tr>
-        <tr>
-          <td>O'rta mahalliy kompaniya</td>
-          <td>$2,000 – $5,000</td>
-          <td>4–6 oy</td>
-        </tr>
-        <tr>
-          <td>Professional (Yevropa / AQSH)</td>
-          <td>$10,000 – $30,000</td>
-          <td>6–12 oy</td>
-        </tr>
-        <tr>
-          <td><strong>Siz bu loyihani yaratdingiz</strong></td>
-          <td class="price-highlight">Bepul 🎉</td>
-          <td class="price-highlight">Bir necha kun ⚡</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="subtitle" style="margin-top:1.5rem; font-size:1rem;">
-      AI — qurol, <strong style="color:var(--text)">siz</strong> — me'mor. Loyihani <span class="highlight">siz yaratdingiz!</span>
-    </p>
-  </div>
+      // Activate selected deck and tab
+      activeDeck = deckId;
+      document.getElementById(`tab-${deckId}`).classList.add('active');
+      document.getElementById(`deck-${deckId}`).classList.add('active');
 
-  <!-- ── SLIDE 9: FINAL ── -->
-  <div class="slide" id="slide-8">
-    <div class="final-glow">🚀</div>
-    <div class="tag cyan">Xulosa</div>
-    <h1 class="hero-title" style="font-size:clamp(2.5rem,5vw,4.5rem)">NexShop tayyor!</h1>
-    <p class="subtitle">
-      To'liq funktsional onlayn do'kon platformasi.<br/>
-      Hosting va domen olsangiz — <strong style="color:var(--text)">real biznes boshlashga tayyor.</strong>
-    </p>
-    <div class="badge-row">
-      <span class="badge">✅ Backend — Spring Boot 3</span>
-      <span class="badge">✅ Frontend — Angular 17</span>
-      <span class="badge">✅ Admin panel</span>
-      <span class="badge">✅ JWT xavfsizlik</span>
-      <span class="badge">✅ Zamonaviy dizayn</span>
-      <span class="badge">✅ Hosting uchun tayyor</span>
-    </div>
-  </div>
+      // Set slide index and draw dots
+      slidesData[activeDeck].current = slideIndex;
+      
+      // Update slide active classes in the current deck
+      const deckEl = document.getElementById(`deck-${deckId}`);
+      const slides = deckEl.querySelectorAll('.slide');
+      slides.forEach((slide, idx) => {
+        slide.classList.remove('active', 'exit');
+        if (idx === slideIndex) {
+          slide.classList.add('active');
+        }
+      });
 
-</div><!-- /slides-wrapper -->
+      initDots();
+      stopAutoplay();
+    }
 
-<!-- Navigation Bar -->
-<div class="nav-bar">
-  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">‹</button>
-  <div class="dots" id="dots"></div>
-  <span class="slide-counter" id="counter">1 / 9</span>
-  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">›</button>
-</div>
+    // Go to specific slide in current deck
+    function goToSlide(index) {
+      const total = slidesData[activeDeck].total;
+      if (index < 0 || index >= total) return;
 
-<script>
-  const slides = document.querySelectorAll('.slide');
-  const totalSlides = slides.length;
-  let current = 0;
+      const current = slidesData[activeDeck].current;
+      if (current === index) return;
 
-  // Create dots
-  const dotsEl = document.getElementById('dots');
-  for (let i = 0; i < totalSlides; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => goTo(i);
-    dotsEl.appendChild(d);
-  }
+      const deckEl = document.getElementById(`deck-${activeDeck}`);
+      const slides = deckEl.querySelectorAll('.slide');
 
-  function updateDots() {
-    document.querySelectorAll('.dot').forEach((d, i) => {
-      d.classList.toggle('active', i === current);
+      // Set slide transition
+      slides[current].classList.remove('active');
+      slides[current].classList.add('exit');
+
+      const prev = current;
+      slidesData[activeDeck].current = index;
+      slides[index].classList.add('active');
+
+      setTimeout(() => {
+        slides[prev].classList.remove('exit');
+      }, 500);
+
+      initDots();
+    }
+
+    // Next/Prev slide
+    function navSlide(dir) {
+      const total = slidesData[activeDeck].total;
+      const current = slidesData[activeDeck].current;
+      let target = current + dir;
+
+      if (target < 0) {
+        target = total - 1; // Loop back
+      } else if (target >= total) {
+        target = 0; // Loop forward
+      }
+
+      goToSlide(target);
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        navSlide(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        navSlide(-1);
+      } else if (e.key === '1') {
+        switchDeck('overview');
+      } else if (e.key === '2') {
+        switchDeck('screenshots');
+      } else if (e.key === '3') {
+        switchDeck('architecture');
+      }
     });
-    document.getElementById('counter').textContent = `${current + 1} / ${totalSlides}`;
-  }
 
-  function goTo(n) {
-    if (n < 0 || n >= totalSlides) return;
-    slides[current].classList.remove('active');
-    slides[current].classList.add('exit');
-    setTimeout(() => slides[current === n ? n : current].classList.remove('exit'), 550);
-    current = n;
-    slides[current].classList.add('active');
-    updateDots();
-  }
+    // Autoplay implementation
+    function toggleAutoplay() {
+      if (isAutoplayActive) {
+        stopAutoplay();
+      } else {
+        startAutoplay();
+      }
+    }
 
-  function changeSlide(dir) {
-    const next = current + dir;
-    if (next < 0 || next >= totalSlides) return;
-    slides[current].classList.remove('active');
-    const prev = current;
-    current = next;
-    slides[current].classList.add('active');
-    setTimeout(() => slides[prev].classList.remove('exit'), 0);
-    updateDots();
-  }
+    function startAutoplay() {
+      isAutoplayActive = true;
+      document.getElementById('autoplay-btn').textContent = '⏸️';
+      autoplayInterval = setInterval(() => {
+        navSlide(1);
+      }, 6000);
+    }
 
-  // Keyboard navigation
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); changeSlide(-1); }
-    if (e.key === 'Home') goTo(0);
-    if (e.key === 'End') goTo(totalSlides - 1);
-  });
+    function stopAutoplay() {
+      isAutoplayActive = false;
+      document.getElementById('autoplay-btn').textContent = '▶️';
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+      }
+    }
 
-  // Touch/swipe support
-  let touchX = 0;
-  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    const diff = touchX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
-  });
+    // Fullscreen API implementation
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
 
-  updateDots();
-</script>
+    // Architecture Hover / Click panel updater
+    const archDetails = {
+      client: {
+        title: "🅰️ Angular Standalone Client (Frontend)",
+        desc: "Foydalanuvchi interfeysi Angular 17 platformasida qurilgan. U to'liq <strong>Standalone component-based</strong> arxitekturaga ega bo'lib, unumdorlik va yuklanish tezligi oshirilgan. Saytdagi barcha dynamic ma'lumotlar backend REST API-laridan AJAX so'rovlari (HttpClient) orqali olinadi. <strong>JWT Interceptor</strong> har bir so'rovga local storagedagi JWT tokenini avtomatik biriktiradi."
+      },
+      server: {
+        title: "🍃 Spring Boot 3 & Security (Backend)",
+        desc: "Loyiha backend asosi <strong>Java 17 va Spring Boot 3</strong> yordamida ishlab chiqilgan. Xavfsizlik zanjiri <strong>Spring Security</strong> orqali boshqariladi. Kirish so'rovlari JWT filter zanjiridan o'tadi, token validity tekshiriladi va foydalanuvchiga huquqlar (RBAC - Role Based Access Control) beriladi. Ma'lumotlar bazasi bilan aloqa Spring Data JPA va Hibernate yordamida ta'minlangan."
+      },
+      db: {
+        title: "🐘 PostgreSQL Ma'lumotlar Bazasi (Database)",
+        desc: "Loyihaning barcha ma'lumotlari (foydalanuvchilar, rollar, tovarlar, kategoriyalar, buyurtmalar, rasmlar, sharhlar) mukammal indekslangan <strong>PostgreSQL</strong> relyatsion ma'lumotlar bazasida saqlanadi. 16 dan ortiq o'zaro bog'langan jadvallar loyiha relyatsion izchilligi va ma'lumotlar yaxlitligini ta'minlaydi."
+      }
+    };
+
+    function showArchInfo(nodeKey) {
+      const info = archDetails[nodeKey];
+      if (info) {
+        document.getElementById('arch-title').innerHTML = info.title;
+        document.getElementById('arch-desc').innerHTML = info.desc;
+      }
+    }
+
+    // JWT Simulator Engine
+    let simulatedToken = '';
+    const consoleEl = document.getElementById('sim-console');
+    const storageEl = document.getElementById('sim-storage');
+    const indicatorEl = document.getElementById('sim-indicator');
+
+    function logConsole(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      let color = '#34d399'; // green for success
+      if (type === 'error') color = '#ef4444';
+      if (type === 'warn') color = '#f59e0b';
+      
+      consoleEl.innerHTML += `\n<span style="color:rgba(255,255,255,0.4)">[${time}]</span> <span style="color:${color}">${message}</span>`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function runJwtStep(step) {
+      const user = document.getElementById('sim-user').value;
+      const pass = document.getElementById('sim-pass').value;
+
+      if (step === 1) {
+        // Step 1: Login Request
+        logConsole(`Yuborildi: POST http://localhost:8080/api/auth/login (username: "${user}")`);
+        
+        setTimeout(() => {
+          if (user === 'admin' && pass === 'password') {
+            simulatedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzE4NDU3NjAwfQ.superSecretSignature";
+            logConsole("Tizim javobi: 200 OK — Muvaffaqiyatli kirildi. JWT token yaratildi.");
+            storageEl.innerHTML = `Local Storage: <strong style="color:var(--primary)">${simulatedToken.substring(0, 30)}...</strong>`;
+            indicatorEl.classList.add('active');
+            logConsole("JWT token local storage-ga saqlandi.", 'info');
+          } else {
+            logConsole("Xatolik: 401 Unauthorized — Login yoki parol noto'g'ri!", 'error');
+            indicatorEl.classList.remove('active');
+          }
+        }, 600);
+
+      } else if (step === 2) {
+        // Step 2: Fetch Admin Data
+        logConsole("Yuborildi: GET http://localhost:8080/api/admin/dashboard/stats");
+        
+        if (simulatedToken) {
+          logConsole(`Sarlavha biriktirildi: "Authorization: Bearer ${simulatedToken.substring(0, 15)}..."`, 'warn');
+          setTimeout(() => {
+            logConsole("Server javobi: 200 OK — Ruxsat berildi!");
+            logConsole("Olingan ma'lumotlar: { jamiDaromad: \"235,000,000 UZS\", faolBuyurtmalar: 18 }", 'info');
+          }, 600);
+        } else {
+          logConsole("Sarlavha yuborilmadi (Token topilmadi!)", 'warn');
+          setTimeout(() => {
+            logConsole("Server javobi: 403 Forbidden — Ruxsat berilmagan API so'rovi!", 'error');
+          }, 600);
+        }
+
+      } else if (step === 3) {
+        // Step 3: Logout
+        simulatedToken = '';
+        storageEl.innerHTML = "Local Storage: <em>Token o'chirildi (yaroqsiz)</em>";
+        indicatorEl.classList.remove('active');
+        logConsole("Foydalanuvchi tizimdan chiqdi. Token local storage-dan o'chirildi.", 'warn');
+      }
+    }
+
+    // Touch Slide Nav (Swipe)
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+    }, {passive: true});
+
+    document.addEventListener('touchend', e => {
+      const diffX = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diffX) > 50) {
+        navSlide(diffX > 0 ? 1 : -1);
+      }
+    }, {passive: true});
+
+    // Start screen
+    initDots();
+  </script>
 </body>
 </html>

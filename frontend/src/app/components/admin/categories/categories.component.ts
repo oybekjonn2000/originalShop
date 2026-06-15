@@ -74,8 +74,8 @@ import { forkJoin } from 'rxjs';
               <td>{{ category.id }}</td>
               <td>
                 <div class="category-cell">
-                  <img *ngIf="category.imageUrl" [src]="category.imageUrl" [alt]="category.name" class="category-thumb" />
-                  <div *ngIf="!category.imageUrl" class="category-thumb-placeholder">
+                  <img *ngIf="category.imageUrl" [src]="category.imageUrl" [alt]="category.name" class="category-thumb" (click)="openEditModal(category)" style="cursor: pointer;" title="Tahrirlash uchun bosing" />
+                  <div *ngIf="!category.imageUrl" class="category-thumb-placeholder" (click)="openEditModal(category)" style="cursor: pointer;" title="Tahrirlash uchun bosing">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   </div>
                   <span class="category-name"><strong>{{ category.name }}</strong></span>
@@ -164,94 +164,104 @@ import { forkJoin } from 'rxjs';
           </div>
 
           <form (ngSubmit)="saveCategory()" class="modal-form">
-            <div class="form-group">
-              <label class="glass-label">Kategoriya nomi *</label>
-              <textarea
-                *ngIf="!isEditMode"
-                [(ngModel)]="form.name"
-                name="name"
-                class="glass-input"
-                required
-                rows="3"
-                placeholder="Nomlarni vergul bilan ajratib kiriting (masalan: Smartfonlar, Noutbuklar, Aksessuarlar...)"
-                autofocus
-              ></textarea>
-              <input
-                *ngIf="isEditMode"
-                type="text"
-                [(ngModel)]="form.name"
-                name="name"
-                class="glass-input"
-                required
-                placeholder="Masalan: Smartfonlar, Noutbuklar..."
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="glass-label">Tavsif (ixtiyoriy)</label>
-              <textarea
-                [(ngModel)]="form.description"
-                name="description"
-                class="glass-input"
-                rows="3"
-                placeholder="Kategoriya haqida qisqacha ma'lumot..."
-              ></textarea>
-            </div>
-
-            <!-- Spec Attributes Template -->
-            <div class="form-group">
-              <label class="glass-label">Xarakteristikalar Shablon Atributlari</label>
-              <div class="input-with-btn" style="display: flex; gap: 0.5rem;">
-                <input
-                  type="text"
-                  [(ngModel)]="newAttributeName"
-                  name="newAttr"
-                  class="glass-input"
-                  style="flex: 1;"
-                  placeholder="Masalan: Ekran o'lchami, RAM, SSD..."
-                  (keydown.enter)="$event.preventDefault(); addAttributeTemplate()"
-                />
-                <button type="button" class="btn-secondary" style="white-space: nowrap; padding: 0.6rem 1rem;" (click)="addAttributeTemplate()">Qo'shish</button>
-              </div>
-              <div class="attribute-tags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.5rem; background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 8px; align-items: center; margin-top: 0.5rem;">
-                <span 
-                  class="tag" 
-                  *ngFor="let attr of tempAttributes; let i = index" 
-                  draggable="true"
-                  (dragstart)="onDragStart(i, $event)"
-                  (dragover)="onDragOver(i, $event)"
-                  (drop)="onDrop(i, $event)"
-                  (dragend)="onDragEnd()"
-                  [style.opacity]="draggedIndex === i ? '0.4' : '1'"
-                  style="background: rgba(168, 85, 247, 0.12); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: grab;"
-                >
-                  {{ attr }}
-                  <span class="remove-tag" draggable="false" style="cursor: pointer; font-weight: bold; color: #ef4444; font-size: 1rem;" (click)="removeAttributeTemplate(i); $event.stopPropagation()">&times;</span>
-                </span>
-                <p class="empty-tags-text" *ngIf="tempAttributes.length === 0" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">Hozircha atribut shablonlari qo'shilmadi</p>
-              </div>
-            </div>
-
-            <!-- Image Upload -->
-            <div class="form-group">
-              <label class="glass-label">Kategoriya Rasmi</label>
-              <div class="image-upload-area" (click)="triggerFileInput()" [class.has-image]="imagePreviewUrl">
-                <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Kategoriya rasmi" class="image-preview" />
-                <div *ngIf="!imagePreviewUrl" class="upload-placeholder">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  <p>Rasmni tanlash uchun bosing</p>
-                  <span>JPG, PNG, WEBP — maksimum 10MB</span>
+            <div class="modal-form-grid" style="display: grid; grid-template-columns: 1.1fr 1.2fr; gap: 2rem;">
+              
+              <!-- Left Column: Details & Image -->
+              <div class="modal-col-left" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="form-group">
+                  <label class="glass-label">Kategoriya nomi *</label>
+                  <textarea
+                    *ngIf="!isEditMode"
+                    [(ngModel)]="form.name"
+                    name="name"
+                    class="glass-input"
+                    required
+                    rows="3"
+                    placeholder="Nomlarni vergul bilan ajratib kiriting (masalan: Smartfonlar, Noutbuklar, Aksessuarlar...)"
+                    autofocus
+                  ></textarea>
+                  <input
+                    *ngIf="isEditMode"
+                    type="text"
+                    [(ngModel)]="form.name"
+                    name="name"
+                    class="glass-input"
+                    required
+                    placeholder="Masalan: Smartfonlar, Noutbuklar..."
+                  />
                 </div>
-                <div *ngIf="imagePreviewUrl" class="image-overlay">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  Rasmni almashtirish
+
+                <div class="form-group">
+                  <label class="glass-label">Tavsif (ixtiyoriy)</label>
+                  <textarea
+                    [(ngModel)]="form.description"
+                    name="description"
+                    class="glass-input"
+                    rows="3"
+                    placeholder="Kategoriya haqida qisqacha ma'lumot..."
+                  ></textarea>
                 </div>
-                <input #categoryFileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input-hidden" />
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                  <label class="glass-label">Kategoriya Rasmi</label>
+                  <div class="image-upload-area" (click)="triggerFileInput()" [class.has-image]="imagePreviewUrl" style="min-height: 140px;">
+                    <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Kategoriya rasmi" class="image-preview" style="max-height: 140px;" />
+                    <div *ngIf="!imagePreviewUrl" class="upload-placeholder" style="padding: 1rem;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      <p style="font-size: 0.85rem; margin: 0;">Rasmni tanlash uchun bosing</p>
+                      <span style="font-size: 0.75rem;">JPG, PNG, WEBP — max 10MB</span>
+                    </div>
+                    <div *ngIf="imagePreviewUrl" class="image-overlay">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      Rasmni almashtirish
+                    </div>
+                    <input #categoryFileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input-hidden" />
+                  </div>
+                  <div *ngIf="isUploading" class="upload-progress">
+                    <div class="upload-spinner"></div>
+                    <span>Rasm yuklanmoqda...</span>
+                  </div>
+                </div>
               </div>
-              <div *ngIf="isUploading" class="upload-progress">
-                <div class="upload-spinner"></div>
-                <span>Rasm yuklanmoqda...</span>
+
+              <!-- Right Column: Attributes template -->
+              <div class="modal-col-right" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <!-- Spec Attributes Template -->
+                <div class="form-group" style="height: 100%; display: flex; flex-direction: column;">
+                  <label class="glass-label">Xarakteristikalar Shablon Atributlari</label>
+                  <div class="input-with-btn" style="display: flex; gap: 0.5rem;">
+                    <input
+                      type="text"
+                      [(ngModel)]="newAttributeName"
+                      name="newAttr"
+                      class="glass-input"
+                      style="flex: 1;"
+                      placeholder="Masalan: Ekran o'lchami, RAM, SSD..."
+                      (keydown.enter)="$event.preventDefault(); addAttributeTemplate()"
+                    />
+                    <button type="button" class="btn-secondary" style="white-space: nowrap; padding: 0.6rem 1rem;" (click)="addAttributeTemplate()">Qo'shish</button>
+                  </div>
+                  <div class="attribute-tags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1; min-height: 200px; max-height: 320px; overflow-y: auto; padding: 0.75rem; background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 8px; align-content: flex-start; margin-top: 0.5rem; scrollbar-width: thin;">
+                    <span 
+                      class="tag" 
+                      *ngFor="let attr of tempAttributes; let i = index" 
+                      draggable="true"
+                      (dragstart)="onDragStart(i, $event)"
+                      (dragover)="onDragOver(i, $event)"
+                      (drop)="onDrop(i, $event)"
+                      (dragend)="onDragEnd()"
+                      [style.opacity]="draggedIndex === i ? '0.4' : '1'"
+                      style="background: rgba(168, 85, 247, 0.12); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: grab;"
+                    >
+                      {{ attr }}
+                      <span class="remove-tag" draggable="false" style="cursor: pointer; font-weight: bold; color: #ef4444; font-size: 1rem;" (click)="removeAttributeTemplate(i); $event.stopPropagation()">&times;</span>
+                    </span>
+                    <p class="empty-tags-text" *ngIf="tempAttributes.length === 0" style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">Hozircha atribut shablonlari qo'shilmadi</p>
+                  </div>
+                </div>
               </div>
+
             </div>
 
             <div *ngIf="errorMsg" class="error-msg">
@@ -259,7 +269,7 @@ import { forkJoin } from 'rxjs';
               {{ errorMsg }}
             </div>
 
-            <div class="modal-actions">
+            <div class="modal-actions" style="border-top: 1px solid var(--glass-border); padding-top: 1.25rem; margin-top: 0.5rem;">
               <button type="button" (click)="closeModal()" class="btn-secondary">Bekor qilish</button>
               <button type="submit" [disabled]="isSaving || isUploading" class="btn-primary">
                 <span *ngIf="!isSaving">{{ isEditMode ? 'Saqlash' : "Qo'shish" }}</span>
@@ -289,14 +299,15 @@ import { forkJoin } from 'rxjs';
         </div>
       </div>
 
-      <!-- Material Snackbar Toast -->
-      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
-        <div class="mat-snack-icon">
-          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        </div>
-        <span class="mat-snack-text">{{ toastMessage }}</span>
+    </div>
+
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
       </div>
+      <span class="mat-snack-text">{{ toastMessage }}</span>
     </div>
   `,
   styles: [`
@@ -561,18 +572,19 @@ import { forkJoin } from 'rxjs';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 50px 1rem 1rem;
+      padding: 1rem;
+      overflow: hidden;
       animation: fadeIn 0.2s ease;
     }
 
     .modal-card {
-      width: 90%;
-      max-width: 550px;
+      width: 95%;
+      max-width: 820px;
       padding: 2.5rem;
       border-radius: var(--border-radius-lg);
-      max-height: 90vh;
+      max-height: 95vh;
       overflow-y: auto;
       background: #ffffff !important;
       border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -583,6 +595,17 @@ import { forkJoin } from 'rxjs';
       background: #0b0e14 !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
       backdrop-filter: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .modal-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+      }
+      .modal-card {
+        padding: 1.5rem !important;
+        max-width: 550px;
+      }
     }
 
     .modal-header {
@@ -941,7 +964,7 @@ export class CategoriesComponent implements OnInit {
   editingId: number | null = null;
   errorMsg = '';
   showToast = false;
-  
+
   showConfirmModal = false;
   categoryToDelete: number | null = null;
   toastMessage = '';
@@ -991,19 +1014,20 @@ export class CategoriesComponent implements OnInit {
     this.currentPage = 1;
   }
 
-  constructor(private productService: ProductService, private http: HttpClient) {}
+  constructor(private productService: ProductService, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.loadCategories();
   }
 
-  loadCategories(): void {
-    this.isLoading = true;
+  loadCategories(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.isLoading = true;
+    }
     this.productService.getCategories().subscribe({
       next: (cats) => {
         this.categories = cats;
-        this.filteredCategories = cats;
-        this.currentPage = 1;
+        this.filterCategories(keepPage);
         this.isLoading = false;
       },
       error: () => {
@@ -1012,17 +1036,26 @@ export class CategoriesComponent implements OnInit {
     });
   }
 
-  filterCategories(): void {
-    this.currentPage = 1;
+  filterCategories(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.currentPage = 1;
+    }
     if (!this.searchTerm) {
       this.filteredCategories = this.categories;
-      return;
+    } else {
+      const q = this.searchTerm.toLowerCase();
+      this.filteredCategories = this.categories.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+      );
     }
-    const q = this.searchTerm.toLowerCase();
-    this.filteredCategories = this.categories.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      (c.description && c.description.toLowerCase().includes(q))
-    );
+
+    if (keepPage) {
+      const totalPages = Math.ceil(this.filteredCategories.length / this.pageSize) || 1;
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages;
+      }
+    }
   }
 
   openAddModal(): void {
@@ -1040,9 +1073,9 @@ export class CategoriesComponent implements OnInit {
   openEditModal(category: any): void {
     this.isEditMode = true;
     this.editingId = category.id;
-    this.form = { 
-      name: category.name, 
-      description: category.description || '', 
+    this.form = {
+      name: category.name,
+      description: category.description || '',
       imageUrl: category.imageUrl || '',
       attributesTemplate: category.attributesTemplate ? [...category.attributesTemplate] : []
     };
@@ -1152,8 +1185,8 @@ export class CategoriesComponent implements OnInit {
     this.errorMsg = '';
 
     if (this.isEditMode && this.editingId) {
-      const payload = { 
-        name: this.form.name.trim(), 
+      const payload = {
+        name: this.form.name.trim(),
         description: this.form.description.trim(),
         imageUrl: this.form.imageUrl.trim(),
         attributesTemplate: [...this.tempAttributes]
@@ -1163,7 +1196,7 @@ export class CategoriesComponent implements OnInit {
         next: () => {
           this.isSaving = false;
           this.closeModal();
-          this.loadCategories();
+          this.loadCategories(true);
           this.triggerToast('Kategoriya muvaffaqiyatli yangilandi!', 'snack-success');
         },
         error: (err) => {
@@ -1198,8 +1231,8 @@ export class CategoriesComponent implements OnInit {
           this.isSaving = false;
           this.closeModal();
           this.loadCategories();
-          const message = names.length > 1 
-            ? `${names.length} ta yangi kategoriya muvaffaqiyatli qo'shildi!` 
+          const message = names.length > 1
+            ? `${names.length} ta yangi kategoriya muvaffaqiyatli qo'shildi!`
             : "Yangi kategoriya qo'shildi!";
           this.triggerToast(message, 'snack-success');
         },
@@ -1225,7 +1258,7 @@ export class CategoriesComponent implements OnInit {
     if (!this.categoryToDelete) return;
     this.productService.deleteCategory(this.categoryToDelete).subscribe({
       next: () => {
-        this.loadCategories();
+        this.loadCategories(true);
         this.triggerToast('Kategoriya muvaffaqiyatli o\'chirildi!', 'snack-success');
         this.closeConfirmModal();
       },

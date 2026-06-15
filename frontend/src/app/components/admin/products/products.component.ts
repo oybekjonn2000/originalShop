@@ -97,7 +97,7 @@ import { BrandService } from '../../../services/brand.service';
                 {{ product.id }}
               </td>
               <td>
-                <img [src]="product.imageUrl" [alt]="product.name" class="product-thumb" />
+                <img [src]="product.imageUrl" [alt]="product.name" class="product-thumb" (click)="openEditModal(product)" style="cursor: pointer;" title="Tahrirlash uchun bosing" />
               </td>
               <td>
                 <span class="product-name">{{ product.name }}</span>
@@ -414,16 +414,16 @@ import { BrandService } from '../../../services/brand.service';
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Material Snackbar Toast -->
-      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
-        <div class="mat-snack-icon">
-          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <svg *ngIf="toastType === 'snack-warning'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        </div>
-        <span class="mat-snack-text">{{ toastMsg }}</span>
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToastNotif">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg *ngIf="toastType === 'snack-warning'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
       </div>
+      <span class="mat-snack-text">{{ toastMsg }}</span>
     </div>
   `,
   styles: [`
@@ -531,9 +531,9 @@ import { BrandService } from '../../../services/brand.service';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 50px 1rem 1rem;
+      padding: 1rem;
       animation: fadeIn 0.2s ease;
     }
 
@@ -1169,18 +1169,18 @@ export class ProductsComponent implements OnInit {
     this.loadAll();
   }
 
-  loadAll(): void {
+  loadAll(keepPage: boolean = false): void {
     this.productService.getCategories().subscribe(c => this.categories = c);
     this.productService.getSubcategories().subscribe(s => this.subcategories = s);
     this.productService.getChildCategories().subscribe(ch => this.childCategories = ch);
     this.brandService.getBrands().subscribe(b => this.brands = b);
     this.productService.getProducts().subscribe(p => {
       this.products = p;
-      this.filterProducts();
+      this.filterProducts(keepPage);
     });
   }
 
-  filterProducts(): void {
+  filterProducts(keepPage: boolean = false): void {
     let result = this.products.filter(p => {
       const matchSearch = !this.searchTerm ||
         p.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -1226,7 +1226,14 @@ export class ProductsComponent implements OnInit {
     }
 
     this.filteredProducts = result;
-    this.currentPage = 1;
+    if (!keepPage) {
+      this.currentPage = 1;
+    } else {
+      const totalPages = Math.ceil(this.filteredProducts.length / this.pageSize) || 1;
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages;
+      }
+    }
   }
 
   toggleSort(column: string): void {
@@ -1604,7 +1611,7 @@ export class ProductsComponent implements OnInit {
       next: () => {
         this.isSaving = false;
         this.closeModal();
-        this.loadAll();
+        this.loadAll(this.isEditMode);
         this.showToast('Mahsulot muvaffaqiyatli saqlandi!', 'snack-success');
       },
       error: (err) => {
@@ -1628,7 +1635,7 @@ export class ProductsComponent implements OnInit {
     if (!this.productToDelete) return;
     this.productService.deleteProduct(this.productToDelete).subscribe({
       next: () => {
-        this.loadAll();
+        this.loadAll(true);
         this.closeConfirmModal();
         this.showToast('Mahsulot muvaffaqiyatli o\'chirildi!', 'snack-success');
       },

@@ -129,9 +129,9 @@ import { UserService, User } from '../../../services/user.service';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 100px 1rem 1rem;
+      padding: 1rem;
       animation: fadeIn 0.2s ease;
     }
 

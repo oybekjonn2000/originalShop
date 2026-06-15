@@ -71,7 +71,7 @@ import { forkJoin } from 'rxjs';
           <tbody>
             <tr *ngFor="let brand of pagedBrands">
               <td>
-                <img [src]="brand.imageUrl || 'assets/placeholder.png'" [alt]="brand.name" class="brand-thumb" />
+                <img [src]="brand.imageUrl || 'assets/placeholder.png'" [alt]="brand.name" class="brand-thumb" (click)="openEditModal(brand)" style="cursor: pointer;" title="Tahrirlash uchun bosing" />
               </td>
               <td>{{ brand.id }}</td>
               <td><strong>{{ brand.name }}</strong></td>
@@ -224,16 +224,15 @@ import { forkJoin } from 'rxjs';
             <button (click)="confirmDelete()" class="btn-primary btn-danger">O'chirish</button>
           </div>
         </div>
-      </div>
+    </div>
 
-      <!-- Material Snackbar Toast -->
-      <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
-        <div class="mat-snack-icon">
-          <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        </div>
-        <span class="mat-snack-text">{{ toastMessage }}</span>
+    <!-- Material Snackbar Toast -->
+    <div class="mat-snackbar" [ngClass]="toastType" *ngIf="showToast">
+      <div class="mat-snack-icon">
+        <svg *ngIf="toastType === 'snack-success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg *ngIf="toastType === 'snack-error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
       </div>
+      <span class="mat-snack-text">{{ toastMessage }}</span>
     </div>
   `,
   styles: [`
@@ -492,9 +491,9 @@ import { forkJoin } from 'rxjs';
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 50px 1rem 1rem;
+      padding: 1rem;
       animation: fadeIn 0.2s ease;
     }
 
@@ -892,13 +891,14 @@ export class BrandsComponent implements OnInit {
     this.loadBrands();
   }
 
-  loadBrands(): void {
-    this.isLoading = true;
+  loadBrands(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.isLoading = true;
+    }
     this.brandService.getBrands().subscribe({
       next: (brands) => {
         this.brands = brands;
-        this.filteredBrands = brands;
-        this.currentPage = 1;
+        this.filterBrands(keepPage);
         this.isLoading = false;
       },
       error: () => {
@@ -907,16 +907,25 @@ export class BrandsComponent implements OnInit {
     });
   }
 
-  filterBrands(): void {
-    this.currentPage = 1;
+  filterBrands(keepPage: boolean = false): void {
+    if (!keepPage) {
+      this.currentPage = 1;
+    }
     if (!this.searchTerm) {
       this.filteredBrands = this.brands;
-      return;
+    } else {
+      const q = this.searchTerm.toLowerCase();
+      this.filteredBrands = this.brands.filter(b =>
+        b.name.toLowerCase().includes(q)
+      );
     }
-    const q = this.searchTerm.toLowerCase();
-    this.filteredBrands = this.brands.filter(b =>
-      b.name.toLowerCase().includes(q)
-    );
+
+    if (keepPage) {
+      const totalPages = Math.ceil(this.filteredBrands.length / this.pageSize) || 1;
+      if (this.currentPage > totalPages) {
+        this.currentPage = totalPages;
+      }
+    }
   }
 
   openAddModal(): void {
@@ -1001,7 +1010,7 @@ export class BrandsComponent implements OnInit {
         next: () => {
           this.isSaving = false;
           this.closeModal();
-          this.loadBrands();
+          this.loadBrands(true);
           this.triggerToast('Brand muvaffaqiyatli yangilandi!', 'snack-success');
         },
         error: (err) => {
@@ -1061,7 +1070,7 @@ export class BrandsComponent implements OnInit {
     if (!this.brandToDelete) return;
     this.brandService.deleteBrand(this.brandToDelete).subscribe({
       next: () => {
-        this.loadBrands();
+        this.loadBrands(true);
         this.triggerToast('Brand muvaffaqiyatli o\'chirildi!', 'snack-success');
         this.closeConfirmModal();
       },
